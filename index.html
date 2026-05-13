@@ -551,21 +551,64 @@ function tier(d){
 // SECTION 5 — MODULE API (Overpass + Entreprises + Alternance)
 // ════════════════════════════════════════════════════════════
 async function fetchOverpass(lat,lng,rm,amenities,offices){
+  // Uniquement les catégories pertinentes pour un stage TIP
+  const relevantAmenities=['hospital','clinic','doctors','school','college','university','townhall','bank','coworking_space'];
+  const filteredAmenities=amenities.filter(a=>relevantAmenities.includes(a));
+  const relevantOffices=['government','it','association'];
+  const filteredOffices=offices.filter(o=>relevantOffices.includes(o));
+
   const cond=[
-    ...amenities.flatMap(a=>[`node["amenity"="${a}"](around:${rm},${lat},${lng});`,`way["amenity"="${a}"](around:${rm},${lat},${lng});`]),
-    ...offices.flatMap(o=>[`node["office"="${o}"](around:${rm},${lat},${lng});`,`way["office"="${o}"](around:${rm},${lat},${lng});`]),
+    ...filteredAmenities.flatMap(a=>[
+      `node["amenity"="${a}"](around:${rm},${lat},${lng});`,
+      `way["amenity"="${a}"](around:${rm},${lat},${lng});`
+    ]),
+    ...filteredOffices.flatMap(o=>[
+      `node["office"="${o}"](around:${rm},${lat},${lng});`,
+      `way["office"="${o}"](around:${rm},${lat},${lng});`
+    ]),
   ].join('');
   if(!cond)return[];
-  const q=`[out:json][timeout:30];(${cond});out body;>;out skel qt;`;
-  const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
-  const d=await r.json();
-  const am2t={hospital:'Santé',clinic:'Santé',school:'Lycées',college:'Education',university:'Education',townhall:'Public',social_facility:'Asso',coworking_space:'Coworking',mall:'PME',newspaper:'Médias'};
-  return(d.elements||[]).filter(e=>e.tags?.name&&e.tags.name.length>1).map(e=>{
-    const lt=e.lat||e.center?.lat,ln=e.lon||e.center?.lon;
-    const a=e.tags.amenity||e.tags.office||'';
-    const addr=[e.tags['addr:housenumber'],e.tags['addr:street'],e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')||e.tags['addr:city']||'';
-    return{id:'osm_'+e.id,n:e.tags.name,t:am2t[a]||'PME',v:addr,d:a,e:e.tags.email||e.tags['contact:email']||'',web:e.tags.website||e.tags['contact:website']||'',lat:lt||lat,lng:ln||lng,src:'OpenStreetMap'};
-  });
+
+  // out body center; → donne les coordonnées des ways (bâtiments/zones)
+  const q=`[out:json][timeout:30];(${cond});out body center;`;
+  try{
+    const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
+    const d=await r.json();
+    const am2t={
+      hospital:'Santé',clinic:'Santé',doctors:'Santé',
+      school:'Lycées',college:'Education',university:'Education',
+      townhall:'Public',government:'Public',
+      coworking_space:'Coworking',bank:'Banque',
+      association:'Asso',it:'ESN',
+    };
+    return(d.elements||[])
+      .filter(e=>e.tags&&e.tags.name&&e.tags.name.length>1)
+      .map(e=>{
+        // Coordonnées : node → e.lat/e.lon, way/relation → e.center.lat/e.center.lon
+        const lt = e.type==='node' ? e.lat : (e.center ? e.center.lat : null);
+        const ln = e.type==='node' ? e.lon : (e.center ? e.center.lon : null);
+        if(!lt||!ln) return null; // Pas de coordonnées → on ignore
+        const a=e.tags.amenity||e.tags.office||'';
+        const t=am2t[a]||null;
+        if(!t) return null; // Type non pertinent → on ignore
+        const addr=[e.tags['addr:housenumber'],e.tags['addr:street'],
+                    e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')
+                   ||e.tags['addr:city']||'';
+        return{
+          id:'osm_'+e.id,
+          n:e.tags.name, t, v:addr, d:a,
+          e:e.tags.email||e.tags['contact:email']||'',
+          web:e.tags.website||e.tags['contact:website']||'',
+          phone:e.tags.phone||e.tags['contact:phone']||'',
+          lat:lt, lng:ln,
+          src:'OpenStreetMap'
+        };
+      })
+      .filter(Boolean); // Supprimer les null
+  }catch(ex){
+    console.warn('Overpass error:',ex);
+    return[];
+  }
 }
 
 async function fetchEntreprises(lat,lng,rKm,naf){
