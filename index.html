@@ -1,0 +1,1192 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stage TIP – Radar & CRM – Montpellier</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f1f5f9;--card:#fff;--inp:#fff;--bg2:#f8fafc;--bg3:#e2e8f0;
+  --t1:#0f172a;--t2:#334155;--t3:#64748b;--t4:#94a3b8;
+  --brd:#e2e8f0;--brd2:#cbd5e1;
+  --blue:#1d6ef5;--blue-d:#1558cc;--blue-l:#e8f0fe;--blue-t:rgba(29,110,245,.1);
+  --teal:#0a9587;--teal-d:#087a6f;--teal-l:#e0f5f3;
+  --green:#15803d;--green-l:#dcfce7;
+  --amber:#b45309;--amber-l:#fef3c7;
+  --red:#dc2626;--red-l:#fee2e2;
+  --purple:#7c3aed;--purple-l:#ede9fe;
+  --shadow:0 1px 3px rgba(0,0,0,.07);--shadow2:0 4px 14px rgba(0,0,0,.09);
+  --r:8px;--rl:12px;
+}
+html[data-theme=dark]{
+  --bg:#0d1117;--card:#161b22;--inp:#21262d;--bg2:#0d1117;--bg3:#21262d;
+  --t1:#e6edf3;--t2:#c9d1d9;--t3:#8b949e;--t4:#6e7681;
+  --brd:#30363d;--brd2:#484f58;
+  --blue:#58a6ff;--blue-d:#79b8ff;--blue-l:rgba(56,139,253,.12);--blue-t:rgba(56,139,253,.1);
+  --teal:#3fb950;--teal-d:#56d364;--teal-l:rgba(63,185,80,.1);
+  --green:#3fb950;--green-l:rgba(63,185,80,.1);
+  --amber:#e3b341;--amber-l:rgba(187,128,9,.15);
+  --red:#f85149;--red-l:rgba(248,81,73,.1);
+  --purple:#a78bfa;--purple-l:rgba(124,58,237,.12);
+  --shadow:0 1px 3px rgba(0,0,0,.3);--shadow2:0 4px 16px rgba(0,0,0,.4);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t1);line-height:1.55;font-size:15px}
+
+/* ── HEADER ─────────────────────────────────────────── */
+.hdr{background:#010409;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;position:sticky;top:0;z-index:300;border-bottom:1px solid rgba(255,255,255,.06)}
+html[data-theme=light] .hdr{background:#0f172a}
+.logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:700;font-size:.95rem;flex-shrink:0}
+.logo-sq{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.hdr-r{display:flex;align-items:center;gap:6px}
+.tbtn{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.75rem;font-family:inherit}
+.tbtn:hover{background:rgba(255,255,255,.1);color:#fff}
+
+/* ── TAB NAV ─────────────────────────────────────────── */
+.tabnav{background:var(--card);border-bottom:1px solid var(--brd);display:flex;overflow-x:auto;padding:0 1rem;position:sticky;top:56px;z-index:200}
+.tabnav::-webkit-scrollbar{display:none}
+.tab{display:flex;align-items:center;gap:6px;padding:0 14px;height:44px;font-size:.82rem;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.tab:hover{color:var(--t2)}
+.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
+.tab-badge{min-width:18px;height:18px;padding:0 4px;border-radius:20px;background:var(--blue-l);color:var(--blue);font-size:.65rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+
+/* ── LAYOUT ─────────────────────────────────────────── */
+.main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.page{display:none}.page.on{display:block}
+
+/* ── CARDS ──────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);box-shadow:var(--shadow);padding:1.25rem}
+.card+.card{margin-top:1rem}
+.ct{font-size:1rem;font-weight:700;color:var(--t1);margin-bottom:.2rem}
+.cs{font-size:.8rem;color:var(--t3);margin-bottom:1.1rem}
+.row{display:flex;gap:1rem;flex-wrap:wrap}
+.col{flex:1;min-width:200px}
+
+/* ── FORM ───────────────────────────────────────────── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+.fi{display:flex;flex-direction:column;gap:3px}.fi.full{grid-column:1/-1}
+.fi label{font-size:.71rem;font-weight:700;color:var(--t3);letter-spacing:.04em;text-transform:uppercase}
+input,select,textarea{width:100%;padding:8px 11px;border:1.5px solid var(--brd);border-radius:var(--r);font-size:.875rem;color:var(--t1);background:var(--inp);font-family:inherit;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-t)}
+textarea{resize:vertical;min-height:68px;line-height:1.5}
+input::placeholder,textarea::placeholder{color:var(--t4)}
+
+/* ── BUTTONS ────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r);font-size:.825rem;font-weight:600;cursor:pointer;border:1.5px solid transparent;font-family:inherit;transition:all .15s;white-space:nowrap;text-decoration:none}
+.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-primary:hover{background:var(--blue-d)}
+.btn-teal{background:var(--teal);color:#fff}.btn-teal:hover{background:var(--teal-d)}
+.btn-ghost{background:transparent;color:var(--t2);border-color:var(--brd2)}.btn-ghost:hover{background:var(--bg3)}
+.btn-green{background:var(--green);color:#fff}
+.btn-red{background:var(--red);color:#fff}
+.btn-sm{padding:4px 10px;font-size:.76rem}
+.btn-lg{padding:10px 22px;font-size:.9rem}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── BADGES ─────────────────────────────────────────── */
+.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:.66rem;font-weight:700}
+.b-ESN{background:var(--blue-l);color:var(--blue)}
+.b-Public{background:var(--green-l);color:var(--green)}
+.b-Santé{background:rgba(190,24,93,.1);color:#be185d}
+html[data-theme=dark] .b-Santé{color:#f472b6}
+.b-Education,.b-Lycées{background:var(--amber-l);color:var(--amber)}
+.b-Industrie,.b-Logistique{background:var(--bg3);color:var(--t2)}
+.b-Banque{background:var(--purple-l);color:var(--purple)}
+.b-PME{background:rgba(194,65,12,.1);color:#c2410c}
+html[data-theme=dark] .b-PME{color:#fb923c}
+.b-Télécom,.b-Médias{background:rgba(8,145,178,.1);color:#0891b2}
+html[data-theme=dark] .b-Télécom,.b-Médias{color:#22d3ee}
+.b-Asso{background:rgba(234,179,8,.1);color:#a16207}
+html[data-theme=dark] .b-Asso{color:#fbbf24}
+.b-Coworking{background:var(--purple-l);color:#5b21b6}
+.disc-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--purple-l);color:var(--purple);font-weight:700}
+.pmsmp-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--teal-l);color:var(--teal);font-weight:700}
+.alt-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--amber-l);color:var(--amber);font-weight:700}
+
+/* ── TIER DISTANCE ──────────────────────────────────── */
+.tier{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:.65rem;font-weight:700}
+.t1{background:var(--green-l);color:var(--green)}.t2{background:var(--blue-l);color:var(--blue)}
+.t3{background:var(--amber-l);color:var(--amber)}.t4{background:var(--red-l);color:var(--red)}
+.sdiv-dist{font-size:.73rem;font-weight:800;margin:1rem 0 .4rem;display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px}
+.sdiv-dist::after{content:'';flex:1;height:1px;background:currentColor;opacity:.15}
+.sdiv-dist.t1{background:rgba(21,128,61,.07);color:var(--green)}
+.sdiv-dist.t2{background:var(--blue-t);color:var(--blue)}
+.sdiv-dist.t3{background:rgba(180,83,9,.07);color:var(--amber)}
+.sdiv-dist.t4{background:rgba(220,38,38,.06);color:var(--red)}
+
+/* ── RADAR ──────────────────────────────────────────── */
+.radar-controls{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.cat-grid{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:1rem}
+.cat-btn{padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:1.5px solid var(--brd);background:var(--card);color:var(--t3);transition:all .15s}
+.cat-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.search-banner{background:var(--blue-l);border:1px solid rgba(29,110,245,.2);border-radius:var(--rl);padding:.75rem 1.1rem;margin-bottom:.875rem;display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--blue)}
+.spin{width:16px;height:16px;border:2px solid rgba(29,110,245,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.clist{display:flex;flex-direction:column;gap:6px}
+.cc{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--rl);padding:.75rem 1rem;display:flex;align-items:center;gap:10px;transition:border-color .15s}
+.cc:hover{border-color:var(--blue);box-shadow:0 2px 8px var(--blue-t)}
+.clog{width:36px;height:36px;border-radius:var(--r);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3);flex-shrink:0}
+.ci{flex:1;min-width:0}.cn{font-weight:700;font-size:.84rem;color:var(--t1)}
+.cd{font-size:.73rem;color:var(--t3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ce{font-size:.69rem;color:var(--blue);margin-top:2px;font-family:monospace}
+.ca{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.toolbar{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap}.toolbar input{flex:1;min-width:160px}
+.empty{text-align:center;padding:2.5rem;color:var(--t4);font-size:.875rem}
+
+/* ── KANBAN ─────────────────────────────────────────── */
+.kanban{display:grid;grid-template-columns:repeat(6,minmax(180px,1fr));gap:10px;overflow-x:auto;padding-bottom:.5rem}
+.kb-col{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:.75rem;min-height:300px;display:flex;flex-direction:column;gap:8px}
+.kb-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.kb-title{font-size:.77rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.kb-count{min-width:20px;height:20px;padding:0 5px;border-radius:20px;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.kb-card{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--r);padding:.7rem .875rem;cursor:pointer;transition:all .15s}
+.kb-card:hover{border-color:var(--blue);box-shadow:0 2px 8px var(--blue-t)}
+.kb-card.j7{border-left:3px solid var(--amber)}
+.kb-cname{font-size:.82rem;font-weight:700;color:var(--t1);margin-bottom:3px}
+.kb-meta{font-size:.71rem;color:var(--t3);display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.kb-j7{font-size:.68rem;font-weight:700;color:var(--amber);background:var(--amber-l);padding:1px 6px;border-radius:20px}
+.kb-actions{margin-top:8px;display:flex;gap:4px;flex-wrap:wrap}
+.col-todo .kb-title{color:var(--t3)} .col-todo .kb-count{background:var(--bg3);color:var(--t3)}
+.col-sent .kb-title{color:var(--blue)} .col-sent .kb-count{background:var(--blue-l);color:var(--blue)}
+.col-follow .kb-title{color:var(--amber)} .col-follow .kb-count{background:var(--amber-l);color:var(--amber)}
+.col-int .kb-title{color:var(--purple)} .col-int .kb-count{background:var(--purple-l);color:var(--purple)}
+.col-rej .kb-title{color:var(--red)} .col-rej .kb-count{background:var(--red-l);color:var(--red)}
+.col-acc .kb-title{color:var(--green)} .col-acc .kb-count{background:var(--green-l);color:var(--green)}
+
+/* ── ADDR AUTOCOMPLETE ──────────────────────────────── */
+.addr-wrap{position:relative;flex:1}
+.addr-dd{position:absolute;top:calc(100% - 1px);left:0;right:0;background:var(--card);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 var(--r) var(--r);z-index:99;max-height:220px;overflow-y:auto;display:none;box-shadow:var(--shadow2)}
+.addr-item{padding:9px 13px;font-size:.8rem;cursor:pointer;color:var(--t2);border-bottom:.5px solid var(--brd);line-height:1.45}
+.addr-item:hover,.addr-item.focused{background:var(--blue-l);color:var(--blue)}
+.addr-item:last-child{border-bottom:none}
+.addr-tag{font-size:.69rem;color:var(--t4);display:block;margin-top:1px}
+
+/* ── EMAIL PAGE ─────────────────────────────────────── */
+.ep{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--rl);overflow:hidden}
+.eh{background:var(--bg2);border-bottom:1px solid var(--brd);padding:1rem 1.25rem}
+.ef{display:flex;gap:8px;font-size:.8rem;color:var(--t2);margin-bottom:3px}
+.efl{font-weight:700;color:var(--t4);min-width:52px;font-size:.71rem;text-transform:uppercase}
+.efl2{font-weight:700;color:var(--t1)}
+.ebody{padding:1.25rem;font-size:.86rem;line-height:1.8;color:var(--t1);white-space:pre-wrap;min-height:200px}
+
+/* ── PROFILE BAR ────────────────────────────────────── */
+.pbar{background:var(--blue-l);border:1.5px solid rgba(29,110,245,.2);border-radius:var(--rl);padding:.875rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:1.25rem}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.88rem;flex-shrink:0}
+.pbar-name{font-weight:700;color:var(--t1);font-size:.88rem}.pbar-sub{font-size:.74rem;color:var(--t3)}
+
+/* ── STATS BAR ──────────────────────────────────────── */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
+.sc{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:.7rem;text-align:center}
+.sn{font-size:1.35rem;font-weight:800;color:var(--blue)}.sl{font-size:.67rem;color:var(--t3);font-weight:500;margin-top:1px}
+
+/* ── NOTICE ─────────────────────────────────────────── */
+.notice{border-radius:var(--r);padding:9px 14px;font-size:.79rem;margin-bottom:1rem;border:1px solid;display:flex;gap:8px;align-items:flex-start}
+.n-warn{background:var(--amber-l);border-color:var(--amber);color:var(--amber)}
+.n-info{background:var(--blue-l);border-color:rgba(29,110,245,.3);color:var(--blue)}
+.n-ok{background:var(--green-l);border-color:var(--green);color:var(--green)}
+
+/* ── MISC ───────────────────────────────────────────── */
+.sdiv{font-size:.7rem;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.07em;margin:.9rem 0 .4rem;display:flex;align-items:center;gap:8px}
+.sdiv::after{content:'';flex:1;height:1px;background:var(--brd)}
+code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:.79rem;color:var(--t2)}
+.tipsbox{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:1rem 1.25rem;margin-top:1.25rem}
+.tipsbox-title{font-size:.82rem;font-weight:700;color:var(--t2);margin-bottom:.5rem}
+.tipsbox ol{padding-left:1.2rem;font-size:.8rem;color:var(--t3);line-height:1.95}
+select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
+@media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
+@media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo"><div class="logo-sq">🎯</div><span>Stage TIP – Radar & CRM</span></div>
+  <div class="hdr-r">
+    <button class="tbtn" onclick="exportJSON()" title="Sauvegarder ma progression">💾 Sauvegarder</button>
+    <label class="tbtn" title="Charger une sauvegarde" style="cursor:pointer">📂 Charger<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
+    <button class="tbtn" onclick="toggleTheme()" id="tbtn">🌙</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabnav" id="tabnav">
+  <div class="tab on" onclick="goTab('profil')" id="tab-profil">👤 Profil</div>
+  <div class="tab" onclick="goTab('radar')" id="tab-radar">🎯 Radar <span class="tab-badge" id="badge-radar">0</span></div>
+  <div class="tab" onclick="goTab('suivi')" id="tab-suivi">📋 Suivi <span class="tab-badge" id="badge-suivi" style="background:var(--amber-l);color:var(--amber)">0</span></div>
+  <div class="tab" onclick="goTab('email')" id="tab-email">✉️ Email</div>
+</nav>
+
+<div class="main">
+
+<!-- ══ PROFIL ══════════════════════════════════════════ -->
+<div class="page on" id="page-profil">
+  <div class="card">
+    <div class="ct">👤 Mon profil</div>
+    <div class="cs">Formation pour adultes — Titre Professionnel TIP. Ces informations personnalisent tes emails et activent le radar géographique.</div>
+    <div class="fg">
+      <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
+      <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
+      <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
+      <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
+      <div class="fi full"><label>Organisme de formation *</label>
+        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, …" /></div>
+      <div class="fi"><label>Début de stage</label><input id="p_debut" type="date" value="2026-06-05" /></div>
+      <div class="fi"><label>Fin de stage</label><input id="p_fin" type="date" value="2026-07-31" /></div>
+      <div class="fi full"><label>📍 Adresse (pour le radar de distance)</label>
+        <div style="display:flex;gap:8px">
+          <div class="addr-wrap">
+            <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
+              oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" />
+            <div id="addr_dd" class="addr-dd"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" style="flex-shrink:0">📡 GPS</button>
+        </div>
+        <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:4px"></div>
+      </div>
+      <div class="fi full"><label>Compétences (optionnel)</label>
+        <textarea id="p_comp" placeholder="Certifications, logiciels maîtrisés…"></textarea></div>
+      <div class="fi full"><label>Motivation (optionnel)</label>
+        <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:.75rem">
+      <button class="btn btn-primary btn-lg" onclick="saveProfile()">Sauvegarder & Lancer le Radar →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RADAR ═══════════════════════════════════════════ -->
+<div class="page" id="page-radar">
+  <div id="pbar" class="pbar" style="display:none"></div>
+  <div id="sg" class="sg" style="display:none"></div>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div class="ct">🎯 Radar géographique</div>
+    <div class="cs">Scanne les structures dans un rayon ajustable. Les résultats sont classés du plus proche au plus éloigné.</div>
+    <div class="radar-controls">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
+        <span style="font-size:.8rem;color:var(--t3);white-space:nowrap">Rayon :</span>
+        <input type="range" id="r_km" min="5" max="50" value="30" step="5"
+          oninput="document.getElementById('r_km_val').textContent=this.value+' km'" style="flex:1;padding:0" />
+        <span id="r_km_val" style="font-size:.875rem;font-weight:700;color:var(--blue);min-width:44px">30 km</span>
+      </div>
+      <button class="btn btn-primary" onclick="launchRadar()" id="radar-btn">🔍 Scanner</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV</button>
+    </div>
+    <div class="cat-grid" id="cat-grid"></div>
+  </div>
+
+  <div id="radar-banner" class="search-banner" style="display:none">
+    <div class="spin"></div><span id="radar-msg">Initialisation…</span>
+  </div>
+
+  <div class="card">
+    <div class="toolbar">
+      <input type="text" id="r_srch" placeholder="🔍  Filtrer les résultats…" oninput="renderRadar()" />
+      <select id="r_type" onchange="renderRadar()" style="width:auto;flex:0">
+        <option value="">Tous les types</option>
+      </select>
+    </div>
+    <div class="clist" id="r_list"></div>
+  </div>
+</div>
+
+<!-- ══ SUIVI KANBAN ════════════════════════════════════ -->
+<div class="page" id="page-suivi">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+    <div>
+      <h2 style="font-size:1rem;font-weight:700;color:var(--t1)">📋 Suivi des candidatures</h2>
+      <div style="font-size:.78rem;color:var(--t3)" id="suivi-sub">Glisse les cartes ou clique pour changer de colonne.</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTab('email')" id="btn-write-email">✉️ Rédiger un email</button>
+    </div>
+  </div>
+  <div class="notice n-warn" id="j7-banner" style="display:none">
+    ⏰ <span id="j7-txt"></span>
+  </div>
+  <div class="kanban" id="kanban"></div>
+</div>
+
+<!-- ══ EMAIL ════════════════════════════════════════════ -->
+<div class="page" id="page-email">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+    <h2 style="font-size:1rem;font-weight:700;color:var(--t1)">✉️ Générateur d'email</h2>
+    <button class="btn btn-ghost btn-sm" onclick="goTab('suivi')">← Suivi</button>
+  </div>
+  <div class="card" style="margin-bottom:1rem">
+    <div class="fg">
+      <div class="fi">
+        <label>Entreprise ciblée</label>
+        <select id="e_company" onchange="pickEmailCompany()" style="font-size:.85rem">
+          <option value="">— Sélectionner —</option>
+        </select>
+      </div>
+      <div class="fi">
+        <label>Variante</label>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="prevVar()">◀</button>
+          <span id="e_var_lbl" style="font-size:.8rem;color:var(--t3);padding:5px 0;flex:1;text-align:center">1/1</span>
+          <button class="btn btn-ghost btn-sm" onclick="nextVar()">▶</button>
+        </div>
+      </div>
+      <div class="fi full" id="e_contact_wrap" style="display:none">
+        <label>Nom du contact (si connu)</label>
+        <input id="e_contact" placeholder="ex : Mme Dupont — personnalise la salutation" oninput="renderEmail()" />
+      </div>
+    </div>
+  </div>
+  <div id="e_notice" style="display:none" class="notice n-info"></div>
+  <div class="ep" id="ep" style="min-height:200px"></div>
+  <div style="display:flex;gap:8px;margin-top:.875rem;flex-wrap:wrap">
+    <button class="btn btn-teal" onclick="copyEmail()" id="copy-btn">📋 Copier</button>
+    <button class="btn btn-ghost btn-sm" id="e_li_btn" style="display:none" onclick="openLinkedIn()">🔍 Trouver le contact LinkedIn</button>
+    <button class="btn btn-green btn-sm" onclick="markEmailSent()" id="mark-sent-btn">✅ Marquer envoyé</button>
+    <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨</button>
+  </div>
+  <div class="tipsbox">
+    <div class="tipsbox-title">📌 Mode d'emploi</div>
+    <ol>
+      <li>Sélectionne une entreprise du Suivi ci-dessus</li>
+      <li>Utilise <strong>🔍 Trouver le contact LinkedIn</strong> pour chercher le DSI ou RH</li>
+      <li>Colle le nom dans le champ Contact pour personnaliser la salutation</li>
+      <li>Copie l'email et envoie depuis ta messagerie avec ton CV en PDF</li>
+      <li>Reviens sur le Suivi pour marquer "Envoyé" et suivre la relance J+7</li>
+    </ol>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ════════════════════════════════════════════════════════════
+// SECTION 1 — CONFIG & DATA
+// ════════════════════════════════════════════════════════════
+const VERSION='4.0';
+const KM_STEP=5;
+const RADIUS_DEFAULT=30;
+
+const CATS=[
+  {id:'ESN',     ico:'💻', lbl:'IT & ESN',          osm:[],                    naf:['6202B','9511Z','6203Z','6209Z','6202A','6201Z']},
+  {id:'Public',  ico:'🏛️', lbl:'Public & Admins',   osm:['townhall'],          naf:[]},
+  {id:'Education',ico:'🎓',lbl:'Université & BTS',  osm:['university','college'],naf:[]},
+  {id:'Lycées',  ico:'🏫', lbl:'Lycées & Collèges', osm:['school'],             naf:[]},
+  {id:'Santé',   ico:'🏥', lbl:'Santé & Médical',   osm:['hospital','clinic'],  naf:[]},
+  {id:'Asso',    ico:'🤝', lbl:'Associatif & ONG',  osm:['social_facility'],    naf:['8899B','8810A','9499Z']},
+  {id:'Logistique',ico:'🚚',lbl:'Transport & Infra', osm:['station'],            naf:['4941A','4941B','5210B','5221Z']},
+  {id:'Coworking',ico:'🌱',lbl:'Coworking & Tech',  osm:['coworking_space'],    naf:[]},
+  {id:'PME',     ico:'🏢', lbl:'Commerce & Distrib.',osm:['mall'],              naf:['4719B','4711A','4711B','4711D']},
+  {id:'Médias',  ico:'📡', lbl:'Médias & Télécoms',  osm:['newspaper'],         naf:['5813Z','6020Z','6010Z','7311Z']},
+];
+
+const CRM_COLS=[
+  {id:'todo',   cls:'col-todo', lbl:'À contacter',  ico:'📭'},
+  {id:'sent',   cls:'col-sent', lbl:'Envoyé',        ico:'📤'},
+  {id:'follow', cls:'col-follow',lbl:'Relance',      ico:'⏰'},
+  {id:'int',    cls:'col-int',  lbl:'Entretien',     ico:'🤝'},
+  {id:'rej',    cls:'col-rej',  lbl:'Refus',         ico:'❌'},
+  {id:'acc',    cls:'col-acc',  lbl:'Accepté',       ico:'🎉'},
+];
+
+
+const PRELOADED=[
+{id:'p1',n:"Capgemini",t:"ESN",e:"recrutement.france@capgemini.com",v:"Parc du Millénaire, Montpellier",d:"Leader ESN, nombreux stages IT",lat:43.635,lng:3.872},
+{id:'p2',n:"Sopra Steria",t:"ESN",e:"recrutement@soprasteria.com",v:"Montpellier",d:"ESN européenne, Occitanie",lat:43.610,lng:3.877},
+{id:'p3',n:"Inetum",t:"ESN",e:"recrutement@inetum.com",v:"Montpellier",d:"Support et infra IT",ok:1,lat:43.612,lng:3.875},
+{id:'p4',n:"Atos",t:"ESN",e:"candidature@atos.net",v:"Montpellier",d:"IT international",lat:43.613,lng:3.878},
+{id:'p5',n:"CGI France",t:"ESN",e:"recrutement@cgi.com",v:"Montpellier",d:"Grande ESN",ok:1,lat:43.611,lng:3.876},
+{id:'p6',n:"Axians Occitanie",t:"ESN",e:"recrutement-occitanie@axians.com",v:"Montpellier",d:"Réseaux IT, VINCI",lat:43.615,lng:3.871},
+{id:'p7',n:"Devoteam",t:"ESN",e:"recrutement@devoteam.com",v:"Montpellier",d:"Cloud & cybersécurité",ok:1,lat:43.613,lng:3.874},
+{id:'p8',n:"Keyrus",t:"ESN",e:"recrutement@keyrus.com",v:"Montpellier",d:"Data & IT",ok:1,lat:43.611,lng:3.877},
+{id:'p9',n:"SCC France",t:"ESN",e:"recrutement@scc.fr",v:"Montpellier",d:"Intégrateur IT terrain",ok:1,lat:43.612,lng:3.877},
+{id:'p10',n:"IBM Montpellier",t:"ESN",e:"stages.france@fr.ibm.com",v:"Montpellier",d:"Cloud et infrastructure",lat:43.636,lng:3.870},
+{id:'p11',n:"Mairie de Montpellier",t:"Public",e:"recrutement@montpellier.fr",v:"1 pl. Georges Frêche",d:"DSI ville",lat:43.606,lng:3.877},
+{id:'p12',n:"Conseil Départemental 34",t:"Public",e:"recrutement@herault.fr",v:"1000 rue d'Alco",d:"DSI département",lat:43.633,lng:3.858},
+{id:'p13',n:"Région Occitanie",t:"Public",e:"recrutement@laregion.fr",v:"Montpellier",d:"DSI régionale",lat:43.610,lng:3.872},
+{id:'p14',n:"Métropole de Montpellier",t:"Public",e:"dsi@montpellier3m.fr",v:"50 pl. Zeus",d:"IT métropole",lat:43.628,lng:3.857},
+{id:'p15',n:"SNCF Occitanie",t:"Public",e:"stages-occitanie@sncf.fr",v:"Gare St-Roch",d:"IT régional",lat:43.605,lng:3.880},
+{id:'p16',n:"CHU de Montpellier",t:"Santé",e:"dsi@chu-montpellier.fr",v:"191 av. Doyen Giraud",d:"Plus grand CHU du Sud",lat:43.627,lng:3.858},
+{id:'p17',n:"Clinique du Millénaire",t:"Santé",e:"rh@clinique-millenaire.com",v:"Parc du Millénaire",d:"Clinique privée IT interne",lat:43.628,lng:3.873},
+{id:'p18',n:"CPAM de l'Hérault",t:"Santé",e:"recrutement.herault@cpam.fr",v:"Montpellier",d:"Sécurité sociale",lat:43.610,lng:3.870},
+{id:'p19',n:"Université de Montpellier",t:"Education",e:"dsi@umontpellier.fr",v:"163 r. Broussonet",d:"DSI campus",lat:43.632,lng:3.863},
+{id:'p20',n:"IUT Montpellier-Sète",t:"Education",e:"informatique@iut-montpellier.fr",v:"99 av. d'Occitanie",d:"Stages IT fréquents",lat:43.618,lng:3.867},
+{id:'p21',n:"Rectorat Académie",t:"Education",e:"dsin@ac-montpellier.fr",v:"31 r. de l'Université",d:"DSI académique",lat:43.613,lng:3.875},
+{id:'p22',n:"Lycée Jean Jaurès",t:"Lycées",e:"ce.0342002t@ac-montpellier.fr",v:"Montpellier",d:"Grand lycée polyvalent",lat:43.607,lng:3.882},
+{id:'p23',n:"Lycée Georges Frêche",t:"Lycées",e:"ce.0341932j@ac-montpellier.fr",v:"Montpellier",d:"Lycée hôtelier",lat:43.593,lng:3.885},
+{id:'p24',n:"Lycée Clémenceau",t:"Lycées",e:"ce.0341079t@ac-montpellier.fr",v:"Montpellier",d:"Lycée général",lat:43.616,lng:3.875},
+{id:'p25',n:"Crédit Agricole du Languedoc",t:"Banque",e:"recrutement@ca-languedoc.fr",v:"Mas de Saporta, Lattes",d:"Banque régionale",lat:43.568,lng:3.907},
+{id:'p26',n:"Groupama Méditerranée",t:"Banque",e:"recrutement@groupama-mediterranee.fr",v:"Montpellier",d:"Assurance régionale",lat:43.610,lng:3.878},
+{id:'p27',n:"Thales Montpellier",t:"Industrie",e:"stages.montpellier@thalesgroup.com",v:"Montpellier",d:"Défense, IT embarqué",lat:43.610,lng:3.877},
+{id:'p28',n:"Sanofi Montpellier",t:"Industrie",e:"stages.france@sanofi.com",v:"Montpellier",d:"Pharma, DSI site",lat:43.600,lng:3.868},
+{id:'p29',n:"Enedis Hérault",t:"Public",e:"stages.occitanie@enedis.fr",v:"Montpellier",d:"Distributeur énergie",lat:43.610,lng:3.860},
+{id:'p30',n:"La Poste Groupe (34)",t:"Industrie",e:"stages@laposte.fr",v:"Montpellier",d:"Numérique, IT agences",lat:43.608,lng:3.878},
+];
+
+
+// ════════════════════════════════════════════════════════════
+// SECTION 2 — ÉTAT APPLICATION
+// ════════════════════════════════════════════════════════════
+let S={};              // profil étudiant
+let coords=null;       // {lat,lng} position
+let radarResults=[];   // résultats radar (PRELOADED + découverts)
+let crmData={};        // {id: {status, sentDate, notes, contact}}
+let activeCats=new Set(CATS.map(c=>c.id));
+let emailVariant=0;
+let emailCompanyId=null;
+
+function persist(){try{localStorage.setItem('tip_v4',JSON.stringify({S,crmData,coords}));}catch(e){}}
+function restore(){
+  try{
+    const d=JSON.parse(localStorage.getItem('tip_v4')||'{}');
+    if(d.S)S=d.S;
+    if(d.crmData)crmData=d.crmData;
+    if(d.coords)coords=d.coords;
+  }catch(e){}
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 3 — MODULE THÈME & NAVIGATION
+// ════════════════════════════════════════════════════════════
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('tip_theme',t);document.getElementById('tbtn').textContent=t==='dark'?'☀️':'🌙';}
+function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
+
+function goTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  document.getElementById('tab-'+id).classList.add('on');
+  window.scrollTo(0,0);
+  if(id==='suivi')renderKanban();
+  if(id==='email')refreshEmailList();
+  if(id==='radar')renderRadar();
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 4 — MODULE GEO (Autocomplete & Distance)
+// ════════════════════════════════════════════════════════════
+let _addrT=null,_addrItems=[],_addrFocus=-1,_lastAddrForCoords='';
+
+function onAddrInput(v){
+  _addrFocus=-1;clearTimeout(_addrT);
+  if(v.length<3){closeDD();return;}
+  document.getElementById('geo_st').textContent='🔍 Recherche…';
+  _addrT=setTimeout(()=>fetchSugg(v),350);
+}
+async function fetchSugg(q){
+  try{
+    const r=await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=7`);
+    const d=await r.json();
+    _addrItems=d.features||[];renderDD(_addrItems);
+    document.getElementById('geo_st').textContent=_addrItems.length?`${_addrItems.length} suggestion(s) — clique la bonne`:'Aucun résultat';
+  }catch(e){
+    // Fallback Nominatim
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=fr&limit=5`,{headers:{'User-Agent':'StageTIP/4.0'}});
+      const d=await r.json();
+      _addrItems=d.map(x=>({nom:x.display_name.split(', ').slice(0,2).join(', '),context:x.display_name.split(', ').slice(2,4).join(', '),lat:parseFloat(x.lat),lon:parseFloat(x.lon)}));
+      renderDDNom(_addrItems);
+    }catch(e2){document.getElementById('geo_st').textContent='⚠️ Erreur réseau';}
+  }
+}
+function renderDD(items){
+  const dd=document.getElementById('addr_dd');
+  if(!items.length){dd.style.display='none';return;}
+  dd.innerHTML=items.map((it,i)=>{
+    const props=it.properties||{};
+    const label=props.label||it.nom||'';
+    const ctx=props.context||it.context||'';
+    return`<div class="addr-item" data-idx="${i}" onmousedown="selectAddr(${i})">${label}<span class="addr-tag">${ctx}</span></div>`;
+  }).join('');
+  dd.style.display='block';
+}
+function renderDDNom(items){renderDD(items.map(it=>({properties:{label:it.nom,context:it.context},_lat:it.lat,_lon:it.lon})));}
+function selectAddr(i){
+  const it=_addrItems[i];const props=it.properties||{};
+  const geo=it.geometry?.coordinates||[it._lon||it.lon,it._lat||it.lat];
+  coords={lat:parseFloat(geo[1]||it._lat),lng:parseFloat(geo[0]||it._lon)};
+  const inp=document.getElementById('p_addr');
+  inp.value=props.label||it.nom||inp.value;
+  _lastAddrForCoords=inp.value;
+  closeDD();
+  document.getElementById('geo_st').textContent='✅ Position confirmée — '+inp.value.split(',').slice(0,2).join(',');
+}
+function closeDD(){const dd=document.getElementById('addr_dd');if(dd)dd.style.display='none';_addrFocus=-1;}
+function onAddrKey(e){
+  const items=document.querySelectorAll('.addr-item');if(!items.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();_addrFocus=Math.min(_addrFocus+1,items.length-1);hlAddr();}
+  else if(e.key==='ArrowUp'){e.preventDefault();_addrFocus=Math.max(_addrFocus-1,0);hlAddr();}
+  else if(e.key==='Enter'&&_addrFocus>=0){e.preventDefault();selectAddr(_addrFocus);}
+  else if(e.key==='Escape')closeDD();
+}
+function hlAddr(){document.querySelectorAll('.addr-item').forEach((el,i)=>{el.classList.toggle('focused',i===_addrFocus);if(i===_addrFocus)el.scrollIntoView({block:'nearest'});});}
+document.addEventListener('click',e=>{if(!e.target.closest('.addr-wrap'))closeDD();});
+
+async function gpsLocate(){
+  const st=document.getElementById('geo_st');st.textContent='📡 Localisation…';
+  if(!navigator.geolocation){st.textContent='⚠️ GPS non supporté';return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    coords={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    const gpsLabel='GPS ('+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+')';
+    document.getElementById('p_addr').value=gpsLabel;
+    _lastAddrForCoords=gpsLabel;
+    st.textContent='✅ Position GPS détectée';
+  },()=>st.textContent='⚠️ GPS refusé — saisis ton adresse');
+}
+
+function haversine(a,b,c,d){
+  const R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function dist(c){if(!coords||!c.lat)return null;return haversine(coords.lat,coords.lng,c.lat,c.lng);}
+function tier(d){
+  if(d===null)return{lbl:'',cls:'',s:99};
+  if(d<5)return{lbl:'🏠 '+d.toFixed(1)+' km',cls:'t1',s:1};
+  if(d<15)return{lbl:'🚶 '+d.toFixed(1)+' km',cls:'t2',s:2};
+  if(d<30)return{lbl:'🚌 '+d.toFixed(1)+' km',cls:'t3',s:3};
+  return{lbl:'🚗 '+d.toFixed(1)+' km',cls:'t4',s:4};
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 5 — MODULE API (Overpass + Entreprises + Alternance)
+// ════════════════════════════════════════════════════════════
+async function fetchOverpass(lat,lng,rm,amenities,offices){
+  const cond=[
+    ...amenities.flatMap(a=>[`node["amenity"="${a}"](around:${rm},${lat},${lng});`,`way["amenity"="${a}"](around:${rm},${lat},${lng});`]),
+    ...offices.flatMap(o=>[`node["office"="${o}"](around:${rm},${lat},${lng});`,`way["office"="${o}"](around:${rm},${lat},${lng});`]),
+  ].join('');
+  if(!cond)return[];
+  const q=`[out:json][timeout:30];(${cond});out body;>;out skel qt;`;
+  const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
+  const d=await r.json();
+  const am2t={hospital:'Santé',clinic:'Santé',school:'Lycées',college:'Education',university:'Education',townhall:'Public',social_facility:'Asso',coworking_space:'Coworking',mall:'PME',newspaper:'Médias'};
+  return(d.elements||[]).filter(e=>e.tags?.name&&e.tags.name.length>1).map(e=>{
+    const lt=e.lat||e.center?.lat,ln=e.lon||e.center?.lon;
+    const a=e.tags.amenity||e.tags.office||'';
+    const addr=[e.tags['addr:housenumber'],e.tags['addr:street'],e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')||e.tags['addr:city']||'';
+    return{id:'osm_'+e.id,n:e.tags.name,t:am2t[a]||'PME',v:addr,d:a,e:e.tags.email||e.tags['contact:email']||'',web:e.tags.website||e.tags['contact:website']||'',lat:lt||lat,lng:ln||lng,src:'OpenStreetMap'};
+  });
+}
+
+async function fetchEntreprises(lat,lng,rKm,naf){
+  const res=[];
+  await Promise.all(naf.map(async code=>{
+    try{
+      const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&long=${lng}&radius=${rKm}&activite_principale=${code}&per_page=20&etat_administratif=A`);
+      const d=await r.json();
+      (d.results||[]).forEach(e=>{
+        if(!e.nom_complet&&!e.nom_raison_sociale)return;
+        const sie=e.siege||{};const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
+        res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,t:'ESN',v:sie.libelle_commune||'',d:'NAF '+code,e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,siren:e.siren,src:'Annuaire Entreprises'});
+      });
+    }catch(ex){}
+  }));
+  return res;
+}
+
+async function fetchAlternance(lat,lng,rKm){
+  try{
+    const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=M1801,M1802,M1803`);
+    const d=await r.json();
+    return((d.results||d.matchas||[]).map(e=>({id:'alt_'+Math.random(),n:e.company?.name||e.enseigne||'',t:'ESN',v:e.company?.city||'',d:'Entreprise habituée alternance IT',e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true}))).filter(e=>e.n);
+  }catch(ex){return[];}
+}
+
+async function fetchImmersion(lat,lng,rKm){
+  try{
+    const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&appellationCodes=475290`);
+    const d=await r.json();
+    return((d||[]).map(e=>({id:'imm_'+Math.random(),n:e.name||e.companyName||'',t:'ESN',v:e.address?.city||'',d:'Ouvert aux PMSMP',e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true}))).filter(e=>e.n);
+  }catch(ex){return[];}
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 6 — MODULE RADAR
+// ════════════════════════════════════════════════════════════
+let radarRunning=false;
+
+function buildCatGrid(){
+  document.getElementById('cat-grid').innerHTML=CATS.map(c=>
+    `<button class="cat-btn on" id="cat-${c.id}" onclick="toggleCat('${c.id}')">${c.ico} ${c.lbl}</button>`
+  ).join('');
+  // Also populate type filter
+  const sel=document.getElementById('r_type');
+  sel.innerHTML='<option value="">Tous les types</option>'+CATS.map(c=>`<option value="${c.t||c.id}">${c.ico} ${c.lbl}</option>`).join('');
+}
+
+function toggleCat(id){
+  if(activeCats.has(id))activeCats.delete(id);else activeCats.add(id);
+  const btn=document.getElementById('cat-'+id);
+  btn.classList.toggle('on',activeCats.has(id));
+}
+
+async function launchRadar(){
+  if(!coords){alert("Définis d’abord ton adresse dans l’onglet Profil et sélectionne une suggestion.");return;}
+  if(radarRunning)return;
+  radarRunning=true;
+  const rKm=parseInt(document.getElementById('r_km').value);
+  const rm=rKm*1000;
+  const btn=document.getElementById('radar-btn');btn.disabled=true;btn.textContent='⏳ Scan…';
+  const banner=document.getElementById('radar-banner');banner.style.display='flex';
+  const msg=t=>document.getElementById('radar-msg').textContent=t;
+  msg('📍 Scan depuis : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
+
+  // Reset — repart des pré-chargées à chaque scan
+  radarResults=[...PRELOADED];
+
+  const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
+  const allAmenities=[...new Set(activeCatDefs.flatMap(c=>c.osm))];
+  const allNaf=[...new Set(activeCatDefs.flatMap(c=>c.naf))];
+  const osmOffices=['government'];
+
+  const tasks=[];
+  if(allAmenities.length||osmOffices.length){
+    msg('🔍 Scan OpenStreetMap…');
+    tasks.push(fetchOverpass(coords.lat,coords.lng,rm,allAmenities,osmOffices));
+  }
+  if(allNaf.length){
+    msg('🔍 Annuaire Entreprises…');
+    tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
+  }
+  if(activeCats.has('ESN')){
+    msg('🔍 La Bonne Alternance…');
+    tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
+    msg('🔍 Immersion Facilitée (PMSMP)…');
+    tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
+  }
+
+  const all=await Promise.allSettled(tasks);
+  const seen=new Set(radarResults.map(c=>c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8)));
+  all.forEach(r=>{
+    if(r.status!=='fulfilled')return;
+    (r.value||[]).forEach(c=>{
+      const k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
+      if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push({...c,disc:true});}
+    });
+  });
+
+  // Compute distances & filter by radius
+  radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).filter(c=>c._dist===null||c._dist<=rKm).sort((a,b)=>(a._dist??999)-(b._dist??999));
+
+  updateBadges();
+  // Diagnostic clair
+  const _preCount=PRELOADED.filter(c=>{const d=dist(c);return d===null||d<=rKm;}).length;
+  const _newCount=radarResults.length-_preCount;
+  let _msgFinal='✅ '+radarResults.length+' structures dans '+rKm+' km';
+  _msgFinal+=' ('+_preCount+' pré-chargées';
+  if(_newCount>0)_msgFinal+=', +'+_newCount+' trouvées via APIs';
+  _msgFinal+=')';
+  if(_preCount===radarResults.length&&radarResults.length>0){
+    _msgFinal+=' — APIs sans résultats supplémentaires';
+  }
+  msg(_msgFinal);
+  // Si toutes entreprises sont pré-chargées, afficher explication
+  const _diagEl=document.getElementById('api-diag');
+  if(_diagEl){
+    let _diag='<strong>Position scannée :</strong> '+coords.lat.toFixed(5)+', '+coords.lng.toFixed(5)+'<br>';
+    _diag+='<strong>Entreprises pré-chargées dans le rayon :</strong> '+_preCount+'<br>';
+    _diag+='<strong>Découvertes via APIs :</strong> '+_newCount+'<br>';
+    if(_newCount===0){
+      _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
+      _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
+      _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
+      _diag+='Les APIs externes (Overpass, Annuaire Entreprises) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s’affichent.';
+    }
+    _diagEl.innerHTML=_diag;_diagEl.style.display='block';
+  }
+  setTimeout(()=>banner.style.display='none',5000);
+  btn.disabled=false;btn.textContent='🔍 Scanner';
+  radarRunning=false;
+  renderRadar();
+}
+
+function renderRadar(){
+  const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
+  const tf=document.getElementById('r_type')?.value||'';
+  let fl=radarResults.filter(c=>
+    (!tf||c.t===tf)&&(!q||c.n.toLowerCase().includes(q)||c.t.toLowerCase().includes(q)||c.v.toLowerCase().includes(q))
+  );
+  if(!fl.length){document.getElementById('r_list').innerHTML='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';return;}
+
+  // Group by distance tier
+  const tiers=[
+    {max:5,ico:'🏠',lbl:'Très proches',cls:'t1'},
+    {max:15,ico:'🚶',lbl:'Proches (5–15 km)',cls:'t2'},
+    {max:30,ico:'🚌',lbl:'Accessibles (15–30 km)',cls:'t3'},
+    {max:50,ico:'🚗',lbl:'Envisageables (30–50 km)',cls:'t4'},
+    {max:9999,ico:'📍',lbl:'Plus loin',cls:'t4'},
+  ];
+  let h='';
+  tiers.forEach((tier,ti)=>{
+    const prev=tiers[ti-1]?.max??0;
+    const grp=fl.filter(c=>{const d=c._dist??9999;return d<tier.max&&d>=prev;});
+    if(!grp.length)return;
+    h+=`<div class="sdiv-dist ${tier.cls}">${tier.ico} ${tier.lbl} — ${grp.length} structure${grp.length>1?'s':''}</div>`;
+    h+=grp.map(radarCard).join('');
+  });
+  document.getElementById('r_list').innerHTML=h;
+}
+
+function escA(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;');}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function radarCard(c){
+  var d=c._dist, t=tier(d), cid=escA(c.id||'');
+  var inCRM=crmData[c.id];
+  var badges='';
+  if(c.disc)badges+='<span class="disc-badge">d\u00e9couvert</span> ';
+  if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
+  if(c.alt)badges+='<span class="alt-badge">alternance</span>';
+
+  var emailBtn='';
+  if(c.e){
+    emailBtn='<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="cpEmail(this)" title="Copier email">📧</button>';
+  } else if(c.web){
+    var href=c.web.indexOf('http')===0?c.web:'https://'+c.web;
+    emailBtn='<a class="btn btn-ghost btn-sm" href="'+escA(href)+'" target="_blank" rel="noopener">🌐</a>';
+  }
+
+  var crmCol=inCRM?CRM_COLS.find(function(x){return x.id===inCRM.status;}):null;
+  var crmBtn=inCRM
+    ?'<button class="btn btn-ghost btn-sm" onclick="goTab(\'suivi\')" style="color:var(--green)">📋 '+escH(crmCol?crmCol.lbl:'Suivi')+'</button>'
+    :'<button class="btn btn-primary btn-sm" data-cid="'+cid+'" onclick="addToSuivi(this.dataset.cid)">➕ Suivi</button>';
+
+  var emailDisp='';
+  if(c.e)emailDisp='📧 '+escH(c.e);
+  else if(c.web){var domain=c.web.replace('https://','').replace('http://','').split('/')[0];emailDisp='🌐 '+escH(domain);}
+
+  var tierHtml=t.lbl?'<span class="tier '+t.cls+'">'+escH(t.lbl)+'</span>':'';
+
+  return '<div class="cc">'+
+    '<div class="clog">'+escH(ini(c.n))+'</div>'+
+    '<div class="ci">'+
+      '<div class="cn">'+escH(c.n)+' <span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span> '+tierHtml+' '+badges+'</div>'+
+      '<div class="cd">'+escH((c.d||'')+(c.v?' · '+c.v:''))+'</div>'+
+      '<div class="ce">'+emailDisp+'</div>'+
+    '</div>'+
+    '<div class="ca">'+emailBtn+
+      '<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="openLinkedInFor(this.dataset.cid)" title="LinkedIn">🔗</button>'+
+      crmBtn+
+      '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)">✉</button>'+
+    '</div>'+
+  '</div>';
+}
+
+function cpEmail(btn){
+  var id=btn.dataset.cid;
+  var c=radarResults.find(function(x){return x.id===id;});
+  if(!c||!c.e)return;
+  navigator.clipboard.writeText(c.e);
+  var orig=btn.textContent;btn.textContent='✓';
+  setTimeout(function(){btn.textContent=orig;},1500);
+}
+
+
+function renderRadar(){
+  const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
+  const tf=document.getElementById('r_type')?.value||'';
+  let fl=radarResults.filter(c=>
+    (!tf||c.t===tf)&&(!q||c.n.toLowerCase().includes(q)||c.t.toLowerCase().includes(q)||c.v.toLowerCase().includes(q))
+  );
+  if(!fl.length){document.getElementById('r_list').innerHTML='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';return;}
+
+  // Group by distance tier
+  const tiers=[
+    {max:5,ico:'🏠',lbl:'Très proches',cls:'t1'},
+    {max:15,ico:'🚶',lbl:'Proches (5–15 km)',cls:'t2'},
+    {max:30,ico:'🚌',lbl:'Accessibles (15–30 km)',cls:'t3'},
+    {max:50,ico:'🚗',lbl:'Envisageables (30–50 km)',cls:'t4'},
+    {max:9999,ico:'📍',lbl:'Plus loin',cls:'t4'},
+  ];
+  let h='';
+  tiers.forEach((tier,ti)=>{
+    const prev=tiers[ti-1]?.max??0;
+    const grp=fl.filter(c=>{const d=c._dist??9999;return d<tier.max&&d>=prev;});
+    if(!grp.length)return;
+    h+=`<div class="sdiv-dist ${tier.cls}">${tier.ico} ${tier.lbl} — ${grp.length} structure${grp.length>1?'s':''}</div>`;
+    h+=grp.map(radarCard).join('');
+  });
+  document.getElementById('r_list').innerHTML=h;
+}
+
+function radarCard(c){
+  const d=c._dist,t=tier(d);
+  const inCRM=crmData[c.id];
+  const emailBtn=c.e
+    ?`<button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${c.e}');this.textContent='✓';setTimeout(()=>this.textContent='📧',1500)" title="Copier l'email">📧</button>`
+    :(c.web?`<a class="btn btn-ghost btn-sm" href="${c.web.startsWith('http')?c.web:'https://'+c.web}?q=recrutement+contact" target="_blank" title="Chercher email sur le site">🌐</a>`:'');
+  const crmBtn=inCRM
+    ?`<button class="btn btn-ghost btn-sm" onclick="goTab('suivi')" style="color:var(--green)">📋 ${CRM_COLS.find(x=>x.id===inCRM.status)?.lbl||'Suivi'}</button>`
+    :`<button class="btn btn-primary btn-sm" onclick="addToSuivi('${c.id}')">➕ Suivi</button>`;
+  const badges=[
+    c.disc?'<span class="disc-badge">découvert</span>':'',
+    c.pmsmp?'<span class="pmsmp-badge">PMSMP</span>':'',
+    c.alt?'<span class="alt-badge">alternance</span>':'',
+  ].filter(Boolean).join(' ');
+  return`<div class="cc">
+    <div class="clog">${ini(c.n)}</div>
+    <div class="ci">
+      <div class="cn">${c.n} <span class="badge b-${c.t}">${c.t}</span>${t.lbl?` <span class="tier ${t.cls}">${t.lbl}</span>`:''} ${badges}</div>
+      <div class="cd">${c.d||''}${c.v?' · '+c.v:''}</div>
+      <div class="ce">${c.e?'📧 '+c.e:(c.web?'🌐 '+c.web.replace(/^https?:\/\//,'').split('/')[0]:'')}</div>
+    </div>
+    <div class="ca">${emailBtn}
+      <button class="btn btn-ghost btn-sm" onclick="openLinkedInFor('${c.id}')" title="Chercher le contact">🔗</button>
+      ${crmBtn}
+      <button class="btn btn-teal btn-sm" onclick="openEmailFor('${c.id}')">✉</button>
+    </div>
+  </div>`;
+}
+
+function ini(n){return(n||'?').split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 7 — MODULE CRM & KANBAN
+// ════════════════════════════════════════════════════════════
+function addToSuivi(id){
+  if(!id)return;
+  if(!crmData[id])crmData[id]={status:'todo',sentDate:null,notes:'',contact:''};
+  persist();updateBadges();renderRadar();
+}
+
+function setStatus(id,status){
+  if(!crmData[id])crmData[id]={status,sentDate:null,notes:'',contact:''};
+  crmData[id].status=status;
+  if(status==='sent'&&!crmData[id].sentDate)crmData[id].sentDate=new Date().toISOString().split('T')[0];
+  persist();updateBadges();renderKanban();
+}
+
+function daysSince(d){if(!d)return null;return Math.floor((Date.now()-new Date(d))/(1000*60*60*24));}
+
+function renderKanban(){
+  var allTracked=radarResults.filter(function(c){return !!crmData[c.id];});
+  var j7List=allTracked.filter(function(c){
+    var days=daysSince(crmData[c.id]&&crmData[c.id].sentDate);
+    return crmData[c.id]&&crmData[c.id].status==='sent'&&days!==null&&days>=7;
+  });
+  var jb=document.getElementById('j7-banner');
+  if(j7List.length){
+    jb.style.display='flex';
+    document.getElementById('j7-txt').textContent=j7List.length+' candidature'+(j7List.length>1?'s':'')+' sans r\u00e9ponse depuis 7+ jours : '+j7List.map(function(c){return c.n;}).join(', ');
+  } else jb.style.display='none';
+
+  var kbHtml='';
+  CRM_COLS.forEach(function(col){
+    var cards=allTracked.filter(function(c){return crmData[c.id]&&crmData[c.id].status===col.id;});
+    var cardsHtml='';
+    cards.forEach(function(c){
+      var crm=crmData[c.id]||{};
+      var days=daysSince(crm.sentDate);
+      var isJ7=col.id==='sent'&&days!==null&&days>=7;
+      var cid=escA(c.id||'');
+      var tierH=c._dist!==undefined&&c._dist!==null?'<span class="tier '+tier(c._dist).cls+'" style="font-size:.63rem">'+escH(c._dist.toFixed(1)+' km')+'</span>':'';
+
+      var opts='';
+      CRM_COLS.forEach(function(x){
+        opts+='<option value="'+escA(x.id)+'"'+(x.id===col.id?' selected':'')+'>'+escH(x.ico+' '+x.lbl)+'</option>';
+      });
+
+      cardsHtml+='<div class="kb-card'+(isJ7?' j7':'')+'" id="kb-'+cid+'">'+
+        '<div class="kb-cname">'+escH(c.n)+'</div>'+
+        '<div class="kb-meta">'+
+          '<span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span> '+tierH+
+          (isJ7?' <span class="kb-j7">\u23f0 J+'+days+'</span>':'')+
+          (crm.sentDate?' <span style="font-size:.67rem;color:var(--t4)">'+escH(crm.sentDate)+'</span>':'')+
+        '</div>'+
+        '<div class="kb-actions">'+
+          '<select class="btn btn-ghost btn-sm status-sel" data-cid="'+cid+'" onchange="setStatus(this.dataset.cid,this.value)">'+opts+'</select>'+
+          '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)">✉</button>'+
+        '</div>'+
+      '</div>';
+    });
+
+    kbHtml+='<div class="kb-col '+escA(col.cls)+'">'+
+      '<div class="kb-hdr">'+
+        '<span class="kb-title">'+escH(col.ico+' '+col.lbl)+'</span>'+
+        '<span class="kb-count">'+cards.length+'</span>'+
+      '</div>'+
+      (cardsHtml||'<div style="font-size:.75rem;color:var(--t4);text-align:center;padding:1rem">Vide</div>')+
+    '</div>';
+  });
+  document.getElementById('kanban').innerHTML=kbHtml;
+}
+
+
+function updateBadges(){
+  const tracked=Object.keys(crmData).length;
+  const inRadar=radarResults.length;
+  document.getElementById('badge-radar').textContent=inRadar||'';
+  document.getElementById('badge-radar').style.display=inRadar?'':'none';
+  document.getElementById('badge-suivi').textContent=tracked||'';
+  document.getElementById('badge-suivi').style.display=tracked?'':'none';
+  if(document.getElementById('sg').style.display!=='none'){
+    const ns=Object.values(crmData).filter(c=>c.status==='sent').length;
+    document.getElementById('sg').innerHTML=[
+      {n:inRadar,l:'Structures trouvées'},
+      {n:tracked,l:'En suivi CRM'},
+      {n:ns,l:'Emails envoyés'},
+      {n:Object.values(crmData).filter(c=>c.status==='acc').length,l:'✅ Accepté'},
+    ].map(s=>`<div class="sc"><div class="sn">${s.n}</div><div class="sl">${s.l}</div></div>`).join('');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 8 — MODULE EMAIL
+// ════════════════════════════════════════════════════════════
+const TMPLS={
+ESN:[(s,c,ct)=>`Objet : Candidature – Période en entreprise Titre Professionnel TIP – ${s.prenom} ${s.nom} – Du ${s.debut} au ${s.fin}
+
+${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+
+En formation Titre Professionnel Technicien Informatique de Proximité (TIP) au sein de ${s.etab}, je vous adresse ma candidature pour une période en entreprise non rémunérée du ${s.debut} au ${s.fin}, nécessaire à la validation de mon titre professionnel.
+
+${c.n} est une structure dont le savoir-faire en services informatiques correspond directement à ma formation axée sur le terrain.
+
+Mes compétences : support utilisateur N1/N2, helpdesk, déploiement et maintenance de postes Windows 10/11, Active Directory, GLPI, bases réseau TCP/IP/DNS/DHCP, câblage, imprimantes.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+
+Je reste disponible pour un entretien à votre convenance et me tiens prêt(e) à vous transmettre mon dossier de candidature complet.
+
+Cordialement,
+${s.prenom} ${s.nom}
+${s.tel} | ${s.email}
+Titre Professionnel TIP – ${s.etab}`,
+(s,c,ct)=>`Objet : Stage non rémunéré – TP Technicien Informatique de Proximité – ${s.prenom} ${s.nom}
+
+${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+
+Actuellement en formation Titre Professionnel TIP à ${s.etab}, je recherche une période en entreprise non rémunérée du ${s.debut} au ${s.fin} pour finaliser mon titre professionnel.
+
+L'environnement technique de ${c.n}, avec la diversité des missions et des clients, correspond parfaitement à ma volonté de progresser rapidement en conditions réelles.
+
+Compétences : support N1/N2, helpdesk, Windows 10/11, Active Directory, GLPI, TCP/IP, maintenance préventive et curative.${s.comp?'\n\n'+s.comp:''}
+
+${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
+TP TIP – ${s.etab}`],
+Public:[(s,c,ct)=>`Objet : Demande de période en entreprise – TP TIP non rémunéré – ${s.prenom} ${s.nom}
+
+${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+
+En formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je vous adresse ma candidature pour une période en entreprise non rémunérée du ${s.debut} au ${s.fin}.
+
+Le service public est un environnement qui m'attire : la fiabilité des systèmes informatiques y est essentielle à la mission des agents envers les usagers. Je souhaite contribuer aux équipes IT de ${c.n} en y apportant ma disponibilité et mon engagement.
+
+Compétences : support N1/N2, Windows 10/11, Active Directory, GLPI, helpdesk, maintenance matérielle et logicielle, réseau TCP/IP.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+
+Cordialement,
+${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
+TP TIP – ${s.etab}`],
+Santé:[(s,c,ct)=>`Objet : Candidature période en entreprise TP TIP – ${s.prenom} ${s.nom} – Non rémunérée
+
+${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+
+En formation Titre Professionnel TIP à ${s.etab}, je vous contacte pour une période en entreprise non rémunérée du ${s.debut} au ${s.fin}.
+
+Le secteur de la santé m'attire : la disponibilité des systèmes est vitale, la réactivité du support est primordiale, et la discrétion est absolue. Je mesure pleinement ces responsabilités.
+
+Compétences : support utilisateur, maintenance postes Windows 10/11, helpdesk N1/N2, Active Directory, GLPI, réseau TCP/IP, gestion des imprimantes.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+
+Cordialement,
+${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
+TP TIP – ${s.etab}`],
+Lycées:[(s,c,ct)=>`Objet : Demande de période en entreprise – TP TIP – ${s.prenom} ${s.nom}
+
+${ct?'Bonjour '+ct+',':'Madame le Proviseur / Madame le Principal, Monsieur le Proviseur / Monsieur le Principal,'}
+
+En formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je me permets de vous contacter pour solliciter une période en entreprise non rémunérée du ${s.debut} au ${s.fin} dans votre établissement.
+
+Les besoins informatiques d'un établissement scolaire sont précis et exigeants : maintenance du parc élèves et enseignants, équipements pédagogiques, réseau académique. Ce contexte correspond parfaitement à ma formation.
+
+Compétences : Windows 10/11, Active Directory, GLPI, helpdesk, imprimantes, vidéoprojecteurs, réseau de base.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+
+Je suis sérieux(se) et bien conscient(e) du cadre particulier d'un établissement scolaire.
+
+${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
+TP TIP – ${s.etab}`],
+Asso:[(s,c,ct)=>`Objet : Candidature période en entreprise TP TIP (non rémunérée) – ${s.prenom} ${s.nom}
+
+${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+
+En formation Titre Professionnel TIP à ${s.etab}, je vous adresse ma candidature pour une période en entreprise non rémunérée du ${s.debut} au ${s.fin} au sein de ${c.n}.
+
+Les structures associatives m'intéressent : l'informatique y est souvent au cœur des outils permettant de remplir la mission sociale. Je souhaite apporter mes compétences techniques à votre organisation.
+
+Compétences : support utilisateur, maintenance informatique, helpdesk, Windows 10/11, réseau de base.${s.comp?'\n\n'+s.comp:''}
+
+${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
+TP TIP – ${s.etab}`],
+};
+TMPLS.Education=TMPLS.ESN;TMPLS.Industrie=TMPLS.ESN;TMPLS.Logistique=TMPLS.ESN;
+TMPLS.Banque=TMPLS.Public;TMPLS.PME=TMPLS.ESN;TMPLS.Médias=TMPLS.ESN;TMPLS.Coworking=TMPLS.ESN;
+
+function refreshEmailList(){
+  var sel=document.getElementById('e_company');
+  var current=sel.value;
+  var opts='<option value="">— Sélectionner une entreprise du suivi —</option>';
+  if(radarResults.length){
+    radarResults.forEach(function(c){
+      var inSuivi=!!crmData[c.id];
+      var style=inSuivi?'':' style="color:var(--t4)"';
+      var note=inSuivi?'':' — ajouter au suivi d’abord';
+      opts+='<option value="'+escA(c.id)+'"'+style+'>'+escH(c.n)+' ('+escH(c.t)+')'+escH(note)+'</option>';
+    });
+  } else {
+    opts+='<option disabled>Lance d’abord le radar</option>';
+  }
+  sel.innerHTML=opts;
+  if(current)sel.value=current;
+}
+
+function openEmailFor(id){
+  emailCompanyId=id;emailVariant=0;
+  goTab('email');
+  setTimeout(()=>{document.getElementById('e_company').value=id;renderEmail();},50);
+}
+function pickEmailCompany(){emailCompanyId=document.getElementById('e_company').value;emailVariant=0;renderEmail();}
+
+function renderEmail(){
+  const c=radarResults.find(x=>x.id===emailCompanyId);
+  if(!c){document.getElementById('ep').innerHTML='<div style="padding:2rem;text-align:center;color:var(--t4)">Sélectionne une entreprise</div>';return;}
+  const crm=crmData[c.id]||{};
+  const ct=(document.getElementById('e_contact').value||crm.contact||'').trim();
+  const arr=TMPLS[c.t]||TMPLS.ESN;
+  const fn=arr[emailVariant%arr.length];
+  const txt=fn(S,c,ct);
+  window._email=txt;
+  const lines=txt.split('\n');
+  const obj=lines[0].startsWith('Objet :')?lines[0].replace('Objet :','').trim():'';
+  const body=lines.slice(1).join('\n').trim();
+  document.getElementById('ep').innerHTML=`
+    <div class="eh">
+      <div class="ef"><span class="efl">De</span><span>${S.prenom||'?'} ${S.nom||'?'} &lt;${S.email||'?'}&gt;</span></div>
+      <div class="ef"><span class="efl">À</span><span style="color:var(--blue)">${c.e||'email: voir site officiel'}</span></div>
+      ${obj?`<div class="ef"><span class="efl">Objet</span><strong class="efl2">${esc(obj)}</strong></div>`:''}
+    </div>
+    <div class="ebody">${esc(body)}</div>`;
+  document.getElementById('e_var_lbl').textContent=`${emailVariant%arr.length+1}/${arr.length}`;
+  document.getElementById('e_contact_wrap').style.display='flex';
+  const li=document.getElementById('e_li_btn');
+  li.style.display='block';li.dataset.cid=c.id;
+  const nb=document.getElementById('e_notice');
+  if(!c.e){nb.className='notice n-warn';nb.style.display='flex';nb.textContent="⚠️ Pas d'email vérifié — clique 🌐 sur la fiche pour trouver l'email de contact.";}
+  else{nb.className='notice n-info';nb.style.display='flex';nb.textContent=`📧 Email : ${c.e}`;}
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function nextVar(){emailVariant++;renderEmail();}
+function prevVar(){emailVariant--;if(emailVariant<0)emailVariant=0;renderEmail();}
+function copyEmail(){navigator.clipboard.writeText(window._email||'').then(()=>{const b=document.getElementById('copy-btn');b.textContent='✅ Copié !';b.style.background='var(--green)';setTimeout(()=>{b.textContent='📋 Copier';b.style.background='';},2500);});}
+
+function markEmailSent(){
+  if(!emailCompanyId)return;
+  setStatus(emailCompanyId,'sent');
+  const b=document.getElementById('mark-sent-btn');b.textContent='✓ Marqué !';b.disabled=true;
+  setTimeout(()=>{b.textContent='✅ Marquer envoyé';b.disabled=false;},2000);
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 9 — LINKEDIN & LIENS EXTERNES
+// ════════════════════════════════════════════════════════════
+function openLinkedInFor(id){
+  const c=radarResults.find(x=>x.id===id);if(!c)return;
+  const kw=encodeURIComponent(`("DSI" OR "Directeur Informatique" OR "Responsable IT" OR "IT Manager" OR "Responsable Support" OR "RH") "${c.n}"`);
+  window.open(`https://www.linkedin.com/search/results/people/?keywords=${kw}`,'_blank');
+}
+function openLinkedIn(){const id=document.getElementById('e_li_btn').dataset.cid;if(id)openLinkedInFor(id);}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 10 — EXPORT / IMPORT
+// ════════════════════════════════════════════════════════════
+function exportCSV(){
+  const header='Entreprise,Type,Statut,Email,Site,Distance (km),Date envoi,PMSMP,Alternance,Source';
+  const rows=radarResults.filter(c=>crmData[c.id]).map(c=>{
+    const crm=crmData[c.id]||{};
+    return[c.n,c.t,crm.status||'',c.e||'',c.web||'',c._dist?.toFixed(1)||'',crm.sentDate||'',c.pmsmp?'Oui':'',c.alt?'Oui':'',c.src||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  dl([header,...rows].join('\n'),'stage-tip-suivi.csv','text/csv');
+}
+function exportJSON(){
+  dl(JSON.stringify({version:VERSION,date:new Date().toISOString(),profil:S,coords,radarResults,crmData},null,2),'stage-tip-sauvegarde.json','application/json');
+}
+function importJSON(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.profil)S=d.profil;if(d.coords)coords=d.coords;
+      if(d.radarResults)radarResults=d.radarResults;if(d.crmData)crmData=d.crmData;
+      persist();fillProfileForm();updateBadges();
+      alert(`✅ Sauvegarde restaurée — ${Object.keys(crmData).length} entreprises en suivi.`);
+    }catch(err){alert("Fichier JSON invalide.");}
+  };r.readAsText(f);
+}
+function dl(data,name,type){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 11 — PROFIL & INITIALISATION
+// ════════════════════════════════════════════════════════════
+async function saveProfile(){
+  const f=id=>document.getElementById(id)?.value.trim()||'';
+  if(!f('p_prenom')||!f('p_nom')||!f('p_tel')||!f('p_email')||!f('p_etab')){
+    alert("Merci de remplir tous les champs obligatoires (*)");return;
+  }
+  const fmt={day:'numeric',month:'long',year:'numeric'};
+  const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
+  S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab'),
+     debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
+     fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
+     comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase()};
+  persist();
+  showPbar();
+  goTab('radar');
+  // Géocoder l'adresse si elle a changé ou n'est pas encore géocodée
+  const _currentAddr=f('p_addr');
+  if(_currentAddr && _currentAddr!==_lastAddrForCoords && !_currentAddr.startsWith('GPS')){
+    document.getElementById('geo_st').textContent='🔍 Géocodage de l’adresse…';
+    try{
+      const _gr=await fetch('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(_currentAddr)+'&limit=1');
+      const _gd=await _gr.json();
+      if(_gd.features&&_gd.features.length>0){
+        const _gf=_gd.features[0],_gg=_gf.geometry.coordinates;
+        coords={lat:parseFloat(_gg[1]),lng:parseFloat(_gg[0])};
+        _lastAddrForCoords=_currentAddr;
+        document.getElementById('geo_st').textContent='✅ Adresse géocodée : '+(_gf.properties.label||'').split(',').slice(0,2).join(',');
+        showPbar();
+      }
+    }catch(_ge){
+      document.getElementById('geo_st').textContent='⚠️ Géocodage échoué. Sélectionne une suggestion dans la liste ou utilise le GPS.';
+    }
+  }
+  if(coords)launchRadar();else{
+    document.getElementById('radar-banner').style.display='flex';
+    document.getElementById('radar-msg').textContent='💡 Saisis ton adresse et sélectionne une suggestion dans la liste déroulante, ou clique sur 📡 GPS.';
+    setTimeout(()=>document.getElementById('radar-banner').style.display='none',8000);
+  }
+}
+
+function showPbar(){
+  const pb=document.getElementById('pbar'),sg=document.getElementById('sg');
+  if(!S.prenom)return;
+  pb.style.display='flex';sg.style.display='grid';
+  pb.innerHTML=`<div class="avatar">${S.ini||'?'}</div><div><div class="pbar-name">${S.prenom} ${S.nom}</div><div class="pbar-sub">TP TIP · ${S.etab} · Stage du ${S.debut} au ${S.fin}${coords?' · 📍 position activée':''}</div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="goTab('profil')">Modifier</button>`;
+  updateBadges();
+}
+
+function fillProfileForm(){
+  ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
+    const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
+  });
+  showPbar();
+}
+
+// INIT
+(function(){
+  const t=localStorage.getItem('tip_theme')||(window.matchMedia?.('(prefers-color-scheme:dark)').matches?'dark':'light');
+  applyTheme(t);
+  restore();
+  buildCatGrid();
+  if(S.prenom){fillProfileForm();radarResults=[...PRELOADED];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
+})();
+</script>
+</body>
+</html>
