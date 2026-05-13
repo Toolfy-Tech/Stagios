@@ -977,86 +977,156 @@ function updateBadges(){
 // SECTION 8 — MODULE EMAIL
 // ════════════════════════════════════════════════════════════
 const TMPLS={
-ESN:[(s,c,ct)=>`Objet : Candidature – Période en entreprise Titre Professionnel TIP – ${s.prenom} ${s.nom} – Du ${s.debut} au ${s.fin}
 
-${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+// ── IT & ESN ───────────────────────────────────────────────────────────────
+ESN:[
+function(s,c,ct){
+  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  return `Objet : Recherche de période en entreprise – TP TIP – ${s.prenom} ${s.nom} – Du ${s.debut} au ${s.fin}
 
-En formation Titre Professionnel Technicien Informatique de Proximité (TIP) au sein de ${s.etab}, je vous adresse ma candidature pour une période en entreprise non rémunérée du ${s.debut} au ${s.fin}, nécessaire à la validation de mon titre professionnel.
+${sal}
 
-${c.n} est une structure dont le savoir-faire en services informatiques correspond directement à ma formation axée sur le terrain.
+Je me permets de vous contacter dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP) au sein de ${s.etab}. Je suis actuellement à la recherche d'une période en entreprise non rémunérée, du ${s.debut} au ${s.fin}, pour valider mon titre professionnel.
 
-Mes compétences : support utilisateur N1/N2, helpdesk, déploiement et maintenance de postes Windows 10/11, Active Directory, GLPI, bases réseau TCP/IP/DNS/DHCP, câblage, imprimantes.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+${c.n} m'attire particulièrement pour la diversité des environnements techniques auxquels vous intervenez et la polyvalence que ce type de structure exige au quotidien. C'est précisément ce contexte qui me permettrait de progresser rapidement : travailler sur des projets variés, en contact avec des utilisateurs aux profils différents, et m'adapter à des contraintes techniques que l'on ne retrouve pas ailleurs.
 
-Je reste disponible pour un entretien à votre convenance et me tiens prêt(e) à vous transmettre mon dossier de candidature complet.
+Ma formation m'a permis de développer des compétences solides en support utilisateur N1/N2, helpdesk, déploiement et maintenance de postes sous Windows 10/11, administration Active Directory, gestion de parc avec GLPI, et bases réseau (TCP/IP, DNS, DHCP). Je suis à l'aise aussi bien sur les interventions matérielles que logicielles, et j'accorde une grande importance à la relation avec l'utilisateur final — expliquer, rassurer, trouver une solution durable plutôt qu'un contournement rapide.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+
+Je serais sincèrement heureux(se) de vous présenter mon projet professionnel lors d'un entretien, à la date qui vous conviendra le mieux. Je reste bien entendu disponible pour toute information complémentaire.
+
+Dans l'attente de votre retour, veuillez agréer, ${sal.includes('Bonjour')?ct:'Madame, Monsieur'}, l'expression de mes salutations distinguées.
+
+${s.prenom} ${s.nom}
+${s.tel} · ${s.email}
+Titre Professionnel TIP – ${s.etab}`;
+},
+function(s,c,ct){
+  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  return `Objet : Candidature spontanée – Période en entreprise TP TIP – ${s.prenom} ${s.nom}
+
+${sal}
+
+En formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je recherche une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Cette période, non rémunérée, constitue une étape clé dans la validation de mon titre professionnel.
+
+Ce qui m'a conduit vers ${c.n}, c'est votre positionnement en tant qu'acteur du numérique et la réalité du terrain que vous proposez à vos équipes : des missions concrètes, des clients exigeants, et une nécessité permanente de réactivité. C'est dans ce type d'environnement que je souhaite démontrer ce que j'ai appris et, surtout, continuer à apprendre.
+
+Techniquement, je suis opérationnel(le) sur les aspects clés du support de proximité : prise en main à distance, gestion de tickets, installation et configuration de postes, administration Active Directory, câblage et diagnostic réseau. Au-delà des compétences techniques, j'ai également travaillé sur ma capacité à communiquer avec des utilisateurs non techniciens — ce qui, je crois, est souvent ce qui fait la différence dans ce métier.${s.comp?'\n\n'+s.comp:''}
+
+Je serais ravi(e) d'échanger avec vous sur cette opportunité, et de vous montrer concrètement comment je pourrais m'intégrer à votre équipe le temps de cette période.
 
 Cordialement,
 ${s.prenom} ${s.nom}
-${s.tel} | ${s.email}
-Titre Professionnel TIP – ${s.etab}`,
-(s,c,ct)=>`Objet : Stage non rémunéré – TP Technicien Informatique de Proximité – ${s.prenom} ${s.nom}
+${s.tel} · ${s.email}
+TP TIP – ${s.etab}`;
+}],
 
-${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+// ── SECTEUR PUBLIC ────────────────────────────────────────────────────────
+Public:[
+function(s,c,ct){
+  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  return `Objet : Demande de période en entreprise – TP TIP non rémunérée – ${s.prenom} ${s.nom}
 
-Actuellement en formation Titre Professionnel TIP à ${s.etab}, je recherche une période en entreprise non rémunérée du ${s.debut} au ${s.fin} pour finaliser mon titre professionnel.
+${sal}
 
-L'environnement technique de ${c.n}, avec la diversité des missions et des clients, correspond parfaitement à ma volonté de progresser rapidement en conditions réelles.
+Je me permets de vous adresser ma candidature dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Mon cursus prévoit une période obligatoire en entreprise du ${s.debut} au ${s.fin}, non rémunérée, et je souhaiterais vivement l'effectuer au sein de ${c.n}.
 
-Compétences : support N1/N2, helpdesk, Windows 10/11, Active Directory, GLPI, TCP/IP, maintenance préventive et curative.${s.comp?'\n\n'+s.comp:''}
+Le service public représente pour moi bien plus qu'un simple contexte professionnel. Travailler à la fiabilité des outils informatiques utilisés par des agents dont la mission impacte directement des usagers, c'est une responsabilité qui fait sens. Un poste informatique qui ne fonctionne pas, c'est un service rendu au citoyen qui se dégrade — et c'est précisément ce genre d'enjeu concret qui me motive.
 
-${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
-TP TIP – ${s.etab}`],
-Public:[(s,c,ct)=>`Objet : Demande de période en entreprise – TP TIP non rémunéré – ${s.prenom} ${s.nom}
+En termes de compétences, ma formation m'a préparé au support utilisateur N1/N2, à la gestion de parcs informatiques sous Windows 10/11, à l'administration Active Directory, au helpdesk et à la gestion de tickets (GLPI), ainsi qu'aux bases des réseaux (TCP/IP, DNS, DHCP). Je suis quelqu'un de rigoureux(se), ponctuel(le), et habitué(e) à m'adapter aux contraintes d'environnements exigeants.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
 
-${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+Je serais honoré(e) de vous rencontrer pour vous présenter mon parcours et ma motivation. Je reste disponible selon vos disponibilités.
 
-En formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je vous adresse ma candidature pour une période en entreprise non rémunérée du ${s.debut} au ${s.fin}.
+Dans l'attente de votre réponse, veuillez agréer, ${sal.includes('Bonjour')?ct:'Madame, Monsieur'}, l'expression de mes salutations respectueuses.
 
-Le service public est un environnement qui m'attire : la fiabilité des systèmes informatiques y est essentielle à la mission des agents envers les usagers. Je souhaite contribuer aux équipes IT de ${c.n} en y apportant ma disponibilité et mon engagement.
+${s.prenom} ${s.nom}
+${s.tel} · ${s.email}
+Titre Professionnel TIP – ${s.etab}`;
+}],
 
-Compétences : support N1/N2, Windows 10/11, Active Directory, GLPI, helpdesk, maintenance matérielle et logicielle, réseau TCP/IP.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+// ── SANTÉ ─────────────────────────────────────────────────────────────────
+Santé:[
+function(s,c,ct){
+  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  return `Objet : Période en entreprise TP TIP – Technicien informatique – ${s.prenom} ${s.nom} – Non rémunérée
+
+${sal}
+
+Dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je suis à la recherche d'une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Ce stage non rémunéré est indispensable à la validation de mon titre professionnel, et j'aimerais sincèrement l'accomplir au sein de ${c.n}.
+
+Le secteur de la santé est l'un de ceux où l'informatique a le plus de poids réel. Une panne sur un poste de soins, un accès bloqué à un dossier patient, une imprimante hors service dans un service d'urgence — ces situations ont des conséquences bien au-delà du simple inconfort. C'est cette dimension-là, la responsabilité portée par la fiabilité technique, qui m'attire dans votre environnement. J'en mesure l'exigence et je suis prêt(e) à y répondre.
+
+Ma formation m'a préparé au support utilisateur, à la maintenance et au déploiement de postes sous Windows 10/11, à l'Active Directory, au helpdesk N1/N2 et à la gestion de parc (GLPI). Je suis discret(e), rigoureux(se), et respectueux(se) des protocoles propres aux environnements sensibles.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+
+Je serais heureux(se) de vous rencontrer pour vous présenter mon projet professionnel, à la date de votre choix.
 
 Cordialement,
-${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
-TP TIP – ${s.etab}`],
-Santé:[(s,c,ct)=>`Objet : Candidature période en entreprise TP TIP – ${s.prenom} ${s.nom} – Non rémunérée
+${s.prenom} ${s.nom}
+${s.tel} · ${s.email}
+Titre Professionnel TIP – ${s.etab}`;
+}],
 
-${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+// ── LYCÉES & COLLÈGES ─────────────────────────────────────────────────────
+Lycées:[
+function(s,c,ct){
+  const sal=ct?'Bonjour '+ct+',':'Madame la Proviseure, Monsieur le Proviseur,';
+  return `Objet : Demande d'accueil en période entreprise – TP TIP – ${s.prenom} ${s.nom}
 
-En formation Titre Professionnel TIP à ${s.etab}, je vous contacte pour une période en entreprise non rémunérée du ${s.debut} au ${s.fin}.
+${sal}
 
-Le secteur de la santé m'attire : la disponibilité des systèmes est vitale, la réactivité du support est primordiale, et la discrétion est absolue. Je mesure pleinement ces responsabilités.
+Je me permets de vous contacter afin de solliciter un accueil au sein de votre établissement dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Cette période en entreprise, obligatoire et non rémunérée, se déroulerait du ${s.debut} au ${s.fin}.
 
-Compétences : support utilisateur, maintenance postes Windows 10/11, helpdesk N1/N2, Active Directory, GLPI, réseau TCP/IP, gestion des imprimantes.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+Le milieu éducatif m'intéresse pour des raisons très concrètes : un établissement scolaire, c'est un parc informatique hétérogène, des utilisateurs aux profils très variés (enseignants, personnels administratifs, élèves), des contraintes réseau spécifiques liées au réseau académique, et une obligation de disponibilité permanente. C'est exactement le type d'environnement où les compétences d'un technicien de proximité prennent tout leur sens — et où j'aurais l'occasion d'en acquérir de nouvelles.
+
+En termes de compétences, je suis à l'aise avec le déploiement et la maintenance de postes Windows 10/11, la gestion Active Directory, le helpdesk utilisateur, GLPI, ainsi que le dépannage des équipements périphériques courants (imprimantes, vidéoprojecteurs, TNI). Je suis conscient(e) du cadre particulier d'un établissement scolaire et du sérieux qu'il requiert.${s.comp?'\n\n'+s.comp:''}
+
+Je resterais bien entendu discret(e) et respectueux(se) du bon fonctionnement de votre établissement tout au long de cette période.
+
+Dans l'espoir que ma candidature retiendra votre attention, je me tiens à votre disposition pour tout entretien ou information complémentaire.
+
+${s.prenom} ${s.nom}
+${s.tel} · ${s.email}
+Titre Professionnel TIP – ${s.etab}`;
+},
+function(s,c,ct){
+  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  return `Objet : Candidature période entreprise TIP (non rémunérée) – ${s.prenom} ${s.nom} – ${s.debut} au ${s.fin}
+
+${sal}
+
+En formation Titre Professionnel TIP à ${s.etab}, je suis à la recherche d'un établissement scolaire pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Je souhaiterais pouvoir la réaliser au sein de ${c.n}.
+
+Ce qui m'a attiré vers les établissements de l'enseignement, c'est la réalité quotidienne du poste : assister des professeurs qui ont besoin de leur équipement pour faire cours, maintenir des salles informatiques opérationnelles, intervenir rapidement sans perturber la vie scolaire. Ce n'est pas un environnement spectaculaire, mais c'est un environnement où chaque intervention compte vraiment.
+
+Je maîtrise les outils classiques du support de proximité : Windows 10/11, Active Directory, GLPI, dépannage matériel et logiciel, réseau de base, gestion des imprimantes et vidéoprojecteurs. J'ai également le sens du contact et la patience nécessaire pour accompagner des utilisateurs qui ne sont pas familiers avec les aspects techniques.${s.comp?'\n\n'+s.comp:''}
+
+Je serais disponible pour un entretien à votre convenance.
 
 Cordialement,
-${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
-TP TIP – ${s.etab}`],
-Lycées:[(s,c,ct)=>`Objet : Demande de période en entreprise – TP TIP – ${s.prenom} ${s.nom}
+${s.prenom} ${s.nom} – ${s.tel} – ${s.email}
+TP TIP – ${s.etab}`;
+}],
 
-${ct?'Bonjour '+ct+',':'Madame le Proviseur / Madame le Principal, Monsieur le Proviseur / Monsieur le Principal,'}
+// ── ASSOCIATIF ────────────────────────────────────────────────────────────
+Asso:[
+function(s,c,ct){
+  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  return `Objet : Demande de période en entreprise – TP TIP non rémunérée – ${s.prenom} ${s.nom}
 
-En formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je me permets de vous contacter pour solliciter une période en entreprise non rémunérée du ${s.debut} au ${s.fin} dans votre établissement.
+${sal}
 
-Les besoins informatiques d'un établissement scolaire sont précis et exigeants : maintenance du parc élèves et enseignants, équipements pédagogiques, réseau académique. Ce contexte correspond parfaitement à ma formation.
+Je me permets de vous contacter dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Je suis à la recherche d'une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}, non rémunérée.
 
-Compétences : Windows 10/11, Active Directory, GLPI, helpdesk, imprimantes, vidéoprojecteurs, réseau de base.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
+${c.n} m'attire pour une raison simple : dans une structure associative, l'informatique n'est pas une fin en soi, elle est au service d'une mission. Maintenir des outils fiables pour des équipes qui travaillent souvent avec des ressources limitées, c'est une forme d'engagement que je trouve particulièrement motivante. J'ai envie de mettre mes compétences techniques au service de quelque chose qui dépasse le seul objectif commercial.
 
-Je suis sérieux(se) et bien conscient(e) du cadre particulier d'un établissement scolaire.
+Ma formation m'a préparé au support utilisateur, à la maintenance des postes de travail Windows 10/11, à la gestion de réseau de base, au helpdesk et au dépannage courant. Je suis autonome, débrouillard(e), et habitué(e) à travailler dans des environnements où les solutions "à la carte" sont souvent plus adaptées qu'une procédure standard.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
 
-${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
-TP TIP – ${s.etab}`],
-Asso:[(s,c,ct)=>`Objet : Candidature période en entreprise TP TIP (non rémunérée) – ${s.prenom} ${s.nom}
+Je serais heureux(se) d'échanger avec vous pour voir comment je pourrais m'intégrer à votre équipe le temps de cette période.
 
-${ct?'Bonjour '+ct+',':'Madame, Monsieur,'}
+${s.prenom} ${s.nom}
+${s.tel} · ${s.email}
+Titre Professionnel TIP – ${s.etab}`;
+}],
 
-En formation Titre Professionnel TIP à ${s.etab}, je vous adresse ma candidature pour une période en entreprise non rémunérée du ${s.debut} au ${s.fin} au sein de ${c.n}.
-
-Les structures associatives m'intéressent : l'informatique y est souvent au cœur des outils permettant de remplir la mission sociale. Je souhaite apporter mes compétences techniques à votre organisation.
-
-Compétences : support utilisateur, maintenance informatique, helpdesk, Windows 10/11, réseau de base.${s.comp?'\n\n'+s.comp:''}
-
-${s.prenom} ${s.nom} — ${s.tel} — ${s.email}
-TP TIP – ${s.etab}`],
 };
 TMPLS.Education=TMPLS.ESN;TMPLS.Industrie=TMPLS.ESN;TMPLS.Logistique=TMPLS.ESN;
 TMPLS.Banque=TMPLS.Public;TMPLS.PME=TMPLS.ESN;TMPLS.Médias=TMPLS.ESN;TMPLS.Coworking=TMPLS.ESN;
