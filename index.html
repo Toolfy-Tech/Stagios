@@ -238,12 +238,24 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
     <div class="ct">👤 Mon profil</div>
     <div class="cs">Formation pour adultes — Titre Professionnel TIP. Ces informations personnalisent tes emails et activent le radar géographique.</div>
     <div class="fg">
+      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <label class="btn btn-primary btn-sm" style="cursor:pointer">
+            📎 Choisir mon CV (PDF ou TXT)
+            <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
+          </label>
+          <span id="cv_status" style="font-size:.76rem;color:var(--blue)">Aucun CV chargé</span>
+        </div>
+        <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
+        <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV remplit automatiquement : prénom, nom, email, téléphone, adresse, formation et compétences</div>
+      </div>
       <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
       <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
       <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
       <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
-      <div class="fi full"><label>Organisme de formation *</label>
-        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, …" /></div>
+      <div class="fi full"><label>Organisme de formation (optionnel)</label>
+        <input id="p_etab" placeholder="AFPA, GRETA, CFA, nom de l’école…" /></div>
       <div class="fi full"><label>Formation / Métier *</label>
         <select id="p_formation" onchange="onFormationChange()">
           <option value="">— Sélectionner une formation —</option>
@@ -762,7 +774,8 @@ function toggleShowBlacklisted(){
 }
 
 
-// ── SCAN CV ───────────────────────────────────────────────────────────────
+
+// ── SCAN CV — extraction + préremplissage ────────────────────────────────
 async function handleCvUpload(event){
   var file=event.target.files[0];
   if(!file)return;
@@ -771,25 +784,29 @@ async function handleCvUpload(event){
   status.textContent='⏳ Lecture du CV…';
   try{
     var text='';
-    if(file.type==='application/pdf'||file.name.endsWith('.pdf')){
+    if(file.name.endsWith('.pdf')){
       text=await extractPdfText(file);
     }else{
       text=await new Promise(function(res,rej){
-        var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=rej;r.readAsText(file,'utf-8');
+        var r=new FileReader();
+        r.onload=function(e){res(e.target.result);};
+        r.onerror=rej;
+        r.readAsText(file,'utf-8');
       });
     }
-    text=text.trim();
-    if(!text||text.length<50){status.textContent='⚠️ CV vide ou illisible';return;}
-    // Stocker et afficher
+    text=text.replace(/\s+/g,' ').trim();
+    if(!text||text.length<30){
+      status.textContent='⚠️ CV vide ou illisible — essaie en .txt';
+      return;
+    }
     S.cvText=text;
     S.cvFileName=file.name;
-    status.textContent='✅ CV chargé : '+file.name+' ('+text.length+' caractères)';
+    var filled=autofillFromCv(text);
+    status.textContent='✅ CV chargé : '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
     preview.style.display='block';
-    preview.textContent=text.substring(0,400)+(text.length>400?'…':'');
-    // Auto-remplir compétences si vide
-    autofillFromCv(text);
+    preview.textContent=text.substring(0,350)+(text.length>350?'…':'');
   }catch(e){
-    status.textContent='⚠️ Erreur lecture : '+e.message;
+    status.textContent='⚠️ Erreur : '+e.message;
     console.error(e);
   }
 }
@@ -800,445 +817,130 @@ async function extractPdfText(file){
   var ab=await file.arrayBuffer();
   var pdf=await pdfjsLib.getDocument({data:ab}).promise;
   var texts=[];
-  for(var i=1;i<=Math.min(pdf.numPages,5);i++){
+  for(var i=1;i<=Math.min(pdf.numPages,6);i++){
     var page=await pdf.getPage(i);
     var content=await page.getTextContent();
-    texts.push(content.items.map(function(item){return item.str;}).join(' '));
+    texts.push(content.items.map(function(it){return it.str;}).join(' '));
   }
   return texts.join('\n');
 }
 
 function autofillFromCv(text){
-  // Remplir compétences si vide
-  var compField=document.getElementById('p_comp');
-  if(compField&&!compField.value.trim()){
-    // Extraire lignes avec mots-clés compétences
-    var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>5&&l.length<200;});
-    var skillKeywords=['compétences','skills','maîtrise','logiciels','outils','certifications','formations','expérience','languages','langages','techniques'];
-    var skillLines=[];
-    var inSkillSection=false;
-    lines.forEach(function(line){
-      if(skillKeywords.some(function(k){return line.toLowerCase().includes(k);})){inSkillSection=true;}
-      if(inSkillSection&&line.length>5)skillLines.push(line);
-      if(skillLines.length>=8)inSkillSection=false;
-    });
-    if(skillLines.length>0){
-      compField.value=skillLines.slice(0,6).join(', ').substring(0,300);
+  var filled=0;
+  var t=text;
+
+  // ── EMAIL ──────────────────────────────────────────────────────────
+  var emailMatch=t.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+  if(emailMatch){setField('p_email',emailMatch[0]);filled++;}
+
+  // ── TÉLÉPHONE ──────────────────────────────────────────────────────
+  var telMatch=t.match(/(?:\+33|0)\s*[1-9](?:[\s.\-]?\d{2}){4}/);
+  if(telMatch){setField('p_tel',telMatch[0].replace(/[\s.\-]/g,'').replace(/^33/,'+33'));filled++;}
+
+  // ── PRÉNOM / NOM ───────────────────────────────────────────────────
+  // Heuristique : chercher une ligne de 2-3 mots capitalisés au début
+  var lines=t.split(/[\n.;]/).map(function(l){return l.trim();}).filter(function(l){return l.length>2&&l.length<60;});
+  for(var i=0;i<Math.min(15,lines.length);i++){
+    var l=lines[i];
+    var nameMatch=l.match(/^([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]+)\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜa-zàáâäéèêëîïôùúûü\-]+)$/);
+    if(nameMatch&&!nameMatch[0].match(/^(rue|avenue|boulevard|mail|téléphone|mobile|email|adresse)/i)){
+      var fn=nameMatch[1], ln=nameMatch[2];
+      if(!document.getElementById('p_prenom').value){setField('p_prenom',fn);filled++;}
+      if(!document.getElementById('p_nom').value){setField('p_nom',ln);filled++;}
+      break;
     }
   }
+
+  // ── ADRESSE / VILLE ────────────────────────────────────────────────
+  var addrMatch=t.match(/(\d+\s+(?:rue|avenue|boulevard|impasse|allée|chemin|place|route)[^\n,;]{5,50}[\s,]+\d{5}\s+[A-Za-zÀ-ÖØ-öø-ÿ\-\s]{2,30})/i);
+  if(!addrMatch){
+    // Juste code postal + ville
+    addrMatch=t.match(/(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ\-\s]{3,25})/);
+  }
+  if(addrMatch){
+    var addrEl=document.getElementById('p_addr');
+    if(addrEl&&!addrEl.value){
+      addrEl.value=addrMatch[0].trim();
+      filled++;
+      // Tenter le géocodage
+      fetchSugg(addrMatch[0].trim());
+    }
+  }
+
+  // ── FORMATION / DIPLÔME ────────────────────────────────────────────
+  var diplomaPatterns=[
+    {rx:/Titre Professionnel\s+([^\n,;.]{5,60})/i, fid:'TIP', cust:''},
+    {rx:/TP\s+TIP\b/i, fid:'TIP', cust:''},
+    {rx:/BTS\s+([^\n,;.]{3,50})/i, fid:'Custom', cust:'BTS '},
+    {rx:/CAP\s+([^\n,;.]{3,50})/i, fid:'Custom', cust:'CAP '},
+    {rx:/Bac Pro\s+([^\n,;.]{3,50})/i, fid:'Custom', cust:'Bac Pro '},
+    {rx:/comptabilit[eé]/i, fid:'Compta', cust:''},
+    {rx:/m[eé]canique automobile/i, fid:'Mecanique', cust:''},
+    {rx:/secr[eé]tariat|assistanat/i, fid:'Secretariat', cust:''},
+    {rx:/commerce|vente|MCO|NDRC/i, fid:'Commerce', cust:''},
+    {rx:/[eé]lectrotechnique|[eé]lectricit[eé]/i, fid:'Electro', cust:''},
+    {rx:/b[aâ]timent|BTP|maçonnerie/i, fid:'BTP', cust:''},
+    {rx:/restauration|h[oô]tellerie|cuisine/i, fid:'Restauration', cust:''},
+    {rx:/aide.{0,10}personne|social|AEPE|ADVF/i, fid:'Social', cust:''},
+    {rx:/logistique|transport/i, fid:'Logistique', cust:''},
+    {rx:/informatique|num[eé]rique|r[eé]seau|syst[eè]me/i, fid:'TIP', cust:''},
+  ];
+  var formationFound=false;
+  for(var di=0;di<diplomaPatterns.length;di++){
+    var dp=diplomaPatterns[di];
+    var dm=t.match(dp.rx);
+    if(dm){
+      var selF=document.getElementById('p_formation');
+      if(selF&&!selF.value){
+        selF.value=dp.fid;
+        onFormationChange();
+        filled++;
+        if(dp.fid==='Custom'&&dp.cust&&dm[1]){
+          var custF=document.getElementById('p_custom_formation');
+          if(custF)custF.value=dp.cust+dm[1].trim().substring(0,60);
+        }
+        formationFound=true;
+      }
+      break;
+    }
+  }
+
+  // ── ORGANISME ──────────────────────────────────────────────────────
+  var orgPatterns=[/AFPA[^\n,;]{0,40}/i,/GRETA[^\n,;]{0,40}/i,/CFA[^\n,;]{0,40}/i,
+    /Lyc[eé]e[^\n,;]{0,40}/i,/[Ii]nstitut[^\n,;]{0,40}/i,/[Ee]cole[^\n,;]{0,40}/i,
+    /Universit[eé][^\n,;]{0,40}/i,/IUT[^\n,;]{0,40}/i];
+  for(var oi=0;oi<orgPatterns.length;oi++){
+    var om=t.match(orgPatterns[oi]);
+    if(om){var etabEl=document.getElementById('p_etab');if(etabEl&&!etabEl.value){setField('p_etab',om[0].trim().substring(0,60));filled++;break;}}
+  }
+
+  // ── COMPÉTENCES ────────────────────────────────────────────────────
+  var skillsSection='';
+  var skillMatch=t.match(/(?:comp[eé]tences?|skills?|ma[iî]trise)[^\n]{0,20}\n([\s\S]{20,400}?)(?:\n\n|\n[A-Z])/i);
+  if(skillMatch)skillsSection=skillMatch[1].replace(/\s+/g,' ').trim();
+  if(!skillsSection){
+    // Chercher lignes avec des mots-clés techniques
+    var techWords=['Windows','Linux','Office','Excel','Word','Python','JavaScript','SQL','réseau','TCP','GLPI','Active Directory','Sage','Ciel','EBP','diagnostic','mécanique','soudure','béton','cuisine','HACCP'];
+    var techLines=lines.filter(function(l){return techWords.some(function(w){return l.toLowerCase().includes(w.toLowerCase());});});
+    if(techLines.length)skillsSection=techLines.slice(0,5).join(', ');
+  }
+  if(skillsSection){var compEl=document.getElementById('p_comp');if(compEl&&!compEl.value){compEl.value=skillsSection.substring(0,400);filled++;}}
+
+  // ── MOTIVATION (expérience pro) ─────────────────────────────────────
+  var expMatch=t.match(/(?:exp[eé]rience|stage|mission)[^\n]{0,20}\n([\s\S]{20,300}?)(?:\n\n|\n[A-Z])/i);
+  if(expMatch){var motivEl=document.getElementById('p_motiv');if(motivEl&&!motivEl.value){motivEl.value=expMatch[1].replace(/\s+/g,' ').trim().substring(0,300);filled++;}}
+
+  return filled;
+}
+
+function setField(id,val){
+  var el=document.getElementById(id);
+  if(el&&!el.value&&val)el.value=val.trim();
 }
 
 function getCvContext(){
   if(!S.cvText)return'';
-  // Extrait pertinent du CV pour enrichir les emails
-  var excerpt=S.cvText.substring(0,600).replace(/\s+/g,' ').trim();
-  return '\n\n[Contexte CV : '+excerpt+'…]';
-}
-
-function persist(){try{localStorage.setItem('tip_v4',JSON.stringify({S,crmData,coords}));}catch(e){}}
-function restore(){
-  try{
-    const d=JSON.parse(localStorage.getItem('tip_v4')||'{}');
-    if(d.S)S=d.S;
-    if(d.crmData)crmData=d.crmData;
-    if(d.blacklist)_blacklist=new Set(d.blacklist);
-    if(d.coords)coords=d.coords;
-  }catch(e){}
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTION 3 — MODULE THÈME & NAVIGATION
-// ════════════════════════════════════════════════════════════
-function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('tip_theme',t);document.getElementById('tbtn').textContent=t==='dark'?'☀️':'🌙';}
-function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
-
-function goTab(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
-  document.getElementById('page-'+id).classList.add('on');
-  document.getElementById('tab-'+id).classList.add('on');
-  window.scrollTo(0,0);
-  if(id==='suivi')renderKanban();
-  if(id==='email')refreshEmailList();
-  if(id==='radar')renderRadar();
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTION 4 — MODULE GEO (Autocomplete & Distance)
-// ════════════════════════════════════════════════════════════
-let _addrT=null,_addrItems=[],_addrFocus=-1,_lastAddrForCoords='';
-
-function onAddrInput(v){
-  _addrFocus=-1;clearTimeout(_addrT);
-  if(v.length<3){closeDD();return;}
-  document.getElementById('geo_st').textContent='🔍 Recherche…';
-  _addrT=setTimeout(()=>fetchSugg(v),350);
-}
-async function fetchSugg(q){
-  try{
-    const r=await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=7`);
-    const d=await r.json();
-    _addrItems=d.features||[];renderDD(_addrItems);
-    document.getElementById('geo_st').textContent=_addrItems.length?`${_addrItems.length} suggestion(s) — clique la bonne`:'Aucun résultat';
-  }catch(e){
-    // Fallback Nominatim
-    try{
-      const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=fr&limit=5`,{headers:{'User-Agent':'StageTIP/4.0'}});
-      const d=await r.json();
-      _addrItems=d.map(x=>({nom:x.display_name.split(', ').slice(0,2).join(', '),context:x.display_name.split(', ').slice(2,4).join(', '),lat:parseFloat(x.lat),lon:parseFloat(x.lon)}));
-      renderDDNom(_addrItems);
-    }catch(e2){document.getElementById('geo_st').textContent='⚠️ Erreur réseau';}
-  }
-}
-function renderDD(items){
-  const dd=document.getElementById('addr_dd');
-  if(!items.length){dd.style.display='none';return;}
-  dd.innerHTML=items.map((it,i)=>{
-    const props=it.properties||{};
-    const label=props.label||it.nom||'';
-    const ctx=props.context||it.context||'';
-    return`<div class="addr-item" data-idx="${i}" onmousedown="selectAddr(${i})">${label}<span class="addr-tag">${ctx}</span></div>`;
-  }).join('');
-  dd.style.display='block';
-}
-function renderDDNom(items){renderDD(items.map(it=>({properties:{label:it.nom,context:it.context},_lat:it.lat,_lon:it.lon})));}
-function selectAddr(i){
-  const it=_addrItems[i];const props=it.properties||{};
-  const geo=it.geometry?.coordinates||[it._lon||it.lon,it._lat||it.lat];
-  coords={lat:parseFloat(geo[1]||it._lat),lng:parseFloat(geo[0]||it._lon)};
-  const inp=document.getElementById('p_addr');
-  inp.value=props.label||it.nom||inp.value;
-  _lastAddrForCoords=inp.value;
-  closeDD();
-  document.getElementById('geo_st').textContent='✅ Position confirmée — '+inp.value.split(',').slice(0,2).join(',');
-}
-function closeDD(){const dd=document.getElementById('addr_dd');if(dd)dd.style.display='none';_addrFocus=-1;}
-function onAddrKey(e){
-  const items=document.querySelectorAll('.addr-item');if(!items.length)return;
-  if(e.key==='ArrowDown'){e.preventDefault();_addrFocus=Math.min(_addrFocus+1,items.length-1);hlAddr();}
-  else if(e.key==='ArrowUp'){e.preventDefault();_addrFocus=Math.max(_addrFocus-1,0);hlAddr();}
-  else if(e.key==='Enter'&&_addrFocus>=0){e.preventDefault();selectAddr(_addrFocus);}
-  else if(e.key==='Escape')closeDD();
-}
-function hlAddr(){document.querySelectorAll('.addr-item').forEach((el,i)=>{el.classList.toggle('focused',i===_addrFocus);if(i===_addrFocus)el.scrollIntoView({block:'nearest'});});}
-document.addEventListener('click',e=>{if(!e.target.closest('.addr-wrap'))closeDD();});
-
-async function gpsLocate(){
-  const st=document.getElementById('geo_st');st.textContent='📡 Localisation…';
-  if(!navigator.geolocation){st.textContent='⚠️ GPS non supporté';return;}
-  navigator.geolocation.getCurrentPosition(pos=>{
-    coords={lat:pos.coords.latitude,lng:pos.coords.longitude};
-    const gpsLabel='GPS ('+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+')';
-    document.getElementById('p_addr').value=gpsLabel;
-    _lastAddrForCoords=gpsLabel;
-    st.textContent='✅ Position GPS détectée';
-  },()=>st.textContent='⚠️ GPS refusé — saisis ton adresse');
-}
-
-function haversine(a,b,c,d){
-  const R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
-  const x=Math.sin(dLat/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
-  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
-}
-function dist(c){if(!coords||!c.lat)return null;return haversine(coords.lat,coords.lng,c.lat,c.lng);}
-function tier(d){
-  if(d===null)return{lbl:'',cls:'',s:99};
-  if(d<5)return{lbl:'🏠 '+d.toFixed(1)+' km',cls:'t1',s:1};
-  if(d<15)return{lbl:'🚶 '+d.toFixed(1)+' km',cls:'t2',s:2};
-  if(d<30)return{lbl:'🚌 '+d.toFixed(1)+' km',cls:'t3',s:3};
-  return{lbl:'🚗 '+d.toFixed(1)+' km',cls:'t4',s:4};
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTION 5 — MODULE API (Overpass + Entreprises + Alternance)
-// ════════════════════════════════════════════════════════════
-
-async function fetchFranceTravail(lat,lng,rKm,nafCodes,keywords){
-  // France Travail API nécessite OAuth2 (inscription gratuite sur pole-emploi.io)
-  // Ici on retourne juste un deep link pour chaque fiche
-  return{results:[],source:'France Travail',ok:false,
-    msg:'Voir bouton "🏢 Offres" sur chaque fiche pour consulter les offres'};
-}
-
-async function fetchOverpass(lat,lng,rm,amenities,offices,keywords){
-  var cond=[];
-  amenities.forEach(function(a){
-    cond.push('node["amenity"="'+a+'"](around:'+rm+','+lat+','+lng+');');
-    cond.push('way["amenity"="'+a+'"](around:'+rm+','+lat+','+lng+');');
-  });
-  offices.forEach(function(o){
-    cond.push('node["office"="'+o+'"](around:'+rm+','+lat+','+lng+');');
-    cond.push('way["office"="'+o+'"](around:'+rm+','+lat+','+lng+');');
-  });
-  if(keywords&&keywords.length){
-    keywords.slice(0,4).forEach(function(kw){
-      cond.push('node["name"~"'+kw.replace(/"/g,'')+'"](around:'+rm+','+lat+','+lng+');');
-      cond.push('way["name"~"'+kw.replace(/"/g,'')+'"](around:'+rm+','+lat+','+lng+');');
-    });
-  }
-  if(!cond.length)return{results:[],source:'Overpass',ok:false,msg:'Aucune catégorie'};
-  var q='[out:json][timeout:30];('+cond.join('')+');out body center;';
-  try{
-    var r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));
-    var d=await r.json();
-    var am2t={hospital:'Santé',clinic:'Santé',school:'Lycées',college:'Education',
-      university:'Education',townhall:'Public',government:'Public',
-      coworking_space:'Coworking',bank:'Banque',car_repair:'Garage',fuel:'Garage',
-      restaurant:'Restauration',hotel:'Restauration',fast_food:'Restauration',
-      cafe:'Restauration',bar:'Restauration',social_facility:'Social',
-      supermarket:'Commerce',mall:'Commerce',it:'ESN',company:'PME',
-      accountant:'Banque',construction:'BTP',electrical:'Électro',logistics:'Logistique'};
-    var res=(d.elements||[]).filter(function(e){
-      return e.tags&&e.tags.name&&e.tags.name.length>1;
-    }).map(function(e){
-      var lt=e.type==='node'?e.lat:(e.center?e.center.lat:null);
-      var ln=e.type==='node'?e.lon:(e.center?e.center.lon:null);
-      if(!lt||!ln)return null;
-      var a=e.tags.amenity||e.tags.office||'';
-      var addr=[e.tags['addr:housenumber'],e.tags['addr:street'],
-                e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')||'';
-      return{id:'osm_'+e.id,n:e.tags.name,t:am2t[a]||'PME',v:addr,d:a,
-        e:e.tags.email||e.tags['contact:email']||'',
-        web:e.tags.website||e.tags['contact:website']||'',
-        lat:lt,lng:ln,src:'OpenStreetMap'};
-    }).filter(Boolean);
-    return{results:res,source:'Overpass (OpenStreetMap)',ok:true,msg:res.length+' résultats'};
-  }catch(ex){return{results:[],source:'Overpass',ok:false,msg:'Bloqué/Erreur : '+ex.message};}
-}
-
-async function fetchEntreprises(lat,lng,rKm,nafCodes,keywords){
-  var res=[],tasks=[];
-  // Par codes NAF (précis)
-  (nafCodes||[]).slice(0,4).forEach(function(code){
-    tasks.push(
-      fetch('https://recherche-entreprises.api.gouv.fr/search?lat='+lat+'&long='+lng+'&radius='+rKm+'&activite_principale='+code+'&per_page=15&etat_administratif=A')
-        .then(function(r){return r.json();})
-        .then(function(d){
-          (d.results||[]).forEach(function(e){
-            var sie=e.siege||{};
-            var lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
-            res.push({id:'ent_'+(e.siren||Math.random()),
-              n:e.nom_complet||e.nom_raison_sociale||'',t:'PME',
-              v:sie.libelle_commune||'',d:'NAF '+code,e:'',
-              web:e.site_internet||'',
-              lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,
-              src:'Annuaire Entreprises'});
-          });
-        }).catch(function(){})
-    );
-  });
-  // Par mots-clés (pour formations perso ou custom)
-  if(keywords&&keywords.length){
-    keywords.slice(0,3).forEach(function(kw){
-      tasks.push(
-        fetch('https://recherche-entreprises.api.gouv.fr/search?q='+encodeURIComponent(kw)+'&lat='+lat+'&long='+lng+'&radius='+rKm+'&per_page=10&etat_administratif=A')
-          .then(function(r){return r.json();})
-          .then(function(d){
-            (d.results||[]).forEach(function(e){
-              var sie=e.siege||{};
-              var lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
-              res.push({id:'ent_kw_'+(e.siren||Math.random()),
-                n:e.nom_complet||e.nom_raison_sociale||'',t:'PME',
-                v:sie.libelle_commune||'',d:kw,e:'',
-                web:e.site_internet||'',
-                lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,
-                src:'Annuaire Entreprises'});
-            });
-          }).catch(function(){})
-      );
-    });
-  }
-  await Promise.all(tasks);
-  return{results:res,source:'Annuaire Entreprises',ok:res.length>0,msg:res.length+' résultats'};
-}
-
-async function fetchAlternance(lat,lng,rKm){
-  try{
-    const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=M1801,M1802,M1803`);
-    const d=await r.json();
-    return((d.results||d.matchas||[]).map(e=>({id:'alt_'+Math.random(),n:e.company?.name||e.enseigne||'',t:'ESN',v:e.company?.city||'',d:'Entreprise habituée alternance IT',e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true}))).filter(e=>e.n);
-  }catch(ex){return[];}
-}
-
-async function fetchImmersion(lat,lng,rKm){
-  try{
-    const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&appellationCodes=475290`);
-    const d=await r.json();
-    return((d||[]).map(e=>({id:'imm_'+Math.random(),n:e.name||e.companyName||'',t:'ESN',v:e.address?.city||'',d:'Ouvert aux PMSMP',e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true}))).filter(e=>e.n);
-  }catch(ex){return[];}
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTION 6 — MODULE RADAR
-// ════════════════════════════════════════════════════════════
-let radarRunning=false;
-
-function buildCatGrid(){
-  document.getElementById('cat-grid').innerHTML=CATS.map(c=>
-    `<button class="cat-btn on" id="cat-${c.id}" onclick="toggleCat('${c.id}')">${c.ico} ${c.lbl}</button>`
-  ).join('');
-  // Also populate type filter
-  const sel=document.getElementById('r_type');
-  sel.innerHTML='<option value="">Tous les types</option>'+CATS.map(c=>`<option value="${c.t||c.id}">${c.ico} ${c.lbl}</option>`).join('');
-}
-
-function toggleCat(id){
-  if(activeCats.has(id))activeCats.delete(id);else activeCats.add(id);
-  const btn=document.getElementById('cat-'+id);
-  btn.classList.toggle('on',activeCats.has(id));
-}
-
-async function launchRadar(){
-  if(!coords){alert("Définis d’abord ton adresse dans l’onglet Profil et sélectionne une suggestion.");return;}
-  if(radarRunning)return;
-  radarRunning=true;
-  const rKm=parseInt(document.getElementById('r_km').value);
-  const rm=rKm*1000;
-  const btn=document.getElementById('radar-btn');btn.disabled=true;btn.textContent='⏳ Scan…';
-  const banner=document.getElementById('radar-banner');banner.style.display='flex';
-  const msg=t=>document.getElementById('radar-msg').textContent=t;
-  msg('📍 Scan depuis : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
-
-  // Reset — filtrer les pré-chargées selon la formation active
-  var _fc=S.formation?FORMATION_CONFIG[S.formation]:null;
-  var _relevantSectors=_fc&&_fc.sectors&&_fc.sectors.length?new Set(_fc.sectors):null;
-  radarResults=PRELOADED.filter(function(c){
-    if(!_relevantSectors)return true;
-    return _relevantSectors.has(c.t);
-  });
-  // Garder aussi les secteurs custom de l'étudiant
-  if(S.customSectors&&S.customSectors.length){
-    var _customSet=new Set(S.customSectors.map(function(s){return s.toLowerCase();}));
-    var _extra=PRELOADED.filter(function(c){
-      return!radarResults.includes(c)&&_customSet.has((c.t||'').toLowerCase());
-    });
-    radarResults=radarResults.concat(_extra);
-  }
-
-  // Config dynamique selon la formation sélectionnée
-  var _fid=S.formation||'Custom';
-  var _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
-  var _kw=(_fc.keywords||[]).concat(S.customSectors||[]);
-  var _amenities=_fc.osmAmenities||[];
-  var _offices=(_fc.osmOffices||[]).concat(['government']);
-  var _naf=(_fc.nafCodes||[]).concat(S.nafExtra||[]);
-  _naf=[...new Set(_naf)]; // Dédupliquer
-  // Formation non définie : tout chercher
-  if(_fid==='Custom'&&_kw.length===0){
-    _amenities=['hospital','school','college','university','townhall','bank','car_repair','restaurant'];
-    _offices=['government','company'];
-    _naf=['6202B','9511Z','4520A','6920Z','5610A','4941A'];
-  }
-  msg('🔍 Recherche '+_fc.emoji+' '+_fc.label+' dans '+rKm+' km…');
-  const tasks=[
-    fetchOverpass(coords.lat,coords.lng,rm,_amenities,_offices,_kw),
-    fetchEntreprises(coords.lat,coords.lng,rKm,_naf,_kw),
-    fetchAlternance(coords.lat,coords.lng,rKm),
-    // En mode emploi ou alternance → chercher aussi sur France Travail si possible
-    (S.mode==='alternance'||S.mode==='emploi'?fetchFranceTravail(coords.lat,coords.lng,rKm,_naf,_kw):Promise.resolve({results:[],source:'France Travail',ok:false,msg:'Non activé pour ce mode'}))
-  ];
-
-  // Traitement des résultats
-  const results=await Promise.allSettled(tasks);
-  var apiStats=[],newFound=0;
-  var seen=new Set();
-  radarResults=[];
-  results.forEach(function(r){
-    var val=r.status==='fulfilled'?r.value:{results:[],source:'?',ok:false,msg:'Erreur'};
-    apiStats.push(val);
-    if(val.ok&&val.results.length){
-      val.results.forEach(function(c){
-        var k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
-        if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push(Object.assign({},c,{disc:true}));}
-      });
-    }
-  });
-  // Filtrer par rayon + trier par distance
-  radarResults=radarResults.map(function(c){return Object.assign({},c,{_dist:dist(c)});})
-    .filter(function(c){return c._dist===null||c._dist<=rKm;})
-    .sort(function(a,b){return(a._dist||999)-(b._dist||999);});
-  // Diagnostic
-  var _pc=radarResults.length,_nc=newFound;
-  var allBlocked=apiStats.every(function(a){return!a.ok;});
-  var diagEl=document.getElementById('api-diag');
-  if(diagEl){
-    diagEl.innerHTML='<strong>Scan '+_fc.emoji+' '+escH(_fc.label)+'</strong> · Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' · '+_pc+' structures dans '+rKm+' km'+(allBlocked?'<br>⚠️ APIs non accessibles (vérifier la connexion)':'<br>✅ APIs OK');
-    diagEl.style.display='block';
-  }
-  updateBadges();
-  msg('✅ '+_pc+' structures trouvées dans '+rKm+' km');
-  setTimeout(function(){banner.style.display='none';},4000);
-  btn.disabled=false;btn.textContent='🔍 Scanner';
-  radarRunning=false;
-  renderRadar();
-}
-
-function radarCard(c){
-  var d=c._dist, t=tier(d), cid=escA(c.id||'');
-  var inCRM=crmData[c.id];
-
-  // Badges
-  var badges='';
-  if(c.disc)badges+='<span class="disc-badge">découvert</span> ';
-  if(c.alt) badges+='<span class="offer-badge">🟢 Offre alternance</span> ';
-  if(c.hasOffer)badges+='<span class="offer-badge">🟢 Offre active</span> ';
-  if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
-
-  // Bouton email/site
-  var emailBtn='';
-  if(c.e){
-    emailBtn='<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="cpEmail(this)" title="Copier : '+escA(c.e)+'">📧</button>';
-  }else if(c.web){
-    var href=c.web.indexOf('http')===0?c.web:'https://'+c.web;
-    emailBtn='<a class="btn btn-ghost btn-sm" href="'+escA(href)+'" target="_blank" rel="noopener" title="Site web">🌐</a>';
-  }
-
-  // Bouton recherche (moteur configuré)
-  var engine=(S&&S.searchEngine)||'google';
-  var engineLabel=engine.charAt(0).toUpperCase()+engine.slice(1);
-  var searchQuery=c.n+(c.v?' '+c.v.split(',')[0].trim():'')+' recrutement contact email RH stage';
-  var searchBtn='<a class="btn btn-ghost btn-sm" href="'+searchUrl(searchQuery)+'" target="_blank" rel="noopener" title="Rechercher sur '+engineLabel+'">🔍</a>';
-
-  // Bouton France Travail (offres)
-  var ftUrl=getFranceTravailUrl(c.n,c.v?c.v.split(',').pop().trim():'');
-  var ftBtn='<a class="btn btn-ghost btn-sm" href="'+escA(ftUrl)+'" target="_blank" rel="noopener" title="Voir les offres sur France Travail" style="font-size:.75rem">🏢 Offres</a>';
-
-  // Bouton LinkedIn
-  var liBtn='<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="openLinkedInFor(this.dataset.cid)" title="Chercher le contact sur LinkedIn">🔗</button>';
-
-  // Bouton CRM
-  var crmCol=inCRM?CRM_COLS.find(function(x){return x.id===inCRM.status;}):null;
-  var crmBtn=inCRM
-    ?'<button class="btn btn-ghost btn-sm" onclick="goTab(\'suivi\')" style="color:var(--green)">📋 '+escH(crmCol?crmCol.lbl:'Suivi')+'</button>'
-    :'<button class="btn btn-primary btn-sm" data-cid="'+cid+'" onclick="addToSuivi(this.dataset.cid)">➕ Suivi</button>';
-
-  // Bouton blacklist
-  var blBtn='<button class="btn btn-sm" style="background:transparent;border:1.5px solid var(--red-l);color:var(--red);padding:4px 7px" data-cid="'+cid+'" onclick="blacklist(this.dataset.cid)" title="Masquer">🚫</button>';
-
-  // Affichage contact
-  var emailDisp='';
-  if(c.e)emailDisp='📧 '+escH(c.e);
-  else if(c.web){var domain=c.web.replace('https://','').replace('http://','').split('/')[0];emailDisp='🌐 '+escH(domain);}
-
-  var tierHtml=t.lbl?'<span class="tier '+t.cls+'">'+escH(t.lbl)+'</span>':'';
-
-  // Surbrillance si offre connue
-  var hasOffer=c.alt||c.hasOffer;
-  var cardStyle=hasOffer?'border-color:var(--green);box-shadow:0 0 0 2px rgba(21,128,61,.12)':'';
-
-  return '<div class="cc" style="'+cardStyle+'">'+
-    '<div class="clog">'+escH(ini(c.n))+'</div>'+
-    '<div class="ci">'+
-      '<div class="cn">'+escH(c.n)+' <span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span> '+tierHtml+'</div>'+
-      '<div style="margin:2px 0">'+badges+'</div>'+
-      '<div class="cd">'+escH((c.d||'')+(c.v?' · '+c.v:''))+'</div>'+
-      '<div class="ce">'+emailDisp+'</div>'+
-    '</div>'+
-    '<div class="ca">'+emailBtn+searchBtn+ftBtn+liBtn+crmBtn+
-      '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)" title="Générer email">✉</button>'+
-      blBtn+
-    '</div>'+
-  '</div>';
+  return S.cvText.substring(0,500).replace(/\s+/g,' ').trim();
 }
 
 
