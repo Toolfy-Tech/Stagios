@@ -159,6 +159,10 @@ html[data-theme=dark] .b-Asso{color:#fbbf24}
 .sector-tag button{background:none;border:none;color:var(--blue);cursor:pointer;font-size:.85rem;padding:0;line-height:1;opacity:.7}
 .sector-tag button:hover{opacity:1}
 .formation-badge{display:none;padding:10px 14px;border-radius:var(--rl);background:var(--bg2);border:1px solid var(--brd);margin-top:6px}
+.mode-opt{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--brd);background:var(--card);color:var(--t2);font-size:.78rem;cursor:pointer;transition:all .15s}
+.mode-opt:hover{border-color:var(--blue);background:var(--blue-l)}
+.mode-opt:has(input:checked){border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700}
+.mode-opt input{display:none}
 
 .addr-wrap{position:relative;flex:1}
 .addr-dd{position:absolute;top:calc(100% - 1px);left:0;right:0;background:var(--card);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 var(--r) var(--r);z-index:99;max-height:220px;overflow-y:auto;display:none;box-shadow:var(--shadow2)}
@@ -232,6 +236,18 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
     <div class="ct">👤 Mon profil</div>
     <div class="cs">Formation pour adultes — Titre Professionnel TIP. Ces informations personnalisent tes emails et activent le radar géographique.</div>
     <div class="fg">
+      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <label class="btn btn-primary btn-sm" style="cursor:pointer">
+            📎 Choisir mon CV (PDF ou TXT)
+            <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
+          </label>
+          <span id="cv_status" style="font-size:.76rem;color:var(--blue)">Aucun CV chargé</span>
+        </div>
+        <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
+        <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV peut remplir automatiquement le profil, la formation, l'adresse et les compétences.</div>
+      </div>
       <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
       <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
       <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
@@ -267,6 +283,21 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
           <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" style="flex-shrink:0">+ Ajouter</button>
         </div>
         <div style="font-size:.7rem;color:var(--t4);margin-top:3px">Ces secteurs s'ajouteront aux catégories du radar</div>
+      </div>
+      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche *</label>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
+          <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
+          <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
+          <label class="mode-opt" id="mode_opt_alternance"><input type="radio" name="p_mode" value="alternance" onchange="onModeChange()"><span>🔄 Alternance</span></label>
+          <label class="mode-opt" id="mode_opt_emploi"><input type="radio" name="p_mode" value="emploi" onchange="onModeChange()"><span>💼 Emploi CDI/CDD</span></label>
+        </div>
+        <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
+      </div>
+      <div class="fi">
+        <label>Codes NAF supplémentaires (optionnel)</label>
+        <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
+        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
       </div>
       <div class="fi">
         <label>🔍 Moteur de recherche par défaut</label>
@@ -563,6 +594,41 @@ let activeCats=new Set(CATS.map(c=>c.id));
 let emailVariant=0;
 let emailCompanyId=null;
 
+// ── MODE DE RECHERCHE ─────────────────────────────────────────
+var MODE_HINTS={
+  stage_nr:'Recherche de stages de formation non rémunérés — lettres de motivation ciblées',
+  stage_r:'Recherche de stages conventionnés rémunérés — approche plus professionnelle',
+  alternance:'Recherche de contrats d’apprentissage ou de professionnalisation — liens alternance mis en avant',
+  emploi:'Recherche d’emploi CDI/CDD — candidature orientée poste et expérience'
+};
+function getMode(){
+  var el=document.querySelector('input[name="p_mode"]:checked');
+  return el?el.value:'stage_nr';
+}
+function onModeChange(){
+  var m=getMode();
+  var hint=document.getElementById('mode_hint');
+  if(hint)hint.textContent=MODE_HINTS[m]||'';
+  if(S&&S.prenom){S.mode=m;persist();}
+}
+function getModeLabel(){
+  var labels={stage_nr:'stage non rémunéré',stage_r:'stage rémunéré',alternance:'alternance',emploi:'emploi CDI/CDD'};
+  return labels[(S&&S.mode)||getMode()]||'stage';
+}
+function getModeObjet(){
+  var labels={stage_nr:'Recherche de stage non rémunéré',stage_r:'Candidature – Stage rémunéré',alternance:'Candidature – Alternance / apprentissage',emploi:'Candidature spontanée – CDI/CDD'};
+  return labels[(S&&S.mode)||getMode()]||labels.stage_nr;
+}
+function getFranceTravailUrl(companyName,city){
+  var q=encodeURIComponent(companyName||'');
+  var mode=(S&&S.mode)||getMode();
+  var typeContrat=mode==='alternance'?'&typeContrat=E2,FS':mode==='emploi'?'&typeContrat=CDI,CDD':'';
+  return 'https://candidat.francetravail.fr/offres/recherche?motsCles='+q+(city?'&ville='+encodeURIComponent(city):'')+typeContrat;
+}
+function getLaBonneAlternanceUrl(romes){
+  return 'https://labonnealternance.apprentissage.beta.gouv.fr/recherche-apprentissage?display=list&page=1&romes='+(romes||'')+'&radius=30';
+}
+
 
 // ── FORMATION & SECTEURS CUSTOM ─────────────────────────────────────────
 var _customSectors=[];
@@ -706,34 +772,35 @@ function toggleShowBlacklisted(){
 }
 
 
-// ── SCAN CV ───────────────────────────────────────────────────────────────
+// ── SCAN CV — extraction + préremplissage ─────────────────────────
 async function handleCvUpload(event){
   var file=event.target.files[0];
   if(!file)return;
   var status=document.getElementById('cv_status');
   var preview=document.getElementById('cv_preview');
-  status.textContent='⏳ Lecture du CV…';
+  if(status)status.textContent='⏳ Lecture du CV…';
   try{
     var text='';
-    if(file.type==='application/pdf'||file.name.endsWith('.pdf')){
+    if(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf')){
       text=await extractPdfText(file);
     }else{
       text=await new Promise(function(res,rej){
-        var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=rej;r.readAsText(file,'utf-8');
+        var r=new FileReader();
+        r.onload=function(e){res(e.target.result);};
+        r.onerror=rej;
+        r.readAsText(file,'utf-8');
       });
     }
-    text=text.trim();
-    if(!text||text.length<50){status.textContent='⚠️ CV vide ou illisible';return;}
-    // Stocker et afficher
+    text=(text||'').replace(/\s+/g,' ').trim();
+    if(!text||text.length<30){if(status)status.textContent='⚠️ CV vide ou illisible — essaie en .txt';return;}
     S.cvText=text;
     S.cvFileName=file.name;
-    status.textContent='✅ CV chargé : '+file.name+' ('+text.length+' caractères)';
-    preview.style.display='block';
-    preview.textContent=text.substring(0,400)+(text.length>400?'…':'');
-    // Auto-remplir compétences si vide
-    autofillFromCv(text);
+    var filled=autofillFromCv(text);
+    if(status)status.textContent='✅ CV chargé : '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
+    if(preview){preview.style.display='block';preview.textContent=text.substring(0,350)+(text.length>350?'…':'');}
+    persist();
   }catch(e){
-    status.textContent='⚠️ Erreur lecture : '+e.message;
+    if(status)status.textContent='⚠️ Erreur lecture : '+e.message;
     console.error(e);
   }
 }
@@ -744,39 +811,81 @@ async function extractPdfText(file){
   var ab=await file.arrayBuffer();
   var pdf=await pdfjsLib.getDocument({data:ab}).promise;
   var texts=[];
-  for(var i=1;i<=Math.min(pdf.numPages,5);i++){
+  for(var i=1;i<=Math.min(pdf.numPages,6);i++){
     var page=await pdf.getPage(i);
     var content=await page.getTextContent();
-    texts.push(content.items.map(function(item){return item.str;}).join(' '));
+    texts.push(content.items.map(function(it){return it.str;}).join(' '));
   }
   return texts.join('\n');
 }
 
 function autofillFromCv(text){
-  // Remplir compétences si vide
-  var compField=document.getElementById('p_comp');
-  if(compField&&!compField.value.trim()){
-    // Extraire lignes avec mots-clés compétences
-    var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>5&&l.length<200;});
-    var skillKeywords=['compétences','skills','maîtrise','logiciels','outils','certifications','formations','expérience','languages','langages','techniques'];
-    var skillLines=[];
-    var inSkillSection=false;
-    lines.forEach(function(line){
-      if(skillKeywords.some(function(k){return line.toLowerCase().includes(k);})){inSkillSection=true;}
-      if(inSkillSection&&line.length>5)skillLines.push(line);
-      if(skillLines.length>=8)inSkillSection=false;
-    });
-    if(skillLines.length>0){
-      compField.value=skillLines.slice(0,6).join(', ').substring(0,300);
+  var filled=0;
+  var t=text||'';
+  var emailMatch=t.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+  if(emailMatch){filled+=setField('p_email',emailMatch[0]);}
+  var telMatch=t.match(/(?:\+33|0)\s*[1-9](?:[\s.\-]?\d{2}){4}/);
+  if(telMatch){filled+=setField('p_tel',telMatch[0].replace(/[\s.\-]/g,'').replace(/^33/,'+33'));}
+
+  var chunks=t.split(/[\n.;]/).map(function(l){return l.trim();}).filter(function(l){return l.length>2&&l.length<70;});
+  for(var i=0;i<Math.min(15,chunks.length);i++){
+    var l=chunks[i];
+    var nameMatch=l.match(/^([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]+)\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜa-zàáâäéèêëîïôùúûü\-]+)$/);
+    if(nameMatch&&!nameMatch[0].match(/^(rue|avenue|boulevard|mail|téléphone|mobile|email|adresse)/i)){
+      filled+=setField('p_prenom',nameMatch[1]);
+      filled+=setField('p_nom',nameMatch[2]);
+      break;
     }
   }
+
+  var addrMatch=t.match(/(\d+\s+(?:rue|avenue|boulevard|impasse|allée|chemin|place|route)[^\n,;]{5,50}[\s,]+\d{5}\s+[A-Za-zÀ-ÖØ-öø-ÿ\-\s]{2,30})/i)||t.match(/(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ\-\s]{3,25})/);
+  if(addrMatch){filled+=setField('p_addr',addrMatch[0].trim()); if(typeof fetchSugg==='function')fetchSugg(addrMatch[0].trim());}
+
+  var diplomaPatterns=[
+    {rx:/Titre Professionnel\s+([^\n,;.]{5,60})/i,fid:'TIP',cust:''},
+    {rx:/TP\s+TIP\b/i,fid:'TIP',cust:''},
+    {rx:/BTS\s+([^\n,;.]{3,50})/i,fid:'Custom',cust:'BTS '},
+    {rx:/CAP\s+([^\n,;.]{3,50})/i,fid:'Custom',cust:'CAP '},
+    {rx:/Bac Pro\s+([^\n,;.]{3,50})/i,fid:'Custom',cust:'Bac Pro '},
+    {rx:/comptabilit[eé]/i,fid:'Compta',cust:''},
+    {rx:/m[eé]canique automobile/i,fid:'Mecanique',cust:''},
+    {rx:/secr[eé]tariat|assistanat/i,fid:'Secretariat',cust:''},
+    {rx:/commerce|vente|MCO|NDRC/i,fid:'Commerce',cust:''},
+    {rx:/[eé]lectrotechnique|[eé]lectricit[eé]/i,fid:'Electro',cust:''},
+    {rx:/b[aâ]timent|BTP|maçonnerie/i,fid:'BTP',cust:''},
+    {rx:/restauration|h[oô]tellerie|cuisine/i,fid:'Restauration',cust:''},
+    {rx:/aide.{0,10}personne|social|AEPE|ADVF/i,fid:'Social',cust:''},
+    {rx:/logistique|transport/i,fid:'Logistique',cust:''},
+    {rx:/informatique|num[eé]rique|r[eé]seau|syst[eè]me/i,fid:'TIP',cust:''}
+  ];
+  for(var di=0;di<diplomaPatterns.length;di++){
+    var dp=diplomaPatterns[di], dm=t.match(dp.rx), selF=document.getElementById('p_formation');
+    if(dm&&selF&&!selF.value){selF.value=dp.fid;onFormationChange();filled++;if(dp.fid==='Custom'&&dp.cust&&dm[1])filled+=setField('p_custom_formation',dp.cust+dm[1].trim().substring(0,60));break;}
+  }
+
+  var orgPatterns=[/AFPA[^\n,;]{0,40}/i,/GRETA[^\n,;]{0,40}/i,/CFA[^\n,;]{0,40}/i,/Lyc[eé]e[^\n,;]{0,40}/i,/[Ii]nstitut[^\n,;]{0,40}/i,/[Ee]cole[^\n,;]{0,40}/i,/Universit[eé][^\n,;]{0,40}/i,/IUT[^\n,;]{0,40}/i];
+  for(var oi=0;oi<orgPatterns.length;oi++){var om=t.match(orgPatterns[oi]);if(om){filled+=setField('p_etab',om[0].trim().substring(0,60));break;}}
+
+  var lines=t.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>5&&l.length<200;});
+  var techWords=['Windows','Linux','Office','Excel','Word','Python','JavaScript','SQL','réseau','TCP','GLPI','Active Directory','Sage','Ciel','EBP','diagnostic','mécanique','soudure','béton','cuisine','HACCP'];
+  var techLines=lines.filter(function(l){return techWords.some(function(w){return l.toLowerCase().includes(w.toLowerCase());});});
+  if(techLines.length)filled+=setField('p_comp',techLines.slice(0,5).join(', ').substring(0,400));
+
+  var expMatch=t.match(/(?:exp[eé]rience|stage|mission)[^\n]{0,20}\n([\s\S]{20,300}?)(?:\n\n|\n[A-Z])/i);
+  if(expMatch)filled+=setField('p_motiv',expMatch[1].replace(/\s+/g,' ').trim().substring(0,300));
+  return filled;
+}
+
+function setField(id,val){
+  var el=document.getElementById(id);
+  if(el&&!el.value&&val){el.value=String(val).trim();return 1;}
+  return 0;
 }
 
 function getCvContext(){
   if(!S.cvText)return'';
-  // Extrait pertinent du CV pour enrichir les emails
-  var excerpt=S.cvText.substring(0,600).replace(/\s+/g,' ').trim();
-  return '\n\n[Contexte CV : '+excerpt+'…]';
+  var excerpt=S.cvText.substring(0,450).replace(/\s+/g,' ').trim();
+  return excerpt?'\n\nParcours / CV : '+excerpt+(S.cvText.length>450?'…':''):'';
 }
 
 function persist(){try{localStorage.setItem('tip_v4',JSON.stringify({S,crmData,coords}));}catch(e){}}
@@ -1038,7 +1147,8 @@ async function launchRadar(){
 
   const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
   const allAmenities=[...new Set(activeCatDefs.flatMap(c=>c.osm))];
-  const allNaf=[...new Set(activeCatDefs.flatMap(c=>c.naf))];
+  const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+  const allNaf=[...new Set(activeCatDefs.flatMap(c=>c.naf).concat(extraNaf))];
   const osmOffices=['government'];
 
   const tasks=[];
@@ -1482,32 +1592,51 @@ function openEmailFor(id){
 }
 function pickEmailCompany(){emailCompanyId=document.getElementById('e_company').value;emailVariant=0;renderEmail();}
 
+function buildModeEmail(c,ct){
+  var mode=S.mode||getMode();
+  var prenom=S.prenom||'';
+  var nom=S.nom||'';
+  var etab=S.etab||'mon organisme de formation';
+  var diploma=S.formationDiploma||S.formationLabel||'formation professionnelle';
+  var skills=S.comp||(S.formation&&FORMATION_CONFIG[S.formation]?FORMATION_CONFIG[S.formation].skills:'support utilisateur, outils numériques et adaptation terrain');
+  var periode=(mode==='stage_nr'||mode==='stage_r')?' du '+(S.debut||'début juin')+' au '+(S.fin||'fin juillet'):'';
+  var sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  var intro={stage_nr:'En formation '+diploma+' au sein de '+etab+', je suis à la recherche d’une période en entreprise non rémunérée'+periode+'.',stage_r:'En formation '+diploma+' à '+etab+', je recherche un stage rémunéré'+periode+' afin de consolider mes compétences en situation professionnelle.',alternance:'En recherche d’un contrat d’alternance, je souhaite rejoindre une structure où je pourrai progresser tout en contribuant concrètement aux missions de l’équipe.',emploi:'Titulaire ou en cours de validation d’un parcours '+diploma+', je suis en recherche active d’un poste en CDI ou CDD et je souhaite vous présenter ma candidature.'}[mode]||'';
+  var pourquoi=c.n+' m’intéresse pour son environnement et les missions concrètes que votre structure peut proposer. Je souhaite m’intégrer dans une équipe où la rigueur, le service et l’apprentissage terrain ont une vraie place.';
+  var skillSection='Ma formation et mon parcours m’ont permis de développer des compétences en '+skills+'.';
+  if(S.motiv)skillSection+='\n\n'+S.motiv;
+  var cv=getCvContext();
+  if(cv)skillSection+=cv;
+  var closing={stage_nr:'Je reste disponible pour un entretien et pourrai vous transmettre mon CV en pièce jointe.',stage_r:'Je serais heureux(se) de vous rencontrer pour discuter du contenu et des conditions du stage.',alternance:'Je serais ravi(e) d’échanger avec vous sur une possible collaboration en alternance.',emploi:'Mon CV vous permettra de mieux cerner mon parcours. Je reste disponible pour un entretien.'}[mode]||'Je reste disponible pour un entretien.';
+  var objet={stage_nr:'Stage non rémunéré – '+diploma+' – '+prenom+' '+nom,stage_r:'Candidature stage rémunéré – '+diploma+' – '+prenom+' '+nom,alternance:'Candidature alternance – '+diploma+' – '+prenom+' '+nom,emploi:'Candidature spontanée – '+diploma+' – '+prenom+' '+nom}[mode];
+  return 'Objet : '+objet+'\n\n'+sal+'\n\n'+intro+'\n\n'+pourquoi+'\n\n'+skillSection+'\n\n'+closing+'\n\nCordialement,\n'+prenom+' '+nom+'\n'+(S.tel||'')+' · '+(S.email||'');
+}
+
 function renderEmail(){
   const c=radarResults.find(x=>x.id===emailCompanyId);
   if(!c){document.getElementById('ep').innerHTML='<div style="padding:2rem;text-align:center;color:var(--t4)">Sélectionne une entreprise</div>';return;}
   const crm=crmData[c.id]||{};
   const ct=(document.getElementById('e_contact').value||crm.contact||'').trim();
   const arr=TMPLS[c.t]||TMPLS.ESN;
-  const fn=arr[emailVariant%arr.length];
-  const txt=fn(S,c,ct);
+  const useModeEmail=(S.mode&&S.mode!=='stage_nr')||!!S.cvText;
+  const txt=useModeEmail?buildModeEmail(c,ct):arr[emailVariant%arr.length](S,c,ct);
   window._email=txt;
   const lines=txt.split('\n');
   const obj=lines[0].startsWith('Objet :')?lines[0].replace('Objet :','').trim():'';
   const body=lines.slice(1).join('\n').trim();
-  document.getElementById('ep').innerHTML=`
-    <div class="eh">
-      <div class="ef"><span class="efl">De</span><span>${S.prenom||'?'} ${S.nom||'?'} &lt;${S.email||'?'}&gt;</span></div>
-      <div class="ef"><span class="efl">À</span><span style="color:var(--blue)">${c.e||'email: voir site officiel'}</span></div>
-      ${obj?`<div class="ef"><span class="efl">Objet</span><strong class="efl2">${esc(obj)}</strong></div>`:''}
-    </div>
-    <div class="ebody">${esc(body)}</div>`;
-  document.getElementById('e_var_lbl').textContent=`${emailVariant%arr.length+1}/${arr.length}`;
+  document.getElementById('ep').innerHTML='<div class="eh">'+
+    '<div class="ef"><span class="efl">De</span><span>'+(S.prenom||'?')+' '+(S.nom||'?')+' &lt;'+(S.email||'?')+'&gt;</span></div>'+
+    '<div class="ef"><span class="efl">À</span><span style="color:var(--blue)">'+(c.e||'email: voir site officiel')+'</span></div>'+
+    (obj?'<div class="ef"><span class="efl">Objet</span><strong class="efl2">'+esc(obj)+'</strong></div>':'')+
+    '<div class="ef"><span class="efl">Mode</span><span style="font-size:.75rem;color:var(--t3)">'+esc(getModeLabel())+'</span></div>'+
+    '</div><div class="ebody">'+esc(body)+'</div>';
+  document.getElementById('e_var_lbl').textContent=useModeEmail?'1/1':((emailVariant%arr.length+1)+'/'+arr.length);
   document.getElementById('e_contact_wrap').style.display='flex';
   const li=document.getElementById('e_li_btn');
   li.style.display='block';li.dataset.cid=c.id;
   const nb=document.getElementById('e_notice');
-  if(!c.e){nb.className='notice n-warn';nb.style.display='flex';nb.textContent="⚠️ Pas d'email vérifié — clique 🌐 sur la fiche pour trouver l'email de contact.";}
-  else{nb.className='notice n-info';nb.style.display='flex';nb.textContent=`📧 Email : ${c.e}`;}
+  if(!c.e){nb.className='notice n-warn';nb.style.display='flex';nb.innerHTML='⚠️ Pas d’email vérifié — <a href="'+escA(searchUrl(c.n+' recrutement contact email RH'))+'" target="_blank" style="color:var(--amber);font-weight:700">chercher le contact</a>.';}
+  else{nb.className='notice n-info';nb.style.display='flex';nb.textContent='📧 Email : '+c.e;}
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function nextVar(){emailVariant++;renderEmail();}
@@ -1567,20 +1696,26 @@ function dl(data,name,type){
 // ════════════════════════════════════════════════════════════
 async function saveProfile(){
   const f=id=>document.getElementById(id)?.value.trim()||'';
-  if(!f('p_prenom')||!f('p_nom')||!f('p_tel')||!f('p_email')||!f('p_etab')){
-    alert("Merci de remplir tous les champs obligatoires (*)");return;
+  if(!f('p_prenom')||!f('p_nom')||!f('p_tel')||!f('p_email')){
+    alert("Merci de remplir les champs obligatoires (*)");return;
   }
   const fmt={day:'numeric',month:'long',year:'numeric'};
   const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
   const _fid=document.getElementById('p_formation')?.value||'Custom';
   const _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
   const _customFName=f('p_custom_formation');
-  S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab'),
+  const _oldCvText=S.cvText||'';
+  const _oldCvFileName=S.cvFileName||'';
+  S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab')||'mon organisme de formation',
     formation:_fid,
     formationLabel:_fid==='Custom'?(_customFName||'Formation personnalisée'):_fc.label,
     formationDiploma:_fid==='Custom'?(_customFName||''):_fc.diploma,
     formationEmoji:_fc.emoji||'✏️',
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
+    mode:getMode(),
+    extraNafCodes:f('p_naf_codes'),
+    cvText:_oldCvText,
+    cvFileName:_oldCvFileName,
     customSectors:[..._customSectors],
      debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
@@ -1617,7 +1752,8 @@ function showPbar(){
   const pb=document.getElementById('pbar'),sg=document.getElementById('sg');
   if(!S.prenom)return;
   pb.style.display='flex';sg.style.display='grid';
-  pb.innerHTML=`<div class="avatar">${S.ini||'?'}</div><div><div class="pbar-name">${S.prenom} ${S.nom}</div><div class="pbar-sub">TP TIP · ${S.etab} · Stage du ${S.debut} au ${S.fin}${coords?' · 📍 position activée':''}</div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="goTab('profil')">Modifier</button>`;
+  var modeLabel=typeof getModeLabel==='function'?getModeLabel():'stage';
+  pb.innerHTML=`<div class="avatar">${S.ini||'?'}</div><div><div class="pbar-name">${S.prenom} ${S.nom}</div><div class="pbar-sub">${S.formationLabel||'Formation'} · ${modeLabel} · ${S.etab} · ${S.debut} au ${S.fin}${coords?' · 📍 position activée':''}</div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="goTab('profil')">Modifier</button>`;
   updateBadges();
 }
 
@@ -1630,6 +1766,19 @@ function fillProfileForm(){
   if(S.searchEngine){
     const sel=document.getElementById('p_search_engine');
     if(sel)sel.value=S.searchEngine;
+  }
+  if(S.mode){
+    const modeEl=document.querySelector('input[name="p_mode"][value="'+S.mode+'"]');
+    if(modeEl)modeEl.checked=true;
+    onModeChange();
+  }
+  if(S.extraNafCodes){
+    const nafEl=document.getElementById('p_naf_codes');
+    if(nafEl)nafEl.value=S.extraNafCodes;
+  }
+  if(S.cvFileName){
+    const st=document.getElementById('cv_status');
+    if(st)st.textContent='✅ CV chargé : '+S.cvFileName;
   }
   if(S.customSectors&&S.customSectors.length){
     _customSectors=[...S.customSectors];renderSectorTags();
@@ -1644,6 +1793,7 @@ function fillProfileForm(){
 (function(){
   const t=localStorage.getItem('tip_theme')||(window.matchMedia?.('(prefers-color-scheme:dark)').matches?'dark':'light');
   applyTheme(t);
+  onModeChange();
   loadBlacklist();
   restore();
   buildCatGrid();
