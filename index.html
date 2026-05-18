@@ -101,6 +101,7 @@ html[data-theme=dark] .b-Asso{color:#fbbf24}
 .disc-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--purple-l);color:var(--purple);font-weight:700}
 .pmsmp-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--teal-l);color:var(--teal);font-weight:700}
 .alt-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--amber-l);color:var(--amber);font-weight:700}
+.ft-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:#e0f2fe;color:#0369a1;font-weight:700}
 
 /* ── TIER DISTANCE ──────────────────────────────────── */
 .tier{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:.65rem;font-weight:700}
@@ -328,6 +329,19 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
       <div class="fi full"><label>Motivation (optionnel)</label>
         <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
     </div>
+      <details class="fi full" style="border:1.5px solid rgba(29,110,245,.2);border-radius:var(--rl);padding:.875rem">
+        <summary style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;list-style:none">
+          🔑 API France Travail <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3);font-size:.75rem;margin-left:4px">— offres réelles dans le radar (optionnel)</span>
+        </summary>
+        <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:10px">
+          <div style="font-size:.74rem;color:var(--t3);line-height:1.6">Inscris-toi gratuitement sur <strong>francetravail.io/partenaire</strong> → crée une appli → récupère <em>Client ID</em> et <em>Client Secret</em>.<br>Une fois configuré, les offres réelles de stage / alternance / emploi apparaissent dans le radar avec un badge <strong>France Travail</strong>.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <div><label style="font-size:.73rem;color:var(--t3)">Client ID</label><input id="p_ft_id" placeholder="PAR_xxxx…" autocomplete="off" style="margin-top:3px"/></div>
+            <div><label style="font-size:.73rem;color:var(--t3)">Client Secret</label><input id="p_ft_secret" type="password" placeholder="••••••••" autocomplete="new-password" style="margin-top:3px"/></div>
+          </div>
+          <div id="ft_status" style="font-size:.71rem;color:var(--t4)">Non configuré — les offres France Travail n'apparaîtront pas dans le radar</div>
+        </div>
+      </details>
     <div style="display:flex;justify-content:flex-end;margin-top:.75rem">
       <button class="btn btn-primary btn-lg" onclick="saveProfile()">Sauvegarder & Lancer le Radar →</button>
     </div>
@@ -453,63 +467,73 @@ const FORMATION_CONFIG={
     sectors:['ESN','Public','Education','Lycées','Santé','Industrie','Banque'],
     osmAmenities:['hospital','clinic','school','college','university','townhall','bank','coworking_space'],
     nafCodes:['6202B','9511Z','6203Z','6209Z','6202A'],
+    romeCodes:['M1801','M1802','M1803'],
     skills:'support utilisateur N1/N2, helpdesk, déploiement Windows 10/11, Active Directory, GLPI, réseau TCP/IP/DNS/DHCP'},
   Compta:{label:'Comptabilité / Gestion',emoji:'📊',
     diploma:'Titre Professionnel / BTS Comptabilité-Gestion',
     sectors:['PME','Banque','Public','Industrie'],
     osmAmenities:['bank','townhall'],
     nafCodes:['6920Z','6619B','6622Z','6491Z','8411Z'],
+    romeCodes:['M1203','M1206','M1205'],
     skills:'comptabilité générale et analytique, saisie et lettrage, TVA, rapprochement bancaire, Excel, logiciels comptables (Sage, Ciel, EBP)'},
   Mecanique:{label:'Mécanique automobile',emoji:'🔧',
     diploma:'CAP / Bac Pro Mécanique automobile',
     sectors:['Garage','Industrie','Logistique','PME'],
     osmAmenities:['car_repair','fuel'],
     nafCodes:['4520A','4520B','4511Z','4519Z','4531Z','5010Z'],
+    romeCodes:['I1604','I1605','I1601'],
     skills:'diagnostic électronique, entretien courant, pneumatiques, freinage, distribution, vidange, mécanique générale'},
   Secretariat:{label:'Secrétariat / Assistanat',emoji:'📝',
     diploma:'Titre Professionnel / BTS Assistant de Manager',
     sectors:['PME','Public','Santé','Banque','Industrie'],
     osmAmenities:['townhall','hospital','bank'],
     nafCodes:['8211Z','8219Z','8299Z','8411Z'],
+    romeCodes:['M1607','M1604','M1602'],
     skills:'gestion du courrier et des agendas, accueil, frappe et mise en forme de documents, Pack Office, outils collaboratifs'},
   Commerce:{label:'Commerce / Vente',emoji:'🛍️',
     diploma:'Titre Professionnel / BTS MCO / NDRC',
     sectors:['PME','Industrie','Banque'],
     osmAmenities:['supermarket','mall','bank'],
     nafCodes:['4719B','4711A','4711D','4643Z'],
+    romeCodes:['D1402','D1403','D1501'],
     skills:'relation client, techniques de vente, merchandising, gestion de caisse, outils CRM, prospection commerciale'},
   Electro:{label:'Électrotechnique / Électricité',emoji:'⚡',
     diploma:'CAP / Bac Pro Électrotechnique',
     sectors:['Industrie','Public','BTP'],
     osmAmenities:['townhall'],
     nafCodes:['4321A','4321B','2711Z','3320A'],
+    romeCodes:['I1308','I1306','I1304'],
     skills:'câblage et raccordement électrique, lecture de plans, habilitation électrique, dépannage, automatismes'},
   BTP:{label:'Bâtiment / BTP',emoji:'🏗️',
     diploma:'CAP / Bac Pro Bâtiment',
     sectors:['BTP','Industrie','Public'],
     osmAmenities:['townhall'],
     nafCodes:['4120A','4120B','4211Z','4312A','4391A'],
+    romeCodes:['F1101','F1106','F1201'],
     skills:'lecture de plans, maçonnerie, coffrage, enduits, sécurité chantier, outils et matériaux de construction'},
   Restauration:{label:'Restauration / Hôtellerie',emoji:'🍽️',
     diploma:'CAP / Bac Pro Restauration',
     sectors:['Restauration','Hôtellerie','Collectivité'],
     osmAmenities:['restaurant','hotel','fast_food','cafe'],
     nafCodes:['5610A','5610B','5621Z','5590Z'],
+    romeCodes:['G1602','G1603','G1404'],
     skills:'préparation culinaire, dressage, hygiène HACCP, service en salle, gestion des stocks, encaissement'},
   Social:{label:'Aide à la personne / Social',emoji:'❤️',
     diploma:'CAP AEPE / ADVF / BTS SP3S',
     sectors:['Santé','Asso','Public'],
     osmAmenities:['hospital','social_facility','townhall'],
     nafCodes:['8810A','8810B','8899A','8899B'],
+    romeCodes:['K1302','K1207','K1205'],
     skills:'accompagnement de la personne, aide aux gestes de la vie quotidienne, écoute active, premiers secours, travail en équipe pluridisciplinaire'},
   Logistique:{label:'Logistique / Transport',emoji:'📦',
     diploma:'CAP / Bac Pro Logistique',
     sectors:['Logistique','Industrie','Commerce'],
     osmAmenities:['station'],
     nafCodes:['4941A','4941B','5210B','5221Z','5224A'],
+    romeCodes:['N1103','N4101','N1301'],
     skills:'gestion des stocks, préparation de commandes, utilisation WMS/ERP, CACES (ou en cours), expéditions et réceptions'},
   Custom:{label:'Autre formation (personnalisée)',emoji:'✏️',
-    diploma:'',sectors:[],osmAmenities:[],nafCodes:[],skills:''},
+    diploma:'',sectors:[],osmAmenities:[],nafCodes:[],romeCodes:[],skills:''},
 };
 
 const CATS=[
@@ -593,6 +617,7 @@ let crmData={};        // {id: {status, sentDate, notes, contact}}
 let activeCats=new Set(CATS.map(c=>c.id));
 let emailVariant=0;
 let emailCompanyId=null;
+let _ftToken=null;let _ftTokenExpiry=0;
 
 // ── MODE DE RECHERCHE ─────────────────────────────────────────
 var MODE_HINTS={
@@ -994,6 +1019,13 @@ function haversine(a,b,c,d){
   return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
 }
 function dist(c){if(!coords||!c.lat)return null;return haversine(coords.lat,coords.lng,c.lat,c.lng);}
+async function getCommuneFromCoords(lat,lng){
+  try{
+    const _r=await fetch('https://geo.api.gouv.fr/communes?lat='+lat+'&lon='+lng+'&fields=nom,code&format=json');
+    const _d=await _r.json();
+    return(_d&&_d.length)?{nom:_d[0].nom,code:_d[0].code}:null;
+  }catch(e){return null;}
+}
 function tier(d){
   if(d===null)return{lbl:'',cls:'',s:99};
   if(d<5)return{lbl:'🏠 '+d.toFixed(1)+' km',cls:'t1',s:1};
@@ -1084,9 +1116,11 @@ async function fetchEntreprises(lat,lng,rKm,naf){
 
 async function fetchAlternance(lat,lng,rKm){
   try{
-    const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=M1801,M1802,M1803`);
+    const _fcA=FORMATION_CONFIG[S.formation]||{};
+    const _romesA=(_fcA.romeCodes&&_fcA.romeCodes.length?_fcA.romeCodes:['M1801','M1802']).join(',');
+    const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=${_romesA}`);
     const d=await r.json();
-    return((d.results||d.matchas||[]).map(e=>({id:'alt_'+Math.random(),n:e.company?.name||e.enseigne||'',t:'ESN',v:e.company?.city||'',d:'Entreprise habituée alternance IT',e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true}))).filter(e=>e.n);
+    return((d.results||d.matchas||[]).map(e=>({id:'alt_'+Math.random(),n:e.company?.name||e.enseigne||'',t:(_fcA.sectors&&_fcA.sectors[0])||'ESN',v:e.company?.city||'',d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true}))).filter(e=>e.n);
   }catch(ex){return[];}
 }
 
@@ -1096,6 +1130,55 @@ async function fetchImmersion(lat,lng,rKm){
     const d=await r.json();
     return((d||[]).map(e=>({id:'imm_'+Math.random(),n:e.name||e.companyName||'',t:'ESN',v:e.address?.city||'',d:'Ouvert aux PMSMP',e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true}))).filter(e=>e.n);
   }catch(ex){return[];}
+}
+
+async function getFTToken(){
+  if(_ftToken&&Date.now()<_ftTokenExpiry)return _ftToken;
+  if(!S.ftClientId||!S.ftClientSecret)return null;
+  try{
+    const _r=await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:'grant_type=client_credentials&client_id='+encodeURIComponent(S.ftClientId)+'&client_secret='+encodeURIComponent(S.ftClientSecret)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre')
+    });
+    if(!_r.ok){_ftToken=null;return null;}
+    const _d=await _r.json();
+    _ftToken=_d.access_token;
+    _ftTokenExpiry=Date.now()+(_d.expires_in-60)*1000;
+    return _ftToken;
+  }catch(e){_ftToken=null;return null;}
+}
+
+async function fetchFranceTravail(lat,lng,rKm){
+  const token=await getFTToken();
+  if(!token)return[];
+  try{
+    const _fcFT=FORMATION_CONFIG[S.formation]||{};
+    const _typeContrat={stage_nr:'STG',stage_r:'STG',alternance:'ALT',emploi:'CDI,CDD'}[S.mode]||'STG';
+    const _romesFT=(_fcFT.romeCodes||[]).join(',');
+    const _params=new URLSearchParams({latitude:lat,longitude:lng,distance:Math.min(rKm,35),typeContrat:_typeContrat,range:'0-49'});
+    if(_romesFT)_params.set('codeROME',_romesFT);
+    const _r=await fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+_params,{
+      headers:{Authorization:'Bearer '+token,Accept:'application/json'}
+    });
+    if(!_r.ok)return[];
+    const _d=await _r.json();
+    return(_d.resultats||[]).map(o=>{
+      const _lt=parseFloat(o.lieuTravail?.latitude)||lat;
+      const _ln=parseFloat(o.lieuTravail?.longitude)||lng;
+      return{
+        id:'ft_'+o.id,
+        n:o.entreprise?.nom||o.intitule,
+        t:(_fcFT.sectors&&_fcFT.sectors[0])||'ESN',
+        v:o.lieuTravail?.libelle||'',
+        d:o.intitule+(o.salaire?.libelle?' — '+o.salaire.libelle:''),
+        e:'',
+        web:'https://candidat.francetravail.fr/offres/recherche/detail/'+o.id,
+        lat:isNaN(_lt)?lat:_lt,lng:isNaN(_ln)?lng:_ln,
+        src:'France Travail',hasOffer:true,ft:true
+      };
+    }).filter(o=>o.n&&o.n.length>1);
+  }catch(e){return[];}
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1165,6 +1248,10 @@ async function launchRadar(){
     tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
     msg('🔍 Immersion Facilitée (PMSMP)…');
     tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
+  }
+  if(S.ftClientId&&S.ftClientSecret){
+    msg('🔍 France Travail — offres réelles…');
+    tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
   }
 
   const all=await Promise.allSettled(tasks);
@@ -1257,6 +1344,7 @@ function radarCard(c){
   if(c.disc)badges+='<span class="disc-badge">découvert</span> ';
   if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
   if(c.alt)badges+='<span class="alt-badge">alternance</span>';
+  if(c.ft)badges+='<span class="ft-badge">France Travail</span>';
 
   // Bouton email ou site
   var emailBtn='';
@@ -1292,8 +1380,14 @@ function radarCard(c){
 
   var tierHtml=t.lbl?'<span class="tier '+t.cls+'">'+escH(t.lbl)+'</span>':'';
 
+  var _dom=c.web?(c.web.replace(/https?:\/\//,'').split('/')[0].split('?')[0]):'';
+  var _logoInner=_dom
+    ?'<img src="https://logo.clearbit.com/'+escA(_dom)+'" width="36" height="36" style="border-radius:var(--r);object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+     +'<span style="display:none;width:36px;height:36px;border-radius:var(--r);background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>'
+    :'<span style="display:flex;width:36px;height:36px;border-radius:var(--r);background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>';
+
   return '<div class="cc">'+
-    '<div class="clog">'+escH(ini(c.n))+'</div>'+
+    '<div class="clog" style="overflow:hidden">'+_logoInner+'</div>'+
     '<div class="ci">'+
       '<div class="cn">'+escH(c.n)+' <span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span> '+tierHtml+' '+badges+'</div>'+
       '<div class="cd">'+escH((c.d||'')+(c.v?' · '+c.v:''))+'</div>'+
@@ -1669,7 +1763,8 @@ async function saveProfile(){
     customSectors:[..._customSectors],
      debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
-     comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase()};
+     comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
+    ftClientId:f('p_ft_id'),ftClientSecret:f('p_ft_secret')};
   persist();
   showPbar();
   goTab('radar');
@@ -1685,6 +1780,8 @@ async function saveProfile(){
         coords={lat:parseFloat(_gg[1]),lng:parseFloat(_gg[0])};
         _lastAddrForCoords=_currentAddr;
         document.getElementById('geo_st').textContent='✅ Adresse géocodée : '+(_gf.properties.label||'').split(',').slice(0,2).join(',');
+        const _comm=await getCommuneFromCoords(coords.lat,coords.lng);
+        if(_comm){S.communeInsee=_comm.code;S.communeNom=_comm.nom;persist();}
         showPbar();
       }
     }catch(_ge){
@@ -1733,6 +1830,10 @@ function fillProfileForm(){
   if(S.customSectors&&S.customSectors.length){
     _customSectors=[...S.customSectors];renderSectorTags();
   }
+  if(S.ftClientId){const _ftEl=document.getElementById('p_ft_id');if(_ftEl)_ftEl.value=S.ftClientId;}
+  if(S.ftClientSecret){const _ftSEl=document.getElementById('p_ft_secret');if(_ftSEl)_ftSEl.value=S.ftClientSecret;}
+  const _ftSt=document.getElementById('ft_status');
+  if(_ftSt)_ftSt.textContent=S.ftClientId?'✅ Configuré — offres France Travail actives dans le radar':'Non configuré — les offres France Travail n’apparaîtront pas dans le radar';
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
