@@ -154,11 +154,17 @@ html[data-theme=dark] .b-Asso{color:#fbbf24}
 
 /* ── ADDR AUTOCOMPLETE ──────────────────────────────── */
 
+
+.mode-opt{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--brd);background:var(--card);cursor:pointer;font-size:.78rem;font-weight:500;color:var(--t2);transition:all .15s}
+.mode-opt:has(input:checked){border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700}
+.mode-opt input{display:none}
+.offer-badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:.63rem;font-weight:700;background:rgba(21,128,61,.15);color:var(--green);border:1px solid var(--green)}
+
 .sector-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;min-height:24px}
 .sector-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:var(--blue-l);color:var(--blue);font-size:.74rem;font-weight:600}
 .sector-tag button{background:none;border:none;color:var(--blue);cursor:pointer;font-size:.85rem;padding:0;line-height:1;opacity:.7}
 .sector-tag button:hover{opacity:1}
-.formation-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:var(--blue-l);color:var(--blue);font-size:.78rem;font-weight:600;margin-top:4px}
+.formation-badge{display:none;padding:10px 14px;border-radius:var(--rl);background:var(--bg2);border:1px solid var(--brd);margin-top:6px}
 
 .addr-wrap{position:relative;flex:1}
 .addr-dd{position:absolute;top:calc(100% - 1px);left:0;right:0;background:var(--card);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 var(--r) var(--r);z-index:99;max-height:220px;overflow-y:auto;display:none;box-shadow:var(--shadow2)}
@@ -202,6 +208,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
 @media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
 <body>
 
@@ -266,6 +273,33 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
           <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" style="flex-shrink:0">+ Ajouter</button>
         </div>
         <div style="font-size:.7rem;color:var(--t4);margin-top:3px">Ces secteurs s'ajouteront aux catégories du radar</div>
+      </div>
+      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche *</label>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px" id="mode_grid">
+          <label class="mode-opt" id="mode_opt_stage_nr">
+            <input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()">
+            <span>📋 Stage non rémunéré</span>
+          </label>
+          <label class="mode-opt" id="mode_opt_stage_r">
+            <input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()">
+            <span>💰 Stage rémunéré</span>
+          </label>
+          <label class="mode-opt" id="mode_opt_alternance">
+            <input type="radio" name="p_mode" value="alternance" onchange="onModeChange()">
+            <span>🔄 Alternance / Apprentissage</span>
+          </label>
+          <label class="mode-opt" id="mode_opt_emploi">
+            <input type="radio" name="p_mode" value="emploi" onchange="onModeChange()">
+            <span>💼 Recherche d'emploi (CDI/CDD)</span>
+          </label>
+        </div>
+        <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
+      </div>
+      <div class="fi">
+        <label>Codes NAF supplémentaires (optionnel)</label>
+        <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche SIRENE">
+        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules — ils s'ajoutent à ceux de ta formation</div>
       </div>
       <div class="fi">
         <label>🔍 Moteur de recherche par défaut</label>
@@ -407,6 +441,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
 </div><!-- /main -->
 
 <script>
+
 // ════════════════════════════════════════════════════════════
 // SECTION 1 — CONFIG & DATA
 // ════════════════════════════════════════════════════════════
@@ -416,68 +451,78 @@ const RADIUS_DEFAULT=30;
 
 
 const FORMATION_CONFIG={
-  TIP:{label:'Technicien Informatique de Proximité (TIP)',emoji:'💻',
-    diploma:'Titre Professionnel TIP',
-    sectors:['ESN','Public','Education','Lycées','Santé','Industrie','Banque'],
+  TIP:{label:'Technicien Informatique de Proximité',emoji:'💻',diploma:'Titre Professionnel TIP',
+    sectors:['ESN','Public','Education','Lycées','Santé','Banque','Industrie','Coworking'],
     osmAmenities:['hospital','clinic','school','college','university','townhall','bank','coworking_space'],
-    nafCodes:['6202B','9511Z','6203Z','6209Z','6202A'],
-    skills:'support utilisateur N1/N2, helpdesk, déploiement Windows 10/11, Active Directory, GLPI, réseau TCP/IP/DNS/DHCP'},
-  Compta:{label:'Comptabilité / Gestion',emoji:'📊',
-    diploma:'Titre Professionnel / BTS Comptabilité-Gestion',
-    sectors:['PME','Banque','Public','Industrie'],
+    osmOffices:['government','it','company'],
+    nafCodes:['6202A','6202B','6203Z','6209Z','9511Z','6190Z'],
+    skills:'support N1/N2, helpdesk, Windows 10/11, Active Directory, GLPI, TCP/IP, câblage réseau',
+    keywords:['informatique','numérique','helpdesk','DSI','support','réseau']},
+  Compta:{label:'Comptabilité / Gestion',emoji:'📊',diploma:'Titre Professionnel / BTS CG',
+    sectors:['Banque','PME','Public','Industrie'],
     osmAmenities:['bank','townhall'],
-    nafCodes:['6920Z','6619B','6622Z','6491Z','8411Z'],
-    skills:'comptabilité générale et analytique, saisie et lettrage, TVA, rapprochement bancaire, Excel, logiciels comptables (Sage, Ciel, EBP)'},
-  Mecanique:{label:'Mécanique automobile',emoji:'🔧',
-    diploma:'CAP / Bac Pro Mécanique automobile',
+    osmOffices:['accountant','financial_advisor','government'],
+    nafCodes:['6920Z','6419Z','6622Z','6619B','8411Z'],
+    skills:'comptabilité générale, saisie, TVA, rapprochement bancaire, Sage / Ciel / EBP',
+    keywords:['comptabilité','cabinet comptable','expertise comptable','gestion','finance','paie']},
+  Mecanique:{label:'Mécanique automobile',emoji:'🔧',diploma:'CAP / Bac Pro Mécanique automobile',
     sectors:['Garage','Industrie','Transport'],
     osmAmenities:['car_repair','fuel'],
-    nafCodes:['4520A','4520B','4511Z','4519Z'],
-    skills:'diagnostic électronique, entretien courant, pneumatiques, freinage, distribution, vidange, mécanique générale'},
-  Secretariat:{label:'Secrétariat / Assistanat',emoji:'📝',
-    diploma:'Titre Professionnel / BTS Assistant de Manager',
-    sectors:['PME','Public','Santé','Banque','Industrie'],
-    osmAmenities:['townhall','hospital','bank'],
-    nafCodes:['8211Z','8219Z','8299Z','8411Z'],
-    skills:'gestion du courrier et des agendas, accueil, frappe et mise en forme de documents, Pack Office, outils collaboratifs'},
-  Commerce:{label:'Commerce / Vente',emoji:'🛍️',
-    diploma:'Titre Professionnel / BTS MCO / NDRC',
+    osmOffices:[],
+    nafCodes:['4520A','4520B','4511Z','4519Z','4531Z'],
+    skills:'diagnostic électronique, entretien courant, pneumatiques, freinage, distribution',
+    keywords:['garage','carrosserie','mécanique automobile','concessionnaire','réparation véhicule']},
+  Secretariat:{label:'Secrétariat / Assistanat',emoji:'📝',diploma:'Titre Professionnel / BTS SAM',
+    sectors:['PME','Public','Santé','Banque','Education'],
+    osmAmenities:['townhall','hospital','bank','college'],
+    osmOffices:['government','lawyer','notary'],
+    nafCodes:['8211Z','8219Z','8299Z','8411Z','6910Z'],
+    skills:'gestion agenda et courrier, accueil, Pack Office, prise de notes, classement',
+    keywords:['secrétariat','assistanat','notaire','avocat','cabinet','administration']},
+  Commerce:{label:'Commerce / Vente',emoji:'🛍️',diploma:'Titre Professionnel / BTS MCO',
     sectors:['PME','Industrie','Banque'],
     osmAmenities:['supermarket','mall','bank'],
-    nafCodes:['4719B','4711A','4711D','4643Z'],
-    skills:'relation client, techniques de vente, merchandising, gestion de caisse, outils CRM, prospection commerciale'},
-  Electro:{label:'Électrotechnique / Électricité',emoji:'⚡',
-    diploma:'CAP / Bac Pro Électrotechnique',
+    osmOffices:['estate_agent'],
+    nafCodes:['4719B','4711A','4711D','4643Z','4742Z'],
+    skills:'relation client, techniques de vente, merchandising, CRM, prospection',
+    keywords:['commerce','vente','boutique','commercial','distribution','enseigne']},
+  Electro:{label:'Électrotechnique / Électricité',emoji:'⚡',diploma:'CAP / Bac Pro Électrotechnique',
     sectors:['Industrie','Public','BTP'],
     osmAmenities:['townhall'],
-    nafCodes:['4321A','4321B','2711Z','3320A'],
-    skills:'câblage et raccordement électrique, lecture de plans, habilitation électrique, dépannage, automatismes'},
-  BTP:{label:'Bâtiment / BTP',emoji:'🏗️',
-    diploma:'CAP / Bac Pro Bâtiment',
+    osmOffices:['electrical','company'],
+    nafCodes:['4321A','4321B','2711Z','3320A','3511Z'],
+    skills:'câblage, lecture de plans, habilitation électrique, dépannage, automatismes',
+    keywords:['électricité','électrotechnique','installation électrique','tableau électrique']},
+  BTP:{label:'Bâtiment / BTP',emoji:'🏗️',diploma:'CAP / Bac Pro Bâtiment',
     sectors:['BTP','Industrie','Public'],
     osmAmenities:['townhall'],
+    osmOffices:['construction','company'],
     nafCodes:['4120A','4120B','4211Z','4312A','4391A'],
-    skills:'lecture de plans, maçonnerie, coffrage, enduits, sécurité chantier, outils et matériaux de construction'},
-  Restauration:{label:'Restauration / Hôtellerie',emoji:'🍽️',
-    diploma:'CAP / Bac Pro Restauration',
-    sectors:['Restauration','Hôtellerie','Collectivité'],
-    osmAmenities:['restaurant','hotel','fast_food','cafe'],
-    nafCodes:['5610A','5610B','5621Z','5590Z'],
-    skills:'préparation culinaire, dressage, hygiène HACCP, service en salle, gestion des stocks, encaissement'},
-  Social:{label:'Aide à la personne / Social',emoji:'❤️',
-    diploma:'CAP AEPE / ADVF / BTS SP3S',
+    skills:'lecture de plans, maçonnerie, coffrage, sécurité chantier',
+    keywords:['bâtiment','construction','BTP','maçonnerie','rénovation','artisan']},
+  Restauration:{label:'Restauration / Hôtellerie',emoji:'🍽️',diploma:'CAP / Bac Pro Restauration',
+    sectors:['Restauration','PME'],
+    osmAmenities:['restaurant','hotel','fast_food','cafe','bar'],
+    osmOffices:[],
+    nafCodes:['5610A','5610B','5621Z','5590Z','5530Z'],
+    skills:'préparation culinaire, HACCP, dressage, service en salle, stocks',
+    keywords:['restaurant','hôtel','restauration','traiteur','brasserie','cuisine']},
+  Social:{label:'Aide à la personne / Social',emoji:'❤️',diploma:'CAP AEPE / ADVF / Titre Pro',
     sectors:['Santé','Asso','Public'],
-    osmAmenities:['hospital','social_facility','townhall'],
-    nafCodes:['8810A','8810B','8899A','8899B'],
-    skills:'accompagnement de la personne, aide aux gestes de la vie quotidienne, écoute active, premiers secours, travail en équipe pluridisciplinaire'},
-  Logistique:{label:'Logistique / Transport',emoji:'📦',
-    diploma:'CAP / Bac Pro Logistique',
-    sectors:['Logistique','Industrie','Commerce'],
-    osmAmenities:['station'],
+    osmAmenities:['social_facility','hospital'],
+    osmOffices:['association'],
+    nafCodes:['8810A','8810B','8899A','8899B','8891A'],
+    skills:'accompagnement, aide aux gestes quotidiens, écoute active, premiers secours',
+    keywords:['aide à domicile','EHPAD','maison de retraite','CCAS','action sociale','SAAD']},
+  Logistique:{label:'Logistique / Transport',emoji:'📦',diploma:'CAP / Bac Pro Logistique',
+    sectors:['Logistique','Industrie','PME'],
+    osmAmenities:[],
+    osmOffices:['logistics','company'],
     nafCodes:['4941A','4941B','5210B','5221Z','5224A'],
-    skills:'gestion des stocks, préparation de commandes, utilisation WMS/ERP, CACES (ou en cours), expéditions et réceptions'},
-  Custom:{label:'Autre formation (personnalisée)',emoji:'✏️',
-    diploma:'',sectors:[],osmAmenities:[],nafCodes:[],skills:''},
+    skills:'gestion stocks, préparation commandes, WMS/ERP, CACES, expéditions',
+    keywords:['logistique','transport','entrepôt','messagerie','fret','colis']},
+  Custom:{label:'Formation personnalisée',emoji:'✏️',diploma:'',
+    sectors:[],osmAmenities:[],osmOffices:[],nafCodes:[],skills:'',keywords:[]},
 };
 
 const CATS=[
@@ -517,38 +562,7 @@ function searchUrl(query){
   return e+encodeURIComponent(query);
 }
 
-const PRELOADED=[
-{id:'p1',n:"Capgemini",t:"ESN",e:"recrutement.france@capgemini.com",v:"Parc du Millénaire, Montpellier",d:"Leader ESN, nombreux stages IT",lat:43.635,lng:3.872},
-{id:'p2',n:"Sopra Steria",t:"ESN",e:"recrutement@soprasteria.com",v:"Montpellier",d:"ESN européenne, Occitanie",lat:43.610,lng:3.877},
-{id:'p3',n:"Inetum",t:"ESN",e:"recrutement@inetum.com",v:"Montpellier",d:"Support et infra IT",ok:1,lat:43.612,lng:3.875},
-{id:'p4',n:"Atos",t:"ESN",e:"candidature@atos.net",v:"Montpellier",d:"IT international",lat:43.613,lng:3.878},
-{id:'p5',n:"CGI France",t:"ESN",e:"recrutement@cgi.com",v:"Montpellier",d:"Grande ESN",ok:1,lat:43.611,lng:3.876},
-{id:'p6',n:"Axians Occitanie",t:"ESN",e:"recrutement-occitanie@axians.com",v:"Montpellier",d:"Réseaux IT, VINCI",lat:43.615,lng:3.871},
-{id:'p7',n:"Devoteam",t:"ESN",e:"recrutement@devoteam.com",v:"Montpellier",d:"Cloud & cybersécurité",ok:1,lat:43.613,lng:3.874},
-{id:'p8',n:"Keyrus",t:"ESN",e:"recrutement@keyrus.com",v:"Montpellier",d:"Data & IT",ok:1,lat:43.611,lng:3.877},
-{id:'p9',n:"SCC France",t:"ESN",e:"recrutement@scc.fr",v:"Montpellier",d:"Intégrateur IT terrain",ok:1,lat:43.612,lng:3.877},
-{id:'p10',n:"IBM Montpellier",t:"ESN",e:"stages.france@fr.ibm.com",v:"Montpellier",d:"Cloud et infrastructure",lat:43.636,lng:3.870},
-{id:'p11',n:"Mairie de Montpellier",t:"Public",e:"recrutement@montpellier.fr",v:"1 pl. Georges Frêche",d:"DSI ville",lat:43.606,lng:3.877},
-{id:'p12',n:"Conseil Départemental 34",t:"Public",e:"recrutement@herault.fr",v:"1000 rue d'Alco",d:"DSI département",lat:43.633,lng:3.858},
-{id:'p13',n:"Région Occitanie",t:"Public",e:"recrutement@laregion.fr",v:"Montpellier",d:"DSI régionale",lat:43.610,lng:3.872},
-{id:'p14',n:"Métropole de Montpellier",t:"Public",e:"dsi@montpellier3m.fr",v:"50 pl. Zeus",d:"IT métropole",lat:43.628,lng:3.857},
-{id:'p15',n:"SNCF Occitanie",t:"Public",e:"stages-occitanie@sncf.fr",v:"Gare St-Roch",d:"IT régional",lat:43.605,lng:3.880},
-{id:'p16',n:"CHU de Montpellier",t:"Santé",e:"dsi@chu-montpellier.fr",v:"191 av. Doyen Giraud",d:"Plus grand CHU du Sud",lat:43.627,lng:3.858},
-{id:'p17',n:"Clinique du Millénaire",t:"Santé",e:"rh@clinique-millenaire.com",v:"Parc du Millénaire",d:"Clinique privée IT interne",lat:43.628,lng:3.873},
-{id:'p18',n:"CPAM de l'Hérault",t:"Santé",e:"recrutement.herault@cpam.fr",v:"Montpellier",d:"Sécurité sociale",lat:43.610,lng:3.870},
-{id:'p19',n:"Université de Montpellier",t:"Education",e:"dsi@umontpellier.fr",v:"163 r. Broussonet",d:"DSI campus",lat:43.632,lng:3.863},
-{id:'p20',n:"IUT Montpellier-Sète",t:"Education",e:"informatique@iut-montpellier.fr",v:"99 av. d'Occitanie",d:"Stages IT fréquents",lat:43.618,lng:3.867},
-{id:'p21',n:"Rectorat Académie",t:"Education",e:"dsin@ac-montpellier.fr",v:"31 r. de l'Université",d:"DSI académique",lat:43.613,lng:3.875},
-{id:'p22',n:"Lycée Jean Jaurès",t:"Lycées",e:"ce.0342002t@ac-montpellier.fr",v:"Montpellier",d:"Grand lycée polyvalent",lat:43.607,lng:3.882},
-{id:'p23',n:"Lycée Georges Frêche",t:"Lycées",e:"ce.0341932j@ac-montpellier.fr",v:"Montpellier",d:"Lycée hôtelier",lat:43.593,lng:3.885},
-{id:'p24',n:"Lycée Clémenceau",t:"Lycées",e:"ce.0341079t@ac-montpellier.fr",v:"Montpellier",d:"Lycée général",lat:43.616,lng:3.875},
-{id:'p25',n:"Crédit Agricole du Languedoc",t:"Banque",e:"recrutement@ca-languedoc.fr",v:"Mas de Saporta, Lattes",d:"Banque régionale",lat:43.568,lng:3.907},
-{id:'p26',n:"Groupama Méditerranée",t:"Banque",e:"recrutement@groupama-mediterranee.fr",v:"Montpellier",d:"Assurance régionale",lat:43.610,lng:3.878},
-{id:'p27',n:"Thales Montpellier",t:"Industrie",e:"stages.montpellier@thalesgroup.com",v:"Montpellier",d:"Défense, IT embarqué",lat:43.610,lng:3.877},
-{id:'p28',n:"Sanofi Montpellier",t:"Industrie",e:"stages.france@sanofi.com",v:"Montpellier",d:"Pharma, DSI site",lat:43.600,lng:3.868},
-{id:'p29',n:"Enedis Hérault",t:"Public",e:"stages.occitanie@enedis.fr",v:"Montpellier",d:"Distributeur énergie",lat:43.610,lng:3.860},
-{id:'p30',n:"La Poste Groupe (34)",t:"Industrie",e:"stages@laposte.fr",v:"Montpellier",d:"Numérique, IT agences",lat:43.608,lng:3.878},
-];
+const PRELOADED=[];
 
 
 // ════════════════════════════════════════════════════════════
@@ -563,8 +577,71 @@ let emailVariant=0;
 let emailCompanyId=null;
 
 
+
+// ── MODE ──────────────────────────────────────────────────────────────────
+var MODE_HINTS={
+  stage_nr:'Recherche de stages de formation non rémunérés — lettres de motivation ciblées',
+  stage_r:'Recherche de stages conventionnés rémunérés — profils plus expérimentés',
+  alternance:'Recherche de contrats d\'apprentissage ou de professionnalisation — La Bonne Alternance activée',
+  emploi:'Recherche d\'emploi CDI/CDD — France Travail activé, offres mises en avant'
+};
+function getMode(){
+  var el=document.querySelector('input[name="p_mode"]:checked');
+  return el?el.value:'stage_nr';
+}
+function onModeChange(){
+  var m=getMode();
+  var hint=document.getElementById('mode_hint');
+  if(hint)hint.textContent=MODE_HINTS[m]||'';
+  // Sauvegarder dans S si profil existe
+  if(S.prenom)S.mode=m;
+}
+function getModeLabel(){
+  var labels={stage_nr:'stage non rémunéré',stage_r:'stage rémunéré',
+    alternance:'contrat en alternance',emploi:'poste (CDI/CDD)'};
+  return labels[S.mode||'stage_nr']||'stage';
+}
+function getModeObjet(){
+  var labels={
+    stage_nr:'Recherche de stage non rémunéré',
+    stage_r:'Candidature – Stage rémunéré',
+    alternance:'Candidature – Contrat d\'alternance / apprentissage',
+    emploi:'Candidature spontanée – CDI/CDD'
+  };
+  return labels[S.mode||'stage_nr'];
+}
+function getFranceTravailUrl(companyName,city){
+  var q=encodeURIComponent(companyName);
+  var mode=S.mode||'stage_nr';
+  var typeContrat=mode==='alternance'?'&typeContrat=E2,FS':mode==='emploi'?'&typeContrat=CDI,CDD':'';
+  return'https://candidat.francetravail.fr/offres/recherche?motsCles='+q+(city?'&ville='+encodeURIComponent(city):'')+typeContrat;
+}
+function getLaBonneAlternanceUrl(romes){
+  return'https://labonnealternance.apprentissage.beta.gouv.fr/recherche-apprentissage?&display=list&page=1&romes='+romes+'&radius=30';
+}
+
 // ── FORMATION & SECTEURS CUSTOM ─────────────────────────────────────────
 var _customSectors=[];
+
+
+function activateFormationCats(formationId){
+  var fc=FORMATION_CONFIG[formationId];
+  if(!fc||!fc.sectors||!fc.sectors.length)return;
+  // Désactiver tout d'abord
+  activeCats.clear();
+  // Activer seulement les catégories pertinentes
+  CATS.forEach(function(cat){
+    var relevant=fc.sectors.some(function(s){
+      return s===cat.id||s.toLowerCase()===cat.lbl.toLowerCase();
+    });
+    if(relevant)activeCats.add(cat.id);
+  });
+  // Refresh visuellement
+  CATS.forEach(function(cat){
+    var btn=document.getElementById('cat-'+cat.id);
+    if(btn)btn.classList.toggle('on',activeCats.has(cat.id));
+  });
+}
 
 function onFormationChange(){
   var val=document.getElementById('p_formation').value;
@@ -573,9 +650,21 @@ function onFormationChange(){
   if(val==='Custom'){wrap.style.display='flex';}else{wrap.style.display='none';}
   if(val&&FORMATION_CONFIG[val]){
     var fc=FORMATION_CONFIG[val];
-    badge.style.display='inline-flex';
-    badge.textContent=fc.emoji+' '+fc.diploma;
+    badge.style.display='block';
+    badge.innerHTML=
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+        '<span style="font-size:1.4rem">'+fc.emoji+'</span>'+
+        '<div><div style="font-weight:700;font-size:.85rem;color:var(--t1)">'+escH(fc.label)+'</div>'+
+        '<div style="font-size:.74rem;color:var(--t3)">'+escH(fc.diploma)+'</div></div>'+
+      '</div>'+
+      '<div style="font-size:.73rem;color:var(--t3);margin-bottom:5px">Secteurs ciblés :</div>'+
+      '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
+        fc.sectors.map(function(s){return'<span style="padding:2px 8px;border-radius:20px;font-size:.69rem;font-weight:600;background:var(--blue-l);color:var(--blue)">'+escH(s)+'</span>';}).join('')+
+      '</div>'+
+      (fc.skills?'<div style="font-size:.72rem;color:var(--t4);margin-top:6px;font-style:italic">Compétences type : '+escH(fc.skills)+'</div>':'');
   }else{badge.style.display='none';}
+  // Activer les bonnes catégories radar
+  if(val&&val!=='Custom')activateFormationCats(val);
 }
 
 function addCustomSector(){
@@ -618,12 +707,141 @@ function getSearchUrl(query){
   return searchUrl(query);
 }
 
+
+// ── BLACKLIST ─────────────────────────────────────────────────────────────
+var _blacklist=new Set();
+var _showBlacklisted=false;
+
+function blacklist(id){
+  _blacklist.add(id);
+  saveBlacklist();
+  renderRadar();
+  updateBadges();
+}
+function unblacklist(id){
+  _blacklist.delete(id);
+  saveBlacklist();
+  renderRadar();
+  updateBadges();
+}
+function saveBlacklist(){
+  try{localStorage.setItem('tip_bl',JSON.stringify([..._blacklist]));}catch(e){}
+}
+function loadBlacklist(){
+  try{const d=localStorage.getItem('tip_bl');if(d)_blacklist=new Set(JSON.parse(d));}catch(e){}
+}
+
+function showBlacklistedModal(){
+  var blItems=radarResults.filter(function(c){return _blacklist.has(c.id);});
+  if(!blItems.length)return;
+  var content='<div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:1rem" id="bl-overlay" onclick="if(event.target.id===\'bl-overlay\')this.remove()">' +
+    '<div style="background:var(--card);border-radius:var(--rl);padding:1.25rem;max-width:500px;width:100%;max-height:70vh;overflow-y:auto;box-shadow:var(--sh2)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">' +
+        '<strong style="font-size:.9rem;color:var(--t1)">🚫 Structures masquées</strong>' +
+        '<button onclick="document.getElementById(\'bl-overlay\').remove()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--t3)">×</button>' +
+      '</div>' +
+      blItems.map(function(c){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);margin-bottom:5px">' +
+          '<div><div style="font-size:.83rem;font-weight:600;color:var(--t1)">'+escH(c.n)+'</div>' +
+          '<div style="font-size:.72rem;color:var(--t3)">'+escH(c.t)+(c.v?' · '+escH(c.v):'')+'</div></div>' +
+          '<button class="btn btn-ghost btn-sm" onclick="unblacklist(\''+escA(c.id)+'\');document.getElementById(\'bl-overlay\').remove();showBlacklistedModal();" style="font-size:.72rem;color:var(--green)">↩ Restaurer</button>' +
+        '</div>';
+      }).join('') +
+      '<div style="margin-top:.75rem;display:flex;gap:6px;justify-content:flex-end">' +
+        '<button class="btn btn-ghost btn-sm" onclick="_blacklist.clear();saveBlacklist();renderRadar();updateBadges();document.getElementById(\'bl-overlay\').remove()">Tout restaurer</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'bl-overlay\').remove()">Fermer</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+  document.body.insertAdjacentHTML('beforeend',content);
+}
+
+function toggleShowBlacklisted(){
+  _showBlacklisted=!_showBlacklisted;
+  renderRadar();
+}
+
+
+// ── SCAN CV ───────────────────────────────────────────────────────────────
+async function handleCvUpload(event){
+  var file=event.target.files[0];
+  if(!file)return;
+  var status=document.getElementById('cv_status');
+  var preview=document.getElementById('cv_preview');
+  status.textContent='⏳ Lecture du CV…';
+  try{
+    var text='';
+    if(file.type==='application/pdf'||file.name.endsWith('.pdf')){
+      text=await extractPdfText(file);
+    }else{
+      text=await new Promise(function(res,rej){
+        var r=new FileReader();r.onload=function(e){res(e.target.result);};r.onerror=rej;r.readAsText(file,'utf-8');
+      });
+    }
+    text=text.trim();
+    if(!text||text.length<50){status.textContent='⚠️ CV vide ou illisible';return;}
+    // Stocker et afficher
+    S.cvText=text;
+    S.cvFileName=file.name;
+    status.textContent='✅ CV chargé : '+file.name+' ('+text.length+' caractères)';
+    preview.style.display='block';
+    preview.textContent=text.substring(0,400)+(text.length>400?'…':'');
+    // Auto-remplir compétences si vide
+    autofillFromCv(text);
+  }catch(e){
+    status.textContent='⚠️ Erreur lecture : '+e.message;
+    console.error(e);
+  }
+}
+
+async function extractPdfText(file){
+  if(typeof pdfjsLib==='undefined')throw new Error('pdf.js non chargé');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  var ab=await file.arrayBuffer();
+  var pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  var texts=[];
+  for(var i=1;i<=Math.min(pdf.numPages,5);i++){
+    var page=await pdf.getPage(i);
+    var content=await page.getTextContent();
+    texts.push(content.items.map(function(item){return item.str;}).join(' '));
+  }
+  return texts.join('\n');
+}
+
+function autofillFromCv(text){
+  // Remplir compétences si vide
+  var compField=document.getElementById('p_comp');
+  if(compField&&!compField.value.trim()){
+    // Extraire lignes avec mots-clés compétences
+    var lines=text.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>5&&l.length<200;});
+    var skillKeywords=['compétences','skills','maîtrise','logiciels','outils','certifications','formations','expérience','languages','langages','techniques'];
+    var skillLines=[];
+    var inSkillSection=false;
+    lines.forEach(function(line){
+      if(skillKeywords.some(function(k){return line.toLowerCase().includes(k);})){inSkillSection=true;}
+      if(inSkillSection&&line.length>5)skillLines.push(line);
+      if(skillLines.length>=8)inSkillSection=false;
+    });
+    if(skillLines.length>0){
+      compField.value=skillLines.slice(0,6).join(', ').substring(0,300);
+    }
+  }
+}
+
+function getCvContext(){
+  if(!S.cvText)return'';
+  // Extrait pertinent du CV pour enrichir les emails
+  var excerpt=S.cvText.substring(0,600).replace(/\s+/g,' ').trim();
+  return '\n\n[Contexte CV : '+excerpt+'…]';
+}
+
 function persist(){try{localStorage.setItem('tip_v4',JSON.stringify({S,crmData,coords}));}catch(e){}}
 function restore(){
   try{
     const d=JSON.parse(localStorage.getItem('tip_v4')||'{}');
     if(d.S)S=d.S;
     if(d.crmData)crmData=d.crmData;
+    if(d.blacklist)_blacklist=new Set(d.blacklist);
     if(d.coords)coords=d.coords;
   }catch(e){}
 }
@@ -734,81 +952,104 @@ function tier(d){
 // ════════════════════════════════════════════════════════════
 // SECTION 5 — MODULE API (Overpass + Entreprises + Alternance)
 // ════════════════════════════════════════════════════════════
-async function fetchOverpass(lat,lng,rm,amenities,offices){
-  // Uniquement les catégories pertinentes pour un stage TIP
-  const relevantAmenities=['hospital','clinic','doctors','school','college','university','townhall','bank','coworking_space'];
-  const filteredAmenities=amenities.filter(a=>relevantAmenities.includes(a));
-  const relevantOffices=['government','it','association'];
-  const filteredOffices=offices.filter(o=>relevantOffices.includes(o));
 
-  const cond=[
-    ...filteredAmenities.flatMap(a=>[
-      `node["amenity"="${a}"](around:${rm},${lat},${lng});`,
-      `way["amenity"="${a}"](around:${rm},${lat},${lng});`
-    ]),
-    ...filteredOffices.flatMap(o=>[
-      `node["office"="${o}"](around:${rm},${lat},${lng});`,
-      `way["office"="${o}"](around:${rm},${lat},${lng});`
-    ]),
-  ].join('');
-  if(!cond)return[];
-
-  // out body center; → donne les coordonnées des ways (bâtiments/zones)
-  const q=`[out:json][timeout:30];(${cond});out body center;`;
-  try{
-    const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
-    const d=await r.json();
-    const am2t={
-      hospital:'Santé',clinic:'Santé',doctors:'Santé',
-      school:'Lycées',college:'Education',university:'Education',
-      townhall:'Public',government:'Public',
-      coworking_space:'Coworking',bank:'Banque',
-      association:'Asso',it:'ESN',
-    };
-    return(d.elements||[])
-      .filter(e=>e.tags&&e.tags.name&&e.tags.name.length>1)
-      .map(e=>{
-        // Coordonnées : node → e.lat/e.lon, way/relation → e.center.lat/e.center.lon
-        const lt = e.type==='node' ? e.lat : (e.center ? e.center.lat : null);
-        const ln = e.type==='node' ? e.lon : (e.center ? e.center.lon : null);
-        if(!lt||!ln) return null; // Pas de coordonnées → on ignore
-        const a=e.tags.amenity||e.tags.office||'';
-        const t=am2t[a]||null;
-        if(!t) return null; // Type non pertinent → on ignore
-        const addr=[e.tags['addr:housenumber'],e.tags['addr:street'],
-                    e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')
-                   ||e.tags['addr:city']||'';
-        return{
-          id:'osm_'+e.id,
-          n:e.tags.name, t, v:addr, d:a,
-          e:e.tags.email||e.tags['contact:email']||'',
-          web:e.tags.website||e.tags['contact:website']||'',
-          phone:e.tags.phone||e.tags['contact:phone']||'',
-          lat:lt, lng:ln,
-          src:'OpenStreetMap'
-        };
-      })
-      .filter(Boolean); // Supprimer les null
-  }catch(ex){
-    console.warn('Overpass error:',ex);
-    return[];
-  }
+async function fetchFranceTravail(lat,lng,rKm,nafCodes,keywords){
+  // France Travail API nécessite OAuth2 (inscription gratuite sur pole-emploi.io)
+  // Ici on retourne juste un deep link pour chaque fiche
+  return{results:[],source:'France Travail',ok:false,
+    msg:'Voir bouton "🏢 Offres" sur chaque fiche pour consulter les offres'};
 }
 
-async function fetchEntreprises(lat,lng,rKm,naf){
-  const res=[];
-  await Promise.all(naf.map(async code=>{
-    try{
-      const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&long=${lng}&radius=${rKm}&activite_principale=${code}&per_page=20&etat_administratif=A`);
-      const d=await r.json();
-      (d.results||[]).forEach(e=>{
-        if(!e.nom_complet&&!e.nom_raison_sociale)return;
-        const sie=e.siege||{};const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
-        res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,t:'ESN',v:sie.libelle_commune||'',d:'NAF '+code,e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,siren:e.siren,src:'Annuaire Entreprises'});
-      });
-    }catch(ex){}
-  }));
-  return res;
+async function fetchOverpass(lat,lng,rm,amenities,offices,keywords){
+  var cond=[];
+  amenities.forEach(function(a){
+    cond.push('node["amenity"="'+a+'"](around:'+rm+','+lat+','+lng+');');
+    cond.push('way["amenity"="'+a+'"](around:'+rm+','+lat+','+lng+');');
+  });
+  offices.forEach(function(o){
+    cond.push('node["office"="'+o+'"](around:'+rm+','+lat+','+lng+');');
+    cond.push('way["office"="'+o+'"](around:'+rm+','+lat+','+lng+');');
+  });
+  if(keywords&&keywords.length){
+    keywords.slice(0,4).forEach(function(kw){
+      cond.push('node["name"~"'+kw.replace(/"/g,'')+'"](around:'+rm+','+lat+','+lng+');');
+      cond.push('way["name"~"'+kw.replace(/"/g,'')+'"](around:'+rm+','+lat+','+lng+');');
+    });
+  }
+  if(!cond.length)return{results:[],source:'Overpass',ok:false,msg:'Aucune catégorie'};
+  var q='[out:json][timeout:30];('+cond.join('')+');out body center;';
+  try{
+    var r=await fetch('https://overpass-api.de/api/interpreter?data='+encodeURIComponent(q));
+    var d=await r.json();
+    var am2t={hospital:'Santé',clinic:'Santé',school:'Lycées',college:'Education',
+      university:'Education',townhall:'Public',government:'Public',
+      coworking_space:'Coworking',bank:'Banque',car_repair:'Garage',fuel:'Garage',
+      restaurant:'Restauration',hotel:'Restauration',fast_food:'Restauration',
+      cafe:'Restauration',bar:'Restauration',social_facility:'Social',
+      supermarket:'Commerce',mall:'Commerce',it:'ESN',company:'PME',
+      accountant:'Banque',construction:'BTP',electrical:'Électro',logistics:'Logistique'};
+    var res=(d.elements||[]).filter(function(e){
+      return e.tags&&e.tags.name&&e.tags.name.length>1;
+    }).map(function(e){
+      var lt=e.type==='node'?e.lat:(e.center?e.center.lat:null);
+      var ln=e.type==='node'?e.lon:(e.center?e.center.lon:null);
+      if(!lt||!ln)return null;
+      var a=e.tags.amenity||e.tags.office||'';
+      var addr=[e.tags['addr:housenumber'],e.tags['addr:street'],
+                e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')||'';
+      return{id:'osm_'+e.id,n:e.tags.name,t:am2t[a]||'PME',v:addr,d:a,
+        e:e.tags.email||e.tags['contact:email']||'',
+        web:e.tags.website||e.tags['contact:website']||'',
+        lat:lt,lng:ln,src:'OpenStreetMap'};
+    }).filter(Boolean);
+    return{results:res,source:'Overpass (OpenStreetMap)',ok:true,msg:res.length+' résultats'};
+  }catch(ex){return{results:[],source:'Overpass',ok:false,msg:'Bloqué/Erreur : '+ex.message};}
+}
+
+async function fetchEntreprises(lat,lng,rKm,nafCodes,keywords){
+  var res=[],tasks=[];
+  // Par codes NAF (précis)
+  (nafCodes||[]).slice(0,4).forEach(function(code){
+    tasks.push(
+      fetch('https://recherche-entreprises.api.gouv.fr/search?lat='+lat+'&long='+lng+'&radius='+rKm+'&activite_principale='+code+'&per_page=15&etat_administratif=A')
+        .then(function(r){return r.json();})
+        .then(function(d){
+          (d.results||[]).forEach(function(e){
+            var sie=e.siege||{};
+            var lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
+            res.push({id:'ent_'+(e.siren||Math.random()),
+              n:e.nom_complet||e.nom_raison_sociale||'',t:'PME',
+              v:sie.libelle_commune||'',d:'NAF '+code,e:'',
+              web:e.site_internet||'',
+              lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,
+              src:'Annuaire Entreprises'});
+          });
+        }).catch(function(){})
+    );
+  });
+  // Par mots-clés (pour formations perso ou custom)
+  if(keywords&&keywords.length){
+    keywords.slice(0,3).forEach(function(kw){
+      tasks.push(
+        fetch('https://recherche-entreprises.api.gouv.fr/search?q='+encodeURIComponent(kw)+'&lat='+lat+'&long='+lng+'&radius='+rKm+'&per_page=10&etat_administratif=A')
+          .then(function(r){return r.json();})
+          .then(function(d){
+            (d.results||[]).forEach(function(e){
+              var sie=e.siege||{};
+              var lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
+              res.push({id:'ent_kw_'+(e.siren||Math.random()),
+                n:e.nom_complet||e.nom_raison_sociale||'',t:'PME',
+                v:sie.libelle_commune||'',d:kw,e:'',
+                web:e.site_internet||'',
+                lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,
+                src:'Annuaire Entreprises'});
+            });
+          }).catch(function(){})
+      );
+    });
+  }
+  await Promise.all(tasks);
+  return{results:res,source:'Annuaire Entreprises',ok:res.length>0,msg:res.length+' résultats'};
 }
 
 async function fetchAlternance(lat,lng,rKm){
@@ -858,655 +1099,336 @@ async function launchRadar(){
   const msg=t=>document.getElementById('radar-msg').textContent=t;
   msg('📍 Scan depuis : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
 
-  // Reset — repart des pré-chargées à chaque scan
-  radarResults=[...PRELOADED];
-
-  const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
-  const allAmenities=[...new Set(activeCatDefs.flatMap(c=>c.osm))];
-  const allNaf=[...new Set(activeCatDefs.flatMap(c=>c.naf))];
-  const osmOffices=['government'];
-
-  const tasks=[];
-  if(allAmenities.length||osmOffices.length){
-    msg('🔍 Scan OpenStreetMap…');
-    tasks.push(fetchOverpass(coords.lat,coords.lng,rm,allAmenities,osmOffices));
-  }
-  if(allNaf.length){
-    msg('🔍 Annuaire Entreprises…');
-    tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
-  }
-  if(activeCats.has('ESN')){
-    msg('🔍 La Bonne Alternance…');
-    tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
-    msg('🔍 Immersion Facilitée (PMSMP)…');
-    tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
-  }
-
-  const all=await Promise.allSettled(tasks);
-  const seen=new Set(radarResults.map(c=>c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8)));
-  all.forEach(r=>{
-    if(r.status!=='fulfilled')return;
-    (r.value||[]).forEach(c=>{
-      const k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
-      if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push({...c,disc:true});}
-    });
+  // Reset — filtrer les pré-chargées selon la formation active
+  var _fc=S.formation?FORMATION_CONFIG[S.formation]:null;
+  var _relevantSectors=_fc&&_fc.sectors&&_fc.sectors.length?new Set(_fc.sectors):null;
+  radarResults=PRELOADED.filter(function(c){
+    if(!_relevantSectors)return true;
+    return _relevantSectors.has(c.t);
   });
-
-  // Compute distances & filter by radius
-  radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).filter(c=>c._dist===null||c._dist<=rKm).sort((a,b)=>(a._dist??999)-(b._dist??999));
-
-  updateBadges();
-  // Diagnostic clair
-  const _preCount=PRELOADED.filter(c=>{const d=dist(c);return d===null||d<=rKm;}).length;
-  const _newCount=radarResults.length-_preCount;
-  let _msgFinal='✅ '+radarResults.length+' structures dans '+rKm+' km';
-  _msgFinal+=' ('+_preCount+' pré-chargées';
-  if(_newCount>0)_msgFinal+=', +'+_newCount+' trouvées via APIs';
-  _msgFinal+=')';
-  if(_preCount===radarResults.length&&radarResults.length>0){
-    _msgFinal+=' — APIs sans résultats supplémentaires';
+  // Garder aussi les secteurs custom de l'étudiant
+  if(S.customSectors&&S.customSectors.length){
+    var _customSet=new Set(S.customSectors.map(function(s){return s.toLowerCase();}));
+    var _extra=PRELOADED.filter(function(c){
+      return!radarResults.includes(c)&&_customSet.has((c.t||'').toLowerCase());
+    });
+    radarResults=radarResults.concat(_extra);
   }
-  msg(_msgFinal);
-  // Si toutes entreprises sont pré-chargées, afficher explication
-  const _diagEl=document.getElementById('api-diag');
-  if(_diagEl){
-    let _diag='<strong>Position scannée :</strong> '+coords.lat.toFixed(5)+', '+coords.lng.toFixed(5)+'<br>';
-    _diag+='<strong>Entreprises pré-chargées dans le rayon :</strong> '+_preCount+'<br>';
-    _diag+='<strong>Découvertes via APIs :</strong> '+_newCount+'<br>';
-    if(_newCount===0){
-      _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
-      _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
-      _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
-      _diag+='Les APIs externes (Overpass, Annuaire Entreprises) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s’affichent.';
+
+  // Config dynamique selon la formation sélectionnée
+  var _fid=S.formation||'Custom';
+  var _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
+  var _kw=(_fc.keywords||[]).concat(S.customSectors||[]);
+  var _amenities=_fc.osmAmenities||[];
+  var _offices=(_fc.osmOffices||[]).concat(['government']);
+  var _naf=(_fc.nafCodes||[]).concat(S.nafExtra||[]);
+  _naf=[...new Set(_naf)]; // Dédupliquer
+  // Formation non définie : tout chercher
+  if(_fid==='Custom'&&_kw.length===0){
+    _amenities=['hospital','school','college','university','townhall','bank','car_repair','restaurant'];
+    _offices=['government','company'];
+    _naf=['6202B','9511Z','4520A','6920Z','5610A','4941A'];
+  }
+  msg('🔍 Recherche '+_fc.emoji+' '+_fc.label+' dans '+rKm+' km…');
+  const tasks=[
+    fetchOverpass(coords.lat,coords.lng,rm,_amenities,_offices,_kw),
+    fetchEntreprises(coords.lat,coords.lng,rKm,_naf,_kw),
+    fetchAlternance(coords.lat,coords.lng,rKm),
+    // En mode emploi ou alternance → chercher aussi sur France Travail si possible
+    (S.mode==='alternance'||S.mode==='emploi'?fetchFranceTravail(coords.lat,coords.lng,rKm,_naf,_kw):Promise.resolve({results:[],source:'France Travail',ok:false,msg:'Non activé pour ce mode'}))
+  ];
+
+  // Traitement des résultats
+  const results=await Promise.allSettled(tasks);
+  var apiStats=[],newFound=0;
+  var seen=new Set();
+  radarResults=[];
+  results.forEach(function(r){
+    var val=r.status==='fulfilled'?r.value:{results:[],source:'?',ok:false,msg:'Erreur'};
+    apiStats.push(val);
+    if(val.ok&&val.results.length){
+      val.results.forEach(function(c){
+        var k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
+        if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push(Object.assign({},c,{disc:true}));}
+      });
     }
-    _diagEl.innerHTML=_diag;_diagEl.style.display='block';
+  });
+  // Filtrer par rayon + trier par distance
+  radarResults=radarResults.map(function(c){return Object.assign({},c,{_dist:dist(c)});})
+    .filter(function(c){return c._dist===null||c._dist<=rKm;})
+    .sort(function(a,b){return(a._dist||999)-(b._dist||999);});
+  // Diagnostic
+  var _pc=radarResults.length,_nc=newFound;
+  var allBlocked=apiStats.every(function(a){return!a.ok;});
+  var diagEl=document.getElementById('api-diag');
+  if(diagEl){
+    diagEl.innerHTML='<strong>Scan '+_fc.emoji+' '+escH(_fc.label)+'</strong> · Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' · '+_pc+' structures dans '+rKm+' km'+(allBlocked?'<br>⚠️ APIs non accessibles (vérifier la connexion)':'<br>✅ APIs OK');
+    diagEl.style.display='block';
   }
-  setTimeout(()=>banner.style.display='none',5000);
+  updateBadges();
+  msg('✅ '+_pc+' structures trouvées dans '+rKm+' km');
+  setTimeout(function(){banner.style.display='none';},4000);
   btn.disabled=false;btn.textContent='🔍 Scanner';
   radarRunning=false;
   renderRadar();
 }
 
-function renderRadar(){
-  const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
-  const tf=document.getElementById('r_type')?.value||'';
-  let fl=radarResults.filter(c=>
-    (!tf||c.t===tf)&&(!q||c.n.toLowerCase().includes(q)||c.t.toLowerCase().includes(q)||c.v.toLowerCase().includes(q))
-  );
-  if(!fl.length){document.getElementById('r_list').innerHTML='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';return;}
-
-  // Group by distance tier
-  const tiers=[
-    {max:5,ico:'🏠',lbl:'Très proches',cls:'t1'},
-    {max:15,ico:'🚶',lbl:'Proches (5–15 km)',cls:'t2'},
-    {max:30,ico:'🚌',lbl:'Accessibles (15–30 km)',cls:'t3'},
-    {max:50,ico:'🚗',lbl:'Envisageables (30–50 km)',cls:'t4'},
-    {max:9999,ico:'📍',lbl:'Plus loin',cls:'t4'},
-  ];
-  let h='';
-  tiers.forEach((tier,ti)=>{
-    const prev=tiers[ti-1]?.max??0;
-    const grp=fl.filter(c=>{const d=c._dist??9999;return d<tier.max&&d>=prev;});
-    if(!grp.length)return;
-    h+=`<div class="sdiv-dist ${tier.cls}">${tier.ico} ${tier.lbl} — ${grp.length} structure${grp.length>1?'s':''}</div>`;
-    h+=grp.map(radarCard).join('');
-  });
-  document.getElementById('r_list').innerHTML=h;
-}
-
-function escA(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;');}
-function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
 function radarCard(c){
   var d=c._dist, t=tier(d), cid=escA(c.id||'');
   var inCRM=crmData[c.id];
-  var badges='';
-  if(c.disc)badges+='<span class="disc-badge">d\u00e9couvert</span> ';
-  if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
-  if(c.alt)badges+='<span class="alt-badge">alternance</span>';
 
+  // Badges
+  var badges='';
+  if(c.disc)badges+='<span class="disc-badge">découvert</span> ';
+  if(c.alt) badges+='<span class="offer-badge">🟢 Offre alternance</span> ';
+  if(c.hasOffer)badges+='<span class="offer-badge">🟢 Offre active</span> ';
+  if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
+
+  // Bouton email/site
   var emailBtn='';
   if(c.e){
-    emailBtn='<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="cpEmail(this)" title="Copier email">📧</button>';
-  } else if(c.web){
+    emailBtn='<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="cpEmail(this)" title="Copier : '+escA(c.e)+'">📧</button>';
+  }else if(c.web){
     var href=c.web.indexOf('http')===0?c.web:'https://'+c.web;
-    emailBtn='<a class="btn btn-ghost btn-sm" href="'+escA(href)+'" target="_blank" rel="noopener">🌐</a>';
+    emailBtn='<a class="btn btn-ghost btn-sm" href="'+escA(href)+'" target="_blank" rel="noopener" title="Site web">🌐</a>';
   }
 
+  // Bouton recherche (moteur configuré)
+  var engine=(S&&S.searchEngine)||'google';
+  var engineLabel=engine.charAt(0).toUpperCase()+engine.slice(1);
+  var searchQuery=c.n+(c.v?' '+c.v.split(',')[0].trim():'')+' recrutement contact email RH stage';
+  var searchBtn='<a class="btn btn-ghost btn-sm" href="'+searchUrl(searchQuery)+'" target="_blank" rel="noopener" title="Rechercher sur '+engineLabel+'">🔍</a>';
+
+  // Bouton France Travail (offres)
+  var ftUrl=getFranceTravailUrl(c.n,c.v?c.v.split(',').pop().trim():'');
+  var ftBtn='<a class="btn btn-ghost btn-sm" href="'+escA(ftUrl)+'" target="_blank" rel="noopener" title="Voir les offres sur France Travail" style="font-size:.75rem">🏢 Offres</a>';
+
+  // Bouton LinkedIn
+  var liBtn='<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="openLinkedInFor(this.dataset.cid)" title="Chercher le contact sur LinkedIn">🔗</button>';
+
+  // Bouton CRM
   var crmCol=inCRM?CRM_COLS.find(function(x){return x.id===inCRM.status;}):null;
   var crmBtn=inCRM
     ?'<button class="btn btn-ghost btn-sm" onclick="goTab(\'suivi\')" style="color:var(--green)">📋 '+escH(crmCol?crmCol.lbl:'Suivi')+'</button>'
     :'<button class="btn btn-primary btn-sm" data-cid="'+cid+'" onclick="addToSuivi(this.dataset.cid)">➕ Suivi</button>';
 
+  // Bouton blacklist
+  var blBtn='<button class="btn btn-sm" style="background:transparent;border:1.5px solid var(--red-l);color:var(--red);padding:4px 7px" data-cid="'+cid+'" onclick="blacklist(this.dataset.cid)" title="Masquer">🚫</button>';
+
+  // Affichage contact
   var emailDisp='';
   if(c.e)emailDisp='📧 '+escH(c.e);
   else if(c.web){var domain=c.web.replace('https://','').replace('http://','').split('/')[0];emailDisp='🌐 '+escH(domain);}
 
   var tierHtml=t.lbl?'<span class="tier '+t.cls+'">'+escH(t.lbl)+'</span>':'';
 
-  return '<div class="cc">'+
+  // Surbrillance si offre connue
+  var hasOffer=c.alt||c.hasOffer;
+  var cardStyle=hasOffer?'border-color:var(--green);box-shadow:0 0 0 2px rgba(21,128,61,.12)':'';
+
+  return '<div class="cc" style="'+cardStyle+'">'+
     '<div class="clog">'+escH(ini(c.n))+'</div>'+
     '<div class="ci">'+
-      '<div class="cn">'+escH(c.n)+' <span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span> '+tierHtml+' '+badges+'</div>'+
+      '<div class="cn">'+escH(c.n)+' <span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span> '+tierHtml+'</div>'+
+      '<div style="margin:2px 0">'+badges+'</div>'+
       '<div class="cd">'+escH((c.d||'')+(c.v?' · '+c.v:''))+'</div>'+
       '<div class="ce">'+emailDisp+'</div>'+
     '</div>'+
-    '<div class="ca">'+emailBtn+
-      '<a class="btn btn-ghost btn-sm" href="https://www.google.com/search?q='+encodeURIComponent(c.n+' '+(c.v||'')+' recrutement contact email RH stage informatique')+'" target="_blank" rel="noopener" title="Rechercher sur Google">🔍</a>'+
-      '<a class="btn btn-ghost btn-sm" href="'+searchUrl(c.n+' '+(c.v?c.v.split(',')[0]:'')+' recrutement contact email RH stage')+'" target="_blank" rel="noopener" title="Rechercher sur '+((S&&S.searchEngine?S.searchEngine[0].toUpperCase()+S.searchEngine.slice(1):'Google'))+'">🔍</a>'+
-      '<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="openLinkedInFor(this.dataset.cid)" title="LinkedIn">🔗</button>'+
-      crmBtn+
-      '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)">✉</button>'+
+    '<div class="ca">'+emailBtn+searchBtn+ftBtn+liBtn+crmBtn+
+      '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)" title="Générer email">✉</button>'+
+      blBtn+
     '</div>'+
   '</div>';
 }
 
-function cpEmail(btn){
-  var id=btn.dataset.cid;
-  var c=radarResults.find(function(x){return x.id===id;});
-  if(!c||!c.e)return;
-  navigator.clipboard.writeText(c.e);
-  var orig=btn.textContent;btn.textContent='✓';
-  setTimeout(function(){btn.textContent=orig;},1500);
-}
 
-
-function renderRadar(){
-  const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
-  const tf=document.getElementById('r_type')?.value||'';
-  let fl=radarResults.filter(c=>
-    (!tf||c.t===tf)&&(!q||c.n.toLowerCase().includes(q)||c.t.toLowerCase().includes(q)||c.v.toLowerCase().includes(q))
-  );
-  if(!fl.length){document.getElementById('r_list').innerHTML='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';return;}
-
-  // Group by distance tier
-  const tiers=[
-    {max:5,ico:'🏠',lbl:'Très proches',cls:'t1'},
-    {max:15,ico:'🚶',lbl:'Proches (5–15 km)',cls:'t2'},
-    {max:30,ico:'🚌',lbl:'Accessibles (15–30 km)',cls:'t3'},
-    {max:50,ico:'🚗',lbl:'Envisageables (30–50 km)',cls:'t4'},
-    {max:9999,ico:'📍',lbl:'Plus loin',cls:'t4'},
-  ];
-  let h='';
-  tiers.forEach((tier,ti)=>{
-    const prev=tiers[ti-1]?.max??0;
-    const grp=fl.filter(c=>{const d=c._dist??9999;return d<tier.max&&d>=prev;});
-    if(!grp.length)return;
-    h+=`<div class="sdiv-dist ${tier.cls}">${tier.ico} ${tier.lbl} — ${grp.length} structure${grp.length>1?'s':''}</div>`;
-    h+=grp.map(radarCard).join('');
-  });
-  document.getElementById('r_list').innerHTML=h;
-}
-
-function radarCard(c){
-  const d=c._dist,t=tier(d);
-  const inCRM=crmData[c.id];
-  const emailBtn=c.e
-    ?`<button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${c.e}');this.textContent='✓';setTimeout(()=>this.textContent='📧',1500)" title="Copier l'email">📧</button>`
-    :(c.web?`<a class="btn btn-ghost btn-sm" href="${c.web.startsWith('http')?c.web:'https://'+c.web}?q=recrutement+contact" target="_blank" title="Chercher email sur le site">🌐</a>`:'');
-  const crmBtn=inCRM
-    ?`<button class="btn btn-ghost btn-sm" onclick="goTab('suivi')" style="color:var(--green)">📋 ${CRM_COLS.find(x=>x.id===inCRM.status)?.lbl||'Suivi'}</button>`
-    :`<button class="btn btn-primary btn-sm" onclick="addToSuivi('${c.id}')">➕ Suivi</button>`;
-  const badges=[
-    c.disc?'<span class="disc-badge">découvert</span>':'',
-    c.pmsmp?'<span class="pmsmp-badge">PMSMP</span>':'',
-    c.alt?'<span class="alt-badge">alternance</span>':'',
-  ].filter(Boolean).join(' ');
-  return`<div class="cc">
-    <div class="clog">${ini(c.n)}</div>
-    <div class="ci">
-      <div class="cn">${c.n} <span class="badge b-${c.t}">${c.t}</span>${t.lbl?` <span class="tier ${t.cls}">${t.lbl}</span>`:''} ${badges}</div>
-      <div class="cd">${c.d||''}${c.v?' · '+c.v:''}</div>
-      <div class="ce">${c.e?'📧 '+c.e:(c.web?'🌐 '+c.web.replace(/^https?:\/\//,'').split('/')[0]:'')}</div>
-    </div>
-    <div class="ca">${emailBtn}
-      <button class="btn btn-ghost btn-sm" onclick="openLinkedInFor('${c.id}')" title="Chercher le contact">🔗</button>
-      ${crmBtn}
-      <button class="btn btn-teal btn-sm" onclick="openEmailFor('${c.id}')">✉</button>
-    </div>
-  </div>`;
-}
-
-function ini(n){return(n||'?').split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';}
-
-// ════════════════════════════════════════════════════════════
-// SECTION 7 — MODULE CRM & KANBAN
-// ════════════════════════════════════════════════════════════
-function addToSuivi(id){
-  if(!id)return;
-  if(!crmData[id])crmData[id]={status:'todo',sentDate:null,notes:'',contact:''};
-  persist();updateBadges();renderRadar();
-}
-
-function setStatus(id,status){
-  if(!crmData[id])crmData[id]={status,sentDate:null,notes:'',contact:''};
-  crmData[id].status=status;
-  if(status==='sent'&&!crmData[id].sentDate)crmData[id].sentDate=new Date().toISOString().split('T')[0];
-  persist();updateBadges();renderKanban();
-}
-
-function daysSince(d){if(!d)return null;return Math.floor((Date.now()-new Date(d))/(1000*60*60*24));}
-
-function renderKanban(){
-  var allTracked=radarResults.filter(function(c){return !!crmData[c.id];});
-  var j7List=allTracked.filter(function(c){
-    var days=daysSince(crmData[c.id]&&crmData[c.id].sentDate);
-    return crmData[c.id]&&crmData[c.id].status==='sent'&&days!==null&&days>=7;
-  });
-  var jb=document.getElementById('j7-banner');
-  if(j7List.length){
-    jb.style.display='flex';
-    document.getElementById('j7-txt').textContent=j7List.length+' candidature'+(j7List.length>1?'s':'')+' sans r\u00e9ponse depuis 7+ jours : '+j7List.map(function(c){return c.n;}).join(', ');
-  } else jb.style.display='none';
-
-  var kbHtml='';
-  CRM_COLS.forEach(function(col){
-    var cards=allTracked.filter(function(c){return crmData[c.id]&&crmData[c.id].status===col.id;});
-    var cardsHtml='';
-    cards.forEach(function(c){
-      var crm=crmData[c.id]||{};
-      var days=daysSince(crm.sentDate);
-      var isJ7=col.id==='sent'&&days!==null&&days>=7;
-      var cid=escA(c.id||'');
-      var tierH=c._dist!==undefined&&c._dist!==null?'<span class="tier '+tier(c._dist).cls+'" style="font-size:.63rem">'+escH(c._dist.toFixed(1)+' km')+'</span>':'';
-
-      var opts='';
-      CRM_COLS.forEach(function(x){
-        opts+='<option value="'+escA(x.id)+'"'+(x.id===col.id?' selected':'')+'>'+escH(x.ico+' '+x.lbl)+'</option>';
-      });
-
-      cardsHtml+='<div class="kb-card'+(isJ7?' j7':'')+'" id="kb-'+cid+'">'+
-        '<div class="kb-cname">'+escH(c.n)+'</div>'+
-        '<div class="kb-meta">'+
-          '<span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span> '+tierH+
-          (isJ7?' <span class="kb-j7">\u23f0 J+'+days+'</span>':'')+
-          (crm.sentDate?' <span style="font-size:.67rem;color:var(--t4)">'+escH(crm.sentDate)+'</span>':'')+
-        '</div>'+
-        '<div class="kb-actions">'+
-          '<select class="btn btn-ghost btn-sm status-sel" data-cid="'+cid+'" onchange="setStatus(this.dataset.cid,this.value)">'+opts+'</select>'+
-          '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)">✉</button>'+
-        '</div>'+
-      '</div>';
-    });
-
-    kbHtml+='<div class="kb-col '+escA(col.cls)+'">'+
-      '<div class="kb-hdr">'+
-        '<span class="kb-title">'+escH(col.ico+' '+col.lbl)+'</span>'+
-        '<span class="kb-count">'+cards.length+'</span>'+
-      '</div>'+
-      (cardsHtml||'<div style="font-size:.75rem;color:var(--t4);text-align:center;padding:1rem">Vide</div>')+
-    '</div>';
-  });
-  document.getElementById('kanban').innerHTML=kbHtml;
-}
-
-
-function updateBadges(){
-  const tracked=Object.keys(crmData).length;
-  const inRadar=radarResults.length;
-  document.getElementById('badge-radar').textContent=inRadar||'';
-  document.getElementById('badge-radar').style.display=inRadar?'':'none';
-  document.getElementById('badge-suivi').textContent=tracked||'';
-  document.getElementById('badge-suivi').style.display=tracked?'':'none';
-  if(document.getElementById('sg').style.display!=='none'){
-    const ns=Object.values(crmData).filter(c=>c.status==='sent').length;
-    document.getElementById('sg').innerHTML=[
-      {n:inRadar,l:'Structures trouvées'},
-      {n:tracked,l:'En suivi CRM'},
-      {n:ns,l:'Emails envoyés'},
-      {n:Object.values(crmData).filter(c=>c.status==='acc').length,l:'✅ Accepté'},
-    ].map(s=>`<div class="sc"><div class="sn">${s.n}</div><div class="sl">${s.l}</div></div>`).join('');
-  }
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTION 8 — MODULE EMAIL
-// ════════════════════════════════════════════════════════════
-const TMPLS={
-
-// ── IT & ESN ───────────────────────────────────────────────────────────────
-ESN:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Recherche de période en entreprise – TP TIP – ${s.prenom} ${s.nom} – Du ${s.debut} au ${s.fin}
-
-${sal}
-
-Je me permets de vous contacter dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP) au sein de ${s.etab}. Je suis actuellement à la recherche d'une période en entreprise non rémunérée, du ${s.debut} au ${s.fin}, pour valider mon titre professionnel.
-
-${c.n} m'attire particulièrement pour la diversité des environnements techniques auxquels vous intervenez et la polyvalence que ce type de structure exige au quotidien. C'est précisément ce contexte qui me permettrait de progresser rapidement : travailler sur des projets variés, en contact avec des utilisateurs aux profils différents, et m'adapter à des contraintes techniques que l'on ne retrouve pas ailleurs.
-
-Ma formation m'a permis de développer des compétences solides en support utilisateur N1/N2, helpdesk, déploiement et maintenance de postes sous Windows 10/11, administration Active Directory, gestion de parc avec GLPI, et bases réseau (TCP/IP, DNS, DHCP). Je suis à l'aise aussi bien sur les interventions matérielles que logicielles, et j'accorde une grande importance à la relation avec l'utilisateur final — expliquer, rassurer, trouver une solution durable plutôt qu'un contournement rapide.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
-
-Je serais sincèrement heureux(se) de vous présenter mon projet professionnel lors d'un entretien, à la date qui vous conviendra le mieux. Je reste bien entendu disponible pour toute information complémentaire.
-
-Dans l'attente de votre retour, veuillez agréer, ${sal.includes('Bonjour')?ct:'Madame, Monsieur'}, l'expression de mes salutations distinguées.
-
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-},
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Candidature spontanée – Période en entreprise TP TIP – ${s.prenom} ${s.nom}
-
-${sal}
-
-En formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je recherche une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Cette période, non rémunérée, constitue une étape clé dans la validation de mon titre professionnel.
-
-Ce qui m'a conduit vers ${c.n}, c'est votre positionnement en tant qu'acteur du numérique et la réalité du terrain que vous proposez à vos équipes : des missions concrètes, des clients exigeants, et une nécessité permanente de réactivité. C'est dans ce type d'environnement que je souhaite démontrer ce que j'ai appris et, surtout, continuer à apprendre.
-
-Techniquement, je suis opérationnel(le) sur les aspects clés du support de proximité : prise en main à distance, gestion de tickets, installation et configuration de postes, administration Active Directory, câblage et diagnostic réseau. Au-delà des compétences techniques, j'ai également travaillé sur ma capacité à communiquer avec des utilisateurs non techniciens — ce qui, je crois, est souvent ce qui fait la différence dans ce métier.${s.comp?'\n\n'+s.comp:''}
-
-Je serais ravi(e) d'échanger avec vous sur cette opportunité, et de vous montrer concrètement comment je pourrais m'intégrer à votre équipe le temps de cette période.
-
-Cordialement,
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-TP TIP – ${s.etab}`;
-}],
-
-// ── SECTEUR PUBLIC ────────────────────────────────────────────────────────
-Public:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Demande de période en entreprise – TP TIP non rémunérée – ${s.prenom} ${s.nom}
-
-${sal}
-
-Je me permets de vous adresser ma candidature dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Mon cursus prévoit une période obligatoire en entreprise du ${s.debut} au ${s.fin}, non rémunérée, et je souhaiterais vivement l'effectuer au sein de ${c.n}.
-
-Le service public représente pour moi bien plus qu'un simple contexte professionnel. Travailler à la fiabilité des outils informatiques utilisés par des agents dont la mission impacte directement des usagers, c'est une responsabilité qui fait sens. Un poste informatique qui ne fonctionne pas, c'est un service rendu au citoyen qui se dégrade — et c'est précisément ce genre d'enjeu concret qui me motive.
-
-En termes de compétences, ma formation m'a préparé au support utilisateur N1/N2, à la gestion de parcs informatiques sous Windows 10/11, à l'administration Active Directory, au helpdesk et à la gestion de tickets (GLPI), ainsi qu'aux bases des réseaux (TCP/IP, DNS, DHCP). Je suis quelqu'un de rigoureux(se), ponctuel(le), et habitué(e) à m'adapter aux contraintes d'environnements exigeants.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
-
-Je serais honoré(e) de vous rencontrer pour vous présenter mon parcours et ma motivation. Je reste disponible selon vos disponibilités.
-
-Dans l'attente de votre réponse, veuillez agréer, ${sal.includes('Bonjour')?ct:'Madame, Monsieur'}, l'expression de mes salutations respectueuses.
-
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-}],
-
-// ── SANTÉ ─────────────────────────────────────────────────────────────────
-Santé:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Période en entreprise TP TIP – Technicien informatique – ${s.prenom} ${s.nom} – Non rémunérée
-
-${sal}
-
-Dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je suis à la recherche d'une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Ce stage non rémunéré est indispensable à la validation de mon titre professionnel, et j'aimerais sincèrement l'accomplir au sein de ${c.n}.
-
-Le secteur de la santé est l'un de ceux où l'informatique a le plus de poids réel. Une panne sur un poste de soins, un accès bloqué à un dossier patient, une imprimante hors service dans un service d'urgence — ces situations ont des conséquences bien au-delà du simple inconfort. C'est cette dimension-là, la responsabilité portée par la fiabilité technique, qui m'attire dans votre environnement. J'en mesure l'exigence et je suis prêt(e) à y répondre.
-
-Ma formation m'a préparé au support utilisateur, à la maintenance et au déploiement de postes sous Windows 10/11, à l'Active Directory, au helpdesk N1/N2 et à la gestion de parc (GLPI). Je suis discret(e), rigoureux(se), et respectueux(se) des protocoles propres aux environnements sensibles.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
-
-Je serais heureux(se) de vous rencontrer pour vous présenter mon projet professionnel, à la date de votre choix.
-
-Cordialement,
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-}],
-
-// ── LYCÉES & COLLÈGES ─────────────────────────────────────────────────────
-Lycées:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame la Proviseure, Monsieur le Proviseur,';
-  return `Objet : Demande d'accueil en période entreprise – TP TIP – ${s.prenom} ${s.nom}
-
-${sal}
-
-Je me permets de vous contacter afin de solliciter un accueil au sein de votre établissement dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Cette période en entreprise, obligatoire et non rémunérée, se déroulerait du ${s.debut} au ${s.fin}.
-
-Le milieu éducatif m'intéresse pour des raisons très concrètes : un établissement scolaire, c'est un parc informatique hétérogène, des utilisateurs aux profils très variés (enseignants, personnels administratifs, élèves), des contraintes réseau spécifiques liées au réseau académique, et une obligation de disponibilité permanente. C'est exactement le type d'environnement où les compétences d'un technicien de proximité prennent tout leur sens — et où j'aurais l'occasion d'en acquérir de nouvelles.
-
-En termes de compétences, je suis à l'aise avec le déploiement et la maintenance de postes Windows 10/11, la gestion Active Directory, le helpdesk utilisateur, GLPI, ainsi que le dépannage des équipements périphériques courants (imprimantes, vidéoprojecteurs, TNI). Je suis conscient(e) du cadre particulier d'un établissement scolaire et du sérieux qu'il requiert.${s.comp?'\n\n'+s.comp:''}
-
-Je resterais bien entendu discret(e) et respectueux(se) du bon fonctionnement de votre établissement tout au long de cette période.
-
-Dans l'espoir que ma candidature retiendra votre attention, je me tiens à votre disposition pour tout entretien ou information complémentaire.
-
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-},
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Candidature période entreprise TIP (non rémunérée) – ${s.prenom} ${s.nom} – ${s.debut} au ${s.fin}
-
-${sal}
-
-En formation Titre Professionnel TIP à ${s.etab}, je suis à la recherche d'un établissement scolaire pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Je souhaiterais pouvoir la réaliser au sein de ${c.n}.
-
-Ce qui m'a attiré vers les établissements de l'enseignement, c'est la réalité quotidienne du poste : assister des professeurs qui ont besoin de leur équipement pour faire cours, maintenir des salles informatiques opérationnelles, intervenir rapidement sans perturber la vie scolaire. Ce n'est pas un environnement spectaculaire, mais c'est un environnement où chaque intervention compte vraiment.
-
-Je maîtrise les outils classiques du support de proximité : Windows 10/11, Active Directory, GLPI, dépannage matériel et logiciel, réseau de base, gestion des imprimantes et vidéoprojecteurs. J'ai également le sens du contact et la patience nécessaire pour accompagner des utilisateurs qui ne sont pas familiers avec les aspects techniques.${s.comp?'\n\n'+s.comp:''}
-
-Je serais disponible pour un entretien à votre convenance.
-
-Cordialement,
-${s.prenom} ${s.nom} – ${s.tel} – ${s.email}
-TP TIP – ${s.etab}`;
-}],
-
-// ── ASSOCIATIF ────────────────────────────────────────────────────────────
-Asso:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Demande de période en entreprise – TP TIP non rémunérée – ${s.prenom} ${s.nom}
-
-${sal}
-
-Je me permets de vous contacter dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Je suis à la recherche d'une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}, non rémunérée.
-
-${c.n} m'attire pour une raison simple : dans une structure associative, l'informatique n'est pas une fin en soi, elle est au service d'une mission. Maintenir des outils fiables pour des équipes qui travaillent souvent avec des ressources limitées, c'est une forme d'engagement que je trouve particulièrement motivante. J'ai envie de mettre mes compétences techniques au service de quelque chose qui dépasse le seul objectif commercial.
-
-Ma formation m'a préparé au support utilisateur, à la maintenance des postes de travail Windows 10/11, à la gestion de réseau de base, au helpdesk et au dépannage courant. Je suis autonome, débrouillard(e), et habitué(e) à travailler dans des environnements où les solutions "à la carte" sont souvent plus adaptées qu'une procédure standard.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
-
-Je serais heureux(se) d'échanger avec vous pour voir comment je pourrais m'intégrer à votre équipe le temps de cette période.
-
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-}],
-
-};
-TMPLS.Education=TMPLS.ESN;TMPLS.Industrie=TMPLS.ESN;TMPLS.Logistique=TMPLS.ESN;
-TMPLS.Banque=TMPLS.Public;TMPLS.PME=TMPLS.ESN;TMPLS.Médias=TMPLS.ESN;TMPLS.Coworking=TMPLS.ESN;
-
+// ── REFRESH EMAIL LIST ──────────────────────────────────────────────────
 function refreshEmailList(){
-  var sel=document.getElementById('e_company');
-  var current=sel.value;
+  var sel=document.getElementById('e_company'),cur=sel.value;
   var opts='<option value="">— Sélectionner une entreprise du suivi —</option>';
   if(radarResults.length){
     radarResults.forEach(function(c){
-      var inSuivi=!!crmData[c.id];
-      var style=inSuivi?'':' style="color:var(--t4)"';
-      var note=inSuivi?'':' — ajouter au suivi d’abord';
-      opts+='<option value="'+escA(c.id)+'"'+style+'>'+escH(c.n)+' ('+escH(c.t)+')'+escH(note)+'</option>';
+      var inS=!!crmData[c.id];
+      opts+='<option value="'+escA(c.id)+'"'+(inS?'':' style="color:var(--t4)"')+'>'+
+        escH(c.n)+' ('+escH(c.t)+')'+(c.alt?' 🟢':'')+(inS?'':' — ajouter au suivi d\u2019abord')+'</option>';
     });
-  } else {
-    opts+='<option disabled>Lance d’abord le radar</option>';
-  }
+  }else{opts+='<option disabled>Lance le radar d\u2019abord</option>';}
   sel.innerHTML=opts;
-  if(current)sel.value=current;
+  if(cur)sel.value=cur;
 }
 
+// ── BUILD EMAIL (unifié par mode + CV) ──────────────────────────────────
+function buildEmail(c,ct){
+  var sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  var mode=S.mode||'stage_nr';
+  var prenom=S.prenom||'';var nom=S.nom||'';
+  var etab=S.etab||'mon organisme de formation';
+  var diploma=S.formationDiploma||S.formationLabel||'formation professionnelle';
+  var skills=S.comp||(S.formation&&FORMATION_CONFIG[S.formation]?FORMATION_CONFIG[S.formation].skills:'')||'compétences acquises en formation';
+  var motiv=S.motiv||'';
+  // Enrichissement CV
+  var cvContext='';
+  if(S.cvText&&S.cvText.length>80){
+    var lines=S.cvText.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>10&&l.length<150;});
+    cvContext=lines.slice(0,3).join(' — ').substring(0,250);
+  }
+  var periode=mode==='stage_nr'||mode==='stage_r'?'du '+(S.debut||'début juin')+' au '+(S.fin||'fin juillet'):'';
+  var intro={
+    stage_nr:'En formation '+diploma+' au sein de '+etab+', je suis à la recherche d\u2019une période en entreprise non rémunérée '+periode+', indispensable à la validation de mon titre professionnel.',
+    stage_r:'En formation '+diploma+' à '+etab+', je recherche un stage rémunéré '+periode+' dans le cadre de mon cursus.',
+    alternance:'En recherche d\u2019un contrat d\u2019alternance (apprentissage ou professionnalisation) pour préparer mon '+diploma+', je vous adresse ma candidature.',
+    emploi:'Titulaire d\u2019un '+diploma+' obtenu à '+etab+', je suis en recherche active d\u2019un poste en CDI ou CDD et vous adresse ma candidature spontanée.',
+  }[mode];
+  var pourquoi=c.t==='Santé'?'Le secteur de la santé m\u2019attire pour la rigueur qu\u2019il exige : des outils fiables quand chaque minute compte pour les équipes soignantes.':
+    (c.t==='Public'||c.t==='Education')?'Le service public représente pour moi une vocation : mettre mes compétences au service de missions ayant un sens direct pour les usagers.':
+    (c.t==='Lycées')?'L\u2019environnement scolaire m\u2019intéresse : un parc hétérogène, des utilisateurs variés, une disponibilité permanente au service de la pédagogie.':
+    (c.t==='Garage')?'Le secteur automobile m\u2019attire pour sa technicité et l\u2019évolution rapide des équipements, notamment avec les véhicules électriques et les diagnostics embarqués.':
+    (c.t==='Restauration')?'La restauration est un secteur que j\u2019apprécie pour son rythme et la diversité des situations qu\u2019il impose au quotidien.':
+    (c.n+' retient mon attention pour la diversité des missions que votre activité implique et l\u2019opportunité de travailler dans un environnement professionnel exigeant.');
+  var skillSection='Ma formation m\u2019a permis de développer des compétences en '+skills+'.';
+  if(cvContext)skillSection+='\n\nÀ travers mon parcours : '+cvContext+'.';
+  if(motiv)skillSection+='\n\n'+motiv;
+  var closing={
+    stage_nr:'Je reste disponible pour un entretien et vous adresserai mon CV en pièce jointe.',
+    stage_r:'Je serais heureux(se) de vous rencontrer pour discuter des conditions du stage.',
+    alternance:'Je serais ravi(e) de vous présenter mon projet et d\u2019échanger sur une possible collaboration en alternance.',
+    emploi:'Mon CV vous permettra de mieux cerner mon parcours. Je reste disponible pour un entretien.',
+  }[mode];
+  var objet={'stage_nr':'Stage non rémunéré – '+diploma+' – '+prenom+' '+nom,
+    'stage_r':'Candidature stage rémunéré – '+diploma+' – '+prenom+' '+nom,
+    'alternance':'Candidature alternance – '+diploma+' – '+prenom+' '+nom,
+    'emploi':'Candidature spontanée – '+diploma+' – '+prenom+' '+nom}[mode];
+  return 'Objet : '+objet+'\n\n'+sal+'\n\n'+intro+'\n\n'+pourquoi+'\n\n'+skillSection+'\n\n'+closing+'\n\nCordialement,\n'+prenom+' '+nom+'\n'+(S.tel||'')+' · '+(S.email||'')+'\n'+diploma+' – '+etab;
+}
+
+// ── PICK EMAIL COMPANY ───────────────────────────────────────────────────
+function pickEmailCompany(){
+  emailCompanyId=document.getElementById('e_company').value;
+  emailVariant=0;
+  renderEmail();
+}
+
+// ── RENDER EMAIL ─────────────────────────────────────────────────────────
+function renderEmail(){
+  var c=radarResults.find(function(x){return x.id===emailCompanyId;});
+  if(!c){document.getElementById('ep').innerHTML='<div style="padding:2rem;text-align:center;color:var(--t4)">Sélectionne une entreprise</div>';return;}
+  var ct=(document.getElementById('e_contact')&&document.getElementById('e_contact').value||'').trim();
+  var txt=buildEmail(c,ct);
+  window._email=txt;
+  var lines=txt.split('\n');
+  var obj=lines[0].startsWith('Objet :')?lines[0].replace('Objet :','').trim():'';
+  var body=lines.slice(1).join('\n').trim();
+  document.getElementById('ep').innerHTML=
+    '<div class="eh">'+
+      '<div class="ef"><span class="efl">De</span><span>'+(S.prenom||'?')+' '+(S.nom||'?')+' &lt;'+(S.email||'?')+'&gt;</span></div>'+
+      '<div class="ef"><span class="efl">À</span><span style="color:var(--blue)">'+(c.e||'(chercher sur le site officiel)')+'</span></div>'+
+      (obj?'<div class="ef"><span class="efl">Objet</span><strong class="efl2">'+escH(obj)+'</strong></div>':'')+
+      (S.mode?'<div class="ef"><span class="efl">Mode</span><span style="font-size:.75rem;color:var(--t3)">'+getModeLabel()+'</span></div>':'')+
+    '</div>'+
+    '<div class="ebody">'+escH(body)+'</div>';
+  var cw=document.getElementById('e_contact_wrap');if(cw)cw.style.display='flex';
+  var li=document.getElementById('e_li_btn');if(li){li.style.display='block';li.dataset.cid=c.id;}
+  var nb=document.getElementById('e_notice');
+  if(nb){
+    if(!c.e){
+      var gs=searchUrl(c.n+' recrutement contact email RH');
+      nb.className='notice n-warn';nb.style.display='flex';
+      nb.innerHTML='⚠️ Pas d\u2019email connu — <a href="'+escA(gs)+'" target="_blank" style="color:var(--blue)">Rechercher sur '+((S&&S.searchEngine)||'Google')+'</a>';
+    }else{
+      nb.className='notice n-info';nb.style.display='flex';
+      nb.innerHTML='📧 '+escH(c.e);
+    }
+  }
+}
+
+// ── COPY EMAIL ───────────────────────────────────────────────────────────
+function copyEmail(){
+  var el=document.createElement('textarea');el.value=window._email||'';
+  el.style.cssText='position:absolute;top:-9999px';
+  document.body.appendChild(el);el.select();
+  try{document.execCommand('copy');}catch(e){}
+  document.body.removeChild(el);
+  var b=document.getElementById('copy-btn');
+  b.textContent='✅ Copié !';b.style.background='var(--green)';
+  setTimeout(function(){b.textContent='📋 Copier';b.style.background='';},2500);
+}
+
+// ── OPEN EMAIL FOR ───────────────────────────────────────────────────────
 function openEmailFor(id){
   emailCompanyId=id;emailVariant=0;
   goTab('email');
-  setTimeout(()=>{document.getElementById('e_company').value=id;renderEmail();},50);
+  setTimeout(function(){
+    var sel=document.getElementById('e_company');
+    if(sel)sel.value=id;
+    renderEmail();
+  },50);
 }
-function pickEmailCompany(){emailCompanyId=document.getElementById('e_company').value;emailVariant=0;renderEmail();}
-
-function renderEmail(){
-  const c=radarResults.find(x=>x.id===emailCompanyId);
-  if(!c){document.getElementById('ep').innerHTML='<div style="padding:2rem;text-align:center;color:var(--t4)">Sélectionne une entreprise</div>';return;}
-  const crm=crmData[c.id]||{};
-  const ct=(document.getElementById('e_contact').value||crm.contact||'').trim();
-  const arr=TMPLS[c.t]||TMPLS.ESN;
-  const fn=arr[emailVariant%arr.length];
-  const txt=fn(S,c,ct);
-  window._email=txt;
-  const lines=txt.split('\n');
-  const obj=lines[0].startsWith('Objet :')?lines[0].replace('Objet :','').trim():'';
-  const body=lines.slice(1).join('\n').trim();
-  document.getElementById('ep').innerHTML=`
-    <div class="eh">
-      <div class="ef"><span class="efl">De</span><span>${S.prenom||'?'} ${S.nom||'?'} &lt;${S.email||'?'}&gt;</span></div>
-      <div class="ef"><span class="efl">À</span><span style="color:var(--blue)">${c.e||'email: voir site officiel'}</span></div>
-      ${obj?`<div class="ef"><span class="efl">Objet</span><strong class="efl2">${esc(obj)}</strong></div>`:''}
-    </div>
-    <div class="ebody">${esc(body)}</div>`;
-  document.getElementById('e_var_lbl').textContent=`${emailVariant%arr.length+1}/${arr.length}`;
-  document.getElementById('e_contact_wrap').style.display='flex';
-  const li=document.getElementById('e_li_btn');
-  li.style.display='block';li.dataset.cid=c.id;
-  const nb=document.getElementById('e_notice');
-  if(!c.e){nb.className='notice n-warn';nb.style.display='flex';nb.textContent="⚠️ Pas d'email vérifié — clique 🌐 sur la fiche pour trouver l'email de contact.";}
-  else{nb.className='notice n-info';nb.style.display='flex';nb.textContent=`📧 Email : ${c.e}`;}
-}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function nextVar(){emailVariant++;renderEmail();}
-function prevVar(){emailVariant--;if(emailVariant<0)emailVariant=0;renderEmail();}
-function copyEmail(){navigator.clipboard.writeText(window._email||'').then(()=>{const b=document.getElementById('copy-btn');b.textContent='✅ Copié !';b.style.background='var(--green)';setTimeout(()=>{b.textContent='📋 Copier';b.style.background='';},2500);});}
 
 function markEmailSent(){
   if(!emailCompanyId)return;
   setStatus(emailCompanyId,'sent');
-  const b=document.getElementById('mark-sent-btn');b.textContent='✓ Marqué !';b.disabled=true;
-  setTimeout(()=>{b.textContent='✅ Marquer envoyé';b.disabled=false;},2000);
+  var b=document.getElementById('mark-sent-btn');
+  b.textContent='✓ Marqué !';b.disabled=true;
+  setTimeout(function(){b.textContent='✅ Marquer envoyé';b.disabled=false;},2000);
 }
 
-// ════════════════════════════════════════════════════════════
-// SECTION 9 — LINKEDIN & LIENS EXTERNES
-// ════════════════════════════════════════════════════════════
-function openLinkedInFor(id){
-  const c=radarResults.find(x=>x.id===id);if(!c)return;
-  const kw=encodeURIComponent(`("DSI" OR "Directeur Informatique" OR "Responsable IT" OR "IT Manager" OR "Responsable Support" OR "RH") "${c.n}"`);
-  window.open(`https://www.linkedin.com/search/results/people/?keywords=${kw}`,'_blank');
-}
-function openLinkedIn(){const id=document.getElementById('e_li_btn').dataset.cid;if(id)openLinkedInFor(id);}
+function nextVar(){emailVariant++;renderEmail();}
+function prevVar(){emailVariant=Math.max(0,emailVariant-1);renderEmail();}
 
-// ════════════════════════════════════════════════════════════
-// SECTION 10 — EXPORT / IMPORT
-// ════════════════════════════════════════════════════════════
+function openLinkedIn(){
+  var id=document.getElementById('e_li_btn')&&document.getElementById('e_li_btn').dataset.cid;
+  if(id)openLinkedInFor(id);
+}
+
+// ── EXPORT / IMPORT ──────────────────────────────────────────────────────
 function exportCSV(){
-  const header='Entreprise,Type,Statut,Email,Site,Distance (km),Date envoi,PMSMP,Alternance,Source';
-  const rows=radarResults.filter(c=>crmData[c.id]).map(c=>{
-    const crm=crmData[c.id]||{};
-    return[c.n,c.t,crm.status||'',c.e||'',c.web||'',c._dist?.toFixed(1)||'',crm.sentDate||'',c.pmsmp?'Oui':'',c.alt?'Oui':'',c.src||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  var h='Entreprise,Type,Statut,Email,Distance (km),Date envoi,Alternance,Source';
+  var rows=radarResults.filter(function(c){return crmData[c.id];}).map(function(c){
+    var crm=crmData[c.id]||{};
+    return[c.n,c.t,crm.status||'',c.e||'',c._dist?c._dist.toFixed(1):'',crm.sentDate||'',c.alt?'Oui':'',c.src||'']
+      .map(function(v){return'"'+String(v).replace(/"/g,'""')+'"';}).join(',');
   });
-  dl([header,...rows].join('\n'),'stage-tip-suivi.csv','text/csv');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([[h].concat(rows).join('\n')],{type:'text/csv'}));
+  a.download='stagios-suivi.csv';a.click();
 }
+
 function exportJSON(){
-  dl(JSON.stringify({version:VERSION,date:new Date().toISOString(),profil:S,coords,radarResults,crmData},null,2),'stage-tip-sauvegarde.json','application/json');
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify({profil:S,coords:coords,radarResults:radarResults,crmData:crmData,blacklist:[..._blacklist]},null,2)],{type:'application/json'}));
+  a.download='stagios-sauvegarde.json';a.click();
 }
+
 function importJSON(ev){
-  const f=ev.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=e=>{
+  var f=ev.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(e){
     try{
-      const d=JSON.parse(e.target.result);
-      if(d.profil)S=d.profil;if(d.coords)coords=d.coords;
-      if(d.radarResults)radarResults=d.radarResults;if(d.crmData)crmData=d.crmData;
-      persist();fillProfileForm();updateBadges();
-      alert(`✅ Sauvegarde restaurée — ${Object.keys(crmData).length} entreprises en suivi.`);
-    }catch(err){alert("Fichier JSON invalide.");}
-  };r.readAsText(f);
-}
-function dl(data,name,type){
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();
-}
-
-// ════════════════════════════════════════════════════════════
-// SECTION 11 — PROFIL & INITIALISATION
-// ════════════════════════════════════════════════════════════
-async function saveProfile(){
-  const f=id=>document.getElementById(id)?.value.trim()||'';
-  if(!f('p_prenom')||!f('p_nom')||!f('p_tel')||!f('p_email')||!f('p_etab')){
-    alert("Merci de remplir tous les champs obligatoires (*)");return;
-  }
-  const fmt={day:'numeric',month:'long',year:'numeric'};
-  const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
-  const _fid=document.getElementById('p_formation')?.value||'Custom';
-  const _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
-  const _customFName=f('p_custom_formation');
-  S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab'),
-    formation:_fid,
-    formationLabel:_fid==='Custom'?(_customFName||'Formation personnalisée'):_fc.label,
-    formationDiploma:_fid==='Custom'?(_customFName||''):_fc.diploma,
-    formationEmoji:_fc.emoji||'✏️',
-    searchEngine:document.getElementById('p_search_engine')?.value||'google',
-    customSectors:[..._customSectors],
-     debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
-     fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
-     comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase()};
-  persist();
-  showPbar();
-  goTab('radar');
-  // Géocoder l'adresse si elle a changé ou n'est pas encore géocodée
-  const _currentAddr=f('p_addr');
-  if(_currentAddr && _currentAddr!==_lastAddrForCoords && !_currentAddr.startsWith('GPS')){
-    document.getElementById('geo_st').textContent='🔍 Géocodage de l’adresse…';
-    try{
-      const _gr=await fetch('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(_currentAddr)+'&limit=1');
-      const _gd=await _gr.json();
-      if(_gd.features&&_gd.features.length>0){
-        const _gf=_gd.features[0],_gg=_gf.geometry.coordinates;
-        coords={lat:parseFloat(_gg[1]),lng:parseFloat(_gg[0])};
-        _lastAddrForCoords=_currentAddr;
-        document.getElementById('geo_st').textContent='✅ Adresse géocodée : '+(_gf.properties.label||'').split(',').slice(0,2).join(',');
-        showPbar();
-      }
-    }catch(_ge){
-      document.getElementById('geo_st').textContent='⚠️ Géocodage échoué. Sélectionne une suggestion dans la liste ou utilise le GPS.';
-    }
-  }
-  if(coords)launchRadar();else{
-    document.getElementById('radar-banner').style.display='flex';
-    document.getElementById('radar-msg').textContent='💡 Saisis ton adresse et sélectionne une suggestion dans la liste déroulante, ou clique sur 📡 GPS.';
-    setTimeout(()=>document.getElementById('radar-banner').style.display='none',8000);
-  }
+      var d=JSON.parse(e.target.result);
+      if(d.profil)S=d.profil;
+      if(d.coords)coords=d.coords;
+      if(d.radarResults)radarResults=d.radarResults;
+      if(d.crmData)crmData=d.crmData;
+      if(d.blacklist)_blacklist=new Set(d.blacklist);
+      fillProfileForm();updateBadges();
+      alert('✅ Restauré — '+Object.keys(crmData).length+' entreprises en suivi.');
+    }catch(err){alert('Fichier JSON invalide.');}
+  };
+  r.readAsText(f);
 }
 
-function showPbar(){
-  const pb=document.getElementById('pbar'),sg=document.getElementById('sg');
-  if(!S.prenom)return;
-  pb.style.display='flex';sg.style.display='grid';
-  pb.innerHTML=`<div class="avatar">${S.ini||'?'}</div><div><div class="pbar-name">${S.prenom} ${S.nom}</div><div class="pbar-sub">TP TIP · ${S.etab} · Stage du ${S.debut} au ${S.fin}${coords?' · 📍 position activée':''}</div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="goTab('profil')">Modifier</button>`;
-  updateBadges();
-}
 
-function fillProfileForm(){
-  if(S.formation){
-    const sel=document.getElementById('p_formation');
-    if(sel)sel.value=S.formation;
-    onFormationChange();
-  }
-  if(S.searchEngine){
-    const sel=document.getElementById('p_search_engine');
-    if(sel)sel.value=S.searchEngine;
-  }
-  if(S.customSectors&&S.customSectors.length){
-    _customSectors=[...S.customSectors];renderSectorTags();
-  }
-  ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
-    const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
-  });
-  showPbar();
-}
-
-// INIT
+// ── INIT ─────────────────────────────────────────────────────────────────
 (function(){
-  const t=localStorage.getItem('tip_theme')||(window.matchMedia?.('(prefers-color-scheme:dark)').matches?'dark':'light');
-  applyTheme(t);
-  restore();
+  loadBlacklist();
+  var dark=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if(dark)applyTheme('dark');
   buildCatGrid();
-  if(S.prenom){fillProfileForm();radarResults=[...PRELOADED];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
+  onModeChange();
+  updateBadges();
+  if(S.prenom){fillProfileForm();}
 })();
+
 </script>
 </body>
 </html>
