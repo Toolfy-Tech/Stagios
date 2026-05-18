@@ -1106,7 +1106,7 @@ function renderRadar(){
   const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
   const tf=document.getElementById('r_type')?.value||'';
   let fl=radarResults.filter(c=>
-    (!tf||c.t===tf)&&(!q||c.n.toLowerCase().includes(q)||c.t.toLowerCase().includes(q)||c.v.toLowerCase().includes(q))
+    (!tf||c.t===tf)&&(!q||(c.n||'').toLowerCase().includes(q)||(c.t||'').toLowerCase().includes(q)||(c.v||'').toLowerCase().includes(q))
   );
   if(!fl.length){document.getElementById('r_list').innerHTML='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';return;}
 
@@ -1206,70 +1206,6 @@ function cpEmail(btn){
   setTimeout(function(){btn.textContent=orig;},1500);
 }
 
-
-function renderRadar(){
-  const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
-  const tf=document.getElementById('r_type')?.value||'';
-  let fl=radarResults.filter(c=>
-    (!tf||c.t===tf)&&(!q||c.n.toLowerCase().includes(q)||c.t.toLowerCase().includes(q)||c.v.toLowerCase().includes(q))
-  );
-  if(!fl.length){document.getElementById('r_list').innerHTML='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';return;}
-
-  // Group by distance tier
-  const tiers=[
-    {max:5,ico:'🏠',lbl:'Très proches',cls:'t1'},
-    {max:15,ico:'🚶',lbl:'Proches (5–15 km)',cls:'t2'},
-    {max:30,ico:'🚌',lbl:'Accessibles (15–30 km)',cls:'t3'},
-    {max:50,ico:'🚗',lbl:'Envisageables (30–50 km)',cls:'t4'},
-    {max:9999,ico:'📍',lbl:'Plus loin',cls:'t4'},
-  ];
-  let h='';
-  tiers.forEach((tier,ti)=>{
-    const prev=tiers[ti-1]?.max??0;
-    const grp=fl.filter(c=>{const d=c._dist??9999;return d<tier.max&&d>=prev;});
-    if(!grp.length)return;
-    h+=`<div class="sdiv-dist ${tier.cls}">${tier.ico} ${tier.lbl} — ${grp.length} structure${grp.length>1?'s':''}</div>`;
-    h+=grp.map(radarCard).join('');
-  });
-  // Ajouter section masqués si besoin
-  var blCount=radarResults.filter(function(c){return _blacklist.has(c.id);}).length;
-  if(blCount>0){
-    h+='<div style="margin-top:1rem;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">'+
-      '<span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount+' structure'+(blCount>1?'s':'')+' masquée'+(blCount>1?'s':'')+'</span>'+
-      '<button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button>'+
-    '</div>';
-  }
-  document.getElementById('r_list').innerHTML=h;
-}
-
-function radarCard(c){
-  const d=c._dist,t=tier(d);
-  const inCRM=crmData[c.id];
-  const emailBtn=c.e
-    ?`<button class="btn btn-ghost btn-sm" onclick="navigator.clipboard.writeText('${c.e}');this.textContent='✓';setTimeout(()=>this.textContent='📧',1500)" title="Copier l'email">📧</button>`
-    :(c.web?`<a class="btn btn-ghost btn-sm" href="${c.web.startsWith('http')?c.web:'https://'+c.web}?q=recrutement+contact" target="_blank" title="Chercher email sur le site">🌐</a>`:'');
-  const crmBtn=inCRM
-    ?`<button class="btn btn-ghost btn-sm" onclick="goTab('suivi')" style="color:var(--green)">📋 ${CRM_COLS.find(x=>x.id===inCRM.status)?.lbl||'Suivi'}</button>`
-    :`<button class="btn btn-primary btn-sm" onclick="addToSuivi('${c.id}')">➕ Suivi</button>`;
-  const badges=[
-    c.disc?'<span class="disc-badge">découvert</span>':'',
-    c.pmsmp?'<span class="pmsmp-badge">PMSMP</span>':'',
-    c.alt?'<span class="alt-badge">alternance</span>':'',
-  ].filter(Boolean).join(' ');
-  return`<div class="cc">
-    <div class="clog">${ini(c.n)}</div>
-    <div class="ci">
-      <div class="cn">${c.n} <span class="badge b-${c.t}">${c.t}</span>${t.lbl?` <span class="tier ${t.cls}">${t.lbl}</span>`:''} ${badges}</div>
-      <div class="cd">${c.d||''}${c.v?' · '+c.v:''}</div>
-      <div class="ce">${c.e?'📧 '+c.e:(c.web?'🌐 '+c.web.replace(/^https?:\/\//,'').split('/')[0]:'')}</div>
-    </div>
-    <div class="ca">${emailBtn}
-      <button class="btn btn-ghost btn-sm" onclick="openLinkedInFor('${c.id}')" title="Chercher le contact">🔗</button>
-      ${crmBtn}
-      <button class="btn btn-teal btn-sm" onclick="openEmailFor('${c.id}')">✉</button>
-    </div>
-  </div>`;
-}
 
 function ini(n){return(n||'?').split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';}
 
@@ -1708,6 +1644,7 @@ function fillProfileForm(){
 (function(){
   const t=localStorage.getItem('tip_theme')||(window.matchMedia?.('(prefers-color-scheme:dark)').matches?'dark':'light');
   applyTheme(t);
+  loadBlacklist();
   restore();
   buildCatGrid();
   if(S.prenom){fillProfileForm();radarResults=[...PRELOADED];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
