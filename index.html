@@ -1410,162 +1410,52 @@ function updateBadges(){
 }
 
 // ════════════════════════════════════════════════════════════
-// SECTION 8 — MODULE EMAIL
+// SECTION 8 — MOTEUR EMAIL DYNAMIQUE
 // ════════════════════════════════════════════════════════════
-const TMPLS={
+const EMAIL_VARIANTS=2;
 
-// ── IT & ESN ───────────────────────────────────────────────────────────────
+// Paragraphes "pourquoi cette structure" — 2 formulations par type
+const _CTX={
 ESN:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Recherche de période en entreprise – TP TIP – ${s.prenom} ${s.nom} – Du ${s.debut} au ${s.fin}
-
-${sal}
-
-Je me permets de vous contacter dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP) au sein de ${s.etab}. Je suis actuellement à la recherche d'une période en entreprise non rémunérée, du ${s.debut} au ${s.fin}, pour valider mon titre professionnel.
-
-${c.n} m'attire particulièrement pour la diversité des environnements techniques auxquels vous intervenez et la polyvalence que ce type de structure exige au quotidien. C'est précisément ce contexte qui me permettrait de progresser rapidement : travailler sur des projets variés, en contact avec des utilisateurs aux profils différents, et m'adapter à des contraintes techniques que l'on ne retrouve pas ailleurs.
-
-Ma formation m'a permis de développer des compétences solides en support utilisateur N1/N2, helpdesk, déploiement et maintenance de postes sous Windows 10/11, administration Active Directory, gestion de parc avec GLPI, et bases réseau (TCP/IP, DNS, DHCP). Je suis à l'aise aussi bien sur les interventions matérielles que logicielles, et j'accorde une grande importance à la relation avec l'utilisateur final — expliquer, rassurer, trouver une solution durable plutôt qu'un contournement rapide.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
-
-Je serais sincèrement heureux(se) de vous présenter mon projet professionnel lors d'un entretien, à la date qui vous conviendra le mieux. Je reste bien entendu disponible pour toute information complémentaire.
-
-Dans l'attente de votre retour, veuillez agréer, ${sal.includes('Bonjour')?ct:'Madame, Monsieur'}, l'expression de mes salutations distinguées.
-
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-},
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Candidature spontanée – Période en entreprise TP TIP – ${s.prenom} ${s.nom}
-
-${sal}
-
-En formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je recherche une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Cette période, non rémunérée, constitue une étape clé dans la validation de mon titre professionnel.
-
-Ce qui m'a conduit vers ${c.n}, c'est votre positionnement en tant qu'acteur du numérique et la réalité du terrain que vous proposez à vos équipes : des missions concrètes, des clients exigeants, et une nécessité permanente de réactivité. C'est dans ce type d'environnement que je souhaite démontrer ce que j'ai appris et, surtout, continuer à apprendre.
-
-Techniquement, je suis opérationnel(le) sur les aspects clés du support de proximité : prise en main à distance, gestion de tickets, installation et configuration de postes, administration Active Directory, câblage et diagnostic réseau. Au-delà des compétences techniques, j'ai également travaillé sur ma capacité à communiquer avec des utilisateurs non techniciens — ce qui, je crois, est souvent ce qui fait la différence dans ce métier.${s.comp?'\n\n'+s.comp:''}
-
-Je serais ravi(e) d'échanger avec vous sur cette opportunité, et de vous montrer concrètement comment je pourrais m'intégrer à votre équipe le temps de cette période.
-
-Cordialement,
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-TP TIP – ${s.etab}`;
-}],
-
-// ── SECTEUR PUBLIC ────────────────────────────────────────────────────────
+(n,fl)=>`${n} m'attire particulièrement pour la diversité des environnements clients et la polyvalence que ce type de structure exige au quotidien. Intervenir sur des contextes techniques variés, auprès d'utilisateurs aux profils différents, c'est précisément le terrain sur lequel un(e) candidat(e) en ${fl} peut progresser rapidement et démontrer sa capacité d'adaptation.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est votre positionnement d'acteur du numérique et la réalité du terrain que vous proposez : des missions concrètes, des clients exigeants, une nécessité permanente de réactivité. C'est exactement le type d'environnement où les compétences acquises en ${fl} prennent tout leur sens.`,
+],
 Public:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Demande de période en entreprise – TP TIP non rémunérée – ${s.prenom} ${s.nom}
-
-${sal}
-
-Je me permets de vous adresser ma candidature dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Mon cursus prévoit une période obligatoire en entreprise du ${s.debut} au ${s.fin}, non rémunérée, et je souhaiterais vivement l'effectuer au sein de ${c.n}.
-
-Le service public représente pour moi bien plus qu'un simple contexte professionnel. Travailler à la fiabilité des outils informatiques utilisés par des agents dont la mission impacte directement des usagers, c'est une responsabilité qui fait sens. Un poste informatique qui ne fonctionne pas, c'est un service rendu au citoyen qui se dégrade — et c'est précisément ce genre d'enjeu concret qui me motive.
-
-En termes de compétences, ma formation m'a préparé au support utilisateur N1/N2, à la gestion de parcs informatiques sous Windows 10/11, à l'administration Active Directory, au helpdesk et à la gestion de tickets (GLPI), ainsi qu'aux bases des réseaux (TCP/IP, DNS, DHCP). Je suis quelqu'un de rigoureux(se), ponctuel(le), et habitué(e) à m'adapter aux contraintes d'environnements exigeants.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
-
-Je serais honoré(e) de vous rencontrer pour vous présenter mon parcours et ma motivation. Je reste disponible selon vos disponibilités.
-
-Dans l'attente de votre réponse, veuillez agréer, ${sal.includes('Bonjour')?ct:'Madame, Monsieur'}, l'expression de mes salutations respectueuses.
-
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-}],
-
-// ── SANTÉ ─────────────────────────────────────────────────────────────────
+(n,fl)=>`Le service public représente pour moi bien plus qu'un cadre professionnel. Travailler à la fiabilité des outils utilisés par des agents dont la mission impacte directement des usagers, c'est une responsabilité concrète qui donne du sens à chaque intervention. C'est cette dimension qui me motive à intégrer ${n}.`,
+(n,fl)=>`${n} m'intéresse pour le sérieux et la rigueur qu'implique le service public. Garantir le bon fonctionnement des outils au quotidien, dans un environnement structuré et exigeant, c'est exactement le cadre dans lequel je souhaite mettre à profit ma formation en ${fl}.`,
+],
 Santé:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Période en entreprise TP TIP – Technicien informatique – ${s.prenom} ${s.nom} – Non rémunérée
-
-${sal}
-
-Dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP) à ${s.etab}, je suis à la recherche d'une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Ce stage non rémunéré est indispensable à la validation de mon titre professionnel, et j'aimerais sincèrement l'accomplir au sein de ${c.n}.
-
-Le secteur de la santé est l'un de ceux où l'informatique a le plus de poids réel. Une panne sur un poste de soins, un accès bloqué à un dossier patient, une imprimante hors service dans un service d'urgence — ces situations ont des conséquences bien au-delà du simple inconfort. C'est cette dimension-là, la responsabilité portée par la fiabilité technique, qui m'attire dans votre environnement. J'en mesure l'exigence et je suis prêt(e) à y répondre.
-
-Ma formation m'a préparé au support utilisateur, à la maintenance et au déploiement de postes sous Windows 10/11, à l'Active Directory, au helpdesk N1/N2 et à la gestion de parc (GLPI). Je suis discret(e), rigoureux(se), et respectueux(se) des protocoles propres aux environnements sensibles.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
-
-Je serais heureux(se) de vous rencontrer pour vous présenter mon projet professionnel, à la date de votre choix.
-
-Cordialement,
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-}],
-
-// ── LYCÉES & COLLÈGES ─────────────────────────────────────────────────────
+(n,fl)=>`Le secteur de la santé est l'un de ceux où chaque intervention a un poids réel. Un équipement défaillant dans un service de soins, c'est une conséquence directe sur les patients et les soignants. C'est cette dimension — la responsabilité portée par la fiabilité — qui m'attire dans l'environnement de ${n}, et dont je mesure pleinement l'exigence.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est la conscience que dans votre secteur, les outils ne sont pas accessoires : ils soutiennent des missions critiques. Intervenir avec rigueur et discrétion dans un environnement aussi sensible, c'est précisément ce à quoi ma formation en ${fl} me prépare.`,
+],
 Lycées:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame la Proviseure, Monsieur le Proviseur,';
-  return `Objet : Demande d'accueil en période entreprise – TP TIP – ${s.prenom} ${s.nom}
-
-${sal}
-
-Je me permets de vous contacter afin de solliciter un accueil au sein de votre établissement dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Cette période en entreprise, obligatoire et non rémunérée, se déroulerait du ${s.debut} au ${s.fin}.
-
-Le milieu éducatif m'intéresse pour des raisons très concrètes : un établissement scolaire, c'est un parc informatique hétérogène, des utilisateurs aux profils très variés (enseignants, personnels administratifs, élèves), des contraintes réseau spécifiques liées au réseau académique, et une obligation de disponibilité permanente. C'est exactement le type d'environnement où les compétences d'un technicien de proximité prennent tout leur sens — et où j'aurais l'occasion d'en acquérir de nouvelles.
-
-En termes de compétences, je suis à l'aise avec le déploiement et la maintenance de postes Windows 10/11, la gestion Active Directory, le helpdesk utilisateur, GLPI, ainsi que le dépannage des équipements périphériques courants (imprimantes, vidéoprojecteurs, TNI). Je suis conscient(e) du cadre particulier d'un établissement scolaire et du sérieux qu'il requiert.${s.comp?'\n\n'+s.comp:''}
-
-Je resterais bien entendu discret(e) et respectueux(se) du bon fonctionnement de votre établissement tout au long de cette période.
-
-Dans l'espoir que ma candidature retiendra votre attention, je me tiens à votre disposition pour tout entretien ou information complémentaire.
-
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-},
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Candidature période entreprise TIP (non rémunérée) – ${s.prenom} ${s.nom} – ${s.debut} au ${s.fin}
-
-${sal}
-
-En formation Titre Professionnel TIP à ${s.etab}, je suis à la recherche d'un établissement scolaire pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}. Je souhaiterais pouvoir la réaliser au sein de ${c.n}.
-
-Ce qui m'a attiré vers les établissements de l'enseignement, c'est la réalité quotidienne du poste : assister des professeurs qui ont besoin de leur équipement pour faire cours, maintenir des salles informatiques opérationnelles, intervenir rapidement sans perturber la vie scolaire. Ce n'est pas un environnement spectaculaire, mais c'est un environnement où chaque intervention compte vraiment.
-
-Je maîtrise les outils classiques du support de proximité : Windows 10/11, Active Directory, GLPI, dépannage matériel et logiciel, réseau de base, gestion des imprimantes et vidéoprojecteurs. J'ai également le sens du contact et la patience nécessaire pour accompagner des utilisateurs qui ne sont pas familiers avec les aspects techniques.${s.comp?'\n\n'+s.comp:''}
-
-Je serais disponible pour un entretien à votre convenance.
-
-Cordialement,
-${s.prenom} ${s.nom} – ${s.tel} – ${s.email}
-TP TIP – ${s.etab}`;
-}],
-
-// ── ASSOCIATIF ────────────────────────────────────────────────────────────
+(n,fl)=>`Un établissement scolaire, c'est un parc informatique hétérogène, des utilisateurs aux profils très variés — enseignants, personnel administratif, élèves —, des contraintes liées au réseau académique, et une disponibilité permanente requise. C'est le type d'environnement où les compétences de terrain prennent tout leur sens, et c'est pourquoi je souhaite réaliser ma période au sein de ${n}.`,
+(n,fl)=>`Ce qui m'a attiré(e) vers les établissements scolaires, c'est la réalité quotidienne du poste : maintenir les équipements opérationnels pour que l'enseignement puisse avoir lieu, accompagner des utilisateurs qui ont besoin que ça fonctionne. Chaque intervention compte vraiment.`,
+],
 Asso:[
-function(s,c,ct){
-  const sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  return `Objet : Demande de période en entreprise – TP TIP non rémunérée – ${s.prenom} ${s.nom}
-
-${sal}
-
-Je me permets de vous contacter dans le cadre de ma formation Titre Professionnel Technicien Informatique de Proximité (TIP), dispensée par ${s.etab}. Je suis à la recherche d'une structure pour effectuer ma période en entreprise obligatoire du ${s.debut} au ${s.fin}, non rémunérée.
-
-${c.n} m'attire pour une raison simple : dans une structure associative, l'informatique n'est pas une fin en soi, elle est au service d'une mission. Maintenir des outils fiables pour des équipes qui travaillent souvent avec des ressources limitées, c'est une forme d'engagement que je trouve particulièrement motivante. J'ai envie de mettre mes compétences techniques au service de quelque chose qui dépasse le seul objectif commercial.
-
-Ma formation m'a préparé au support utilisateur, à la maintenance des postes de travail Windows 10/11, à la gestion de réseau de base, au helpdesk et au dépannage courant. Je suis autonome, débrouillard(e), et habitué(e) à travailler dans des environnements où les solutions "à la carte" sont souvent plus adaptées qu'une procédure standard.${s.comp?'\n\n'+s.comp:''}${s.motiv?'\n\n'+s.motiv:''}
-
-Je serais heureux(se) d'échanger avec vous pour voir comment je pourrais m'intégrer à votre équipe le temps de cette période.
-
-${s.prenom} ${s.nom}
-${s.tel} · ${s.email}
-Titre Professionnel TIP – ${s.etab}`;
-}],
-
+(n,fl)=>`Dans une structure associative, les compétences professionnelles sont au service d'une mission qui dépasse le seul objectif commercial. Maintenir des outils fiables pour des équipes souvent en sous-effectif, avec des ressources limitées, c'est une forme d'engagement que je trouve particulièrement motivante. C'est pour cette raison que je souhaite effectuer ma période au sein de ${n}.`,
+(n,fl)=>`${n} m'attire pour une raison simple : ici, les compétences techniques ont une utilité directe au service d'un projet humain. Je suis autonome, débrouillard(e), et habitué(e) à trouver des solutions adaptées plutôt qu'à appliquer une procédure standard — ce qui me semble particulièrement pertinent dans votre contexte.`,
+],
+Garage:[
+(n,fl)=>`Un garage ou une structure automobile, c'est un environnement où la rigueur et la précision ne sont pas optionnelles : chaque intervention engage la sécurité du client. C'est ce niveau d'exigence qui m'attire dans ${n}, et c'est dans ce type de contexte que je souhaite consolider mes compétences en ${fl}.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est la réalité du métier que vous exercez : des diagnostics, des interventions diverses, et une clientèle qui compte sur vous. C'est exactement le terrain sur lequel un professionnel en formation en ${fl} peut apprendre le plus vite et le plus efficacement.`,
+],
+Commerce:[
+(n,fl)=>`${n} m'attire pour la réalité du terrain commercial : contact client direct, gestion des produits, dynamique d'équipe. C'est dans ce type d'environnement que les compétences acquises en ${fl} — relation client, techniques de vente, organisation — prennent toute leur valeur.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est votre positionnement commercial et la diversité des missions que ce type de structure peut proposer. Évoluer dans un environnement orienté client et résultats, c'est exactement ce que je recherche pour consolider ma formation en ${fl}.`,
+],
+Restauration:[
+(n,fl)=>`La restauration est un secteur d'exigence : rapidité, précision, hygiène, travail en équipe — tout doit fonctionner en même temps. C'est dans cet environnement que les compétences acquises en ${fl} ont le plus de poids. Je souhaite effectuer ma période au sein de ${n} pour y trouver ce niveau d'intensité et de réalisme professionnel.`,
+(n,fl)=>`${n} m'intéresse pour la réalité concrète du service que vous proposez. En cuisine ou en salle, chaque geste compte, et c'est précisément ce type d'environnement — exigeant, rythmé, centré sur le client — que je recherche pour mettre ma formation en ${fl} à l'épreuve.`,
+],
+Social:[
+(n,fl)=>`Travailler dans le secteur social ou médico-social, c'est exercer un métier où la qualité de l'accompagnement a un impact direct sur des personnes fragilisées. C'est cette dimension humaine et concrète qui m'attire vers ${n}, et c'est dans ce cadre que je souhaite mettre mes compétences en ${fl} au service d'une mission qui a du sens.`,
+(n,fl)=>`${n} m'attire pour l'engagement humain qui caractérise votre structure. Dans ce secteur, la rigueur professionnelle et l'écoute active sont au cœur de chaque intervention. C'est exactement le type d'environnement dans lequel je souhaite progresser en ${fl}.`,
+],
 };
-TMPLS.Education=TMPLS.ESN;TMPLS.Industrie=TMPLS.ESN;TMPLS.Logistique=TMPLS.ESN;
-TMPLS.Banque=TMPLS.Public;TMPLS.PME=TMPLS.ESN;TMPLS.Médias=TMPLS.ESN;TMPLS.Coworking=TMPLS.ESN;
+_CTX.Education=_CTX.ESN;_CTX.Coworking=_CTX.ESN;_CTX.PME=_CTX.ESN;_CTX.Médias=_CTX.ESN;
+_CTX.Banque=_CTX.Public;_CTX.Industrie=_CTX.ESN;_CTX.Logistique=_CTX.ESN;_CTX.BTP=_CTX.ESN;
+_CTX.Hôtellerie=_CTX.Restauration;_CTX.Collectivité=_CTX.Public;
 
 function refreshEmailList(){
   var sel=document.getElementById('e_company');
@@ -1592,24 +1482,86 @@ function openEmailFor(id){
 }
 function pickEmailCompany(){emailCompanyId=document.getElementById('e_company').value;emailVariant=0;renderEmail();}
 
-function buildModeEmail(c,ct){
-  var mode=S.mode||getMode();
-  var prenom=S.prenom||'';
-  var nom=S.nom||'';
-  var etab=S.etab||'mon organisme de formation';
-  var diploma=S.formationDiploma||S.formationLabel||'formation professionnelle';
-  var skills=S.comp||(S.formation&&FORMATION_CONFIG[S.formation]?FORMATION_CONFIG[S.formation].skills:'support utilisateur, outils numériques et adaptation terrain');
-  var periode=(mode==='stage_nr'||mode==='stage_r')?' du '+(S.debut||'début juin')+' au '+(S.fin||'fin juillet'):'';
+
+function generateEmail(s,c,ct,v){
+  var fc=FORMATION_CONFIG[s.formation]||{};
+  var mode=s.mode||getMode();
+  var diploma=fc.diploma||s.formationLabel||s.formation||'formation professionnelle';
+  var label=fc.label||s.formationLabel||'ma formation';
+  var skills=s.comp||fc.skills||'compétences acquises en formation';
+  var prenom=s.prenom||'';var nom=s.nom||'';
+  var etab=s.etab||'mon organisme de formation';
   var sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
-  var intro={stage_nr:'En formation '+diploma+' au sein de '+etab+', je suis à la recherche d’une période en entreprise non rémunérée'+periode+'.',stage_r:'En formation '+diploma+' à '+etab+', je recherche un stage rémunéré'+periode+' afin de consolider mes compétences en situation professionnelle.',alternance:'En recherche d’un contrat d’alternance, je souhaite rejoindre une structure où je pourrai progresser tout en contribuant concrètement aux missions de l’équipe.',emploi:'Titulaire ou en cours de validation d’un parcours '+diploma+', je suis en recherche active d’un poste en CDI ou CDD et je souhaite vous présenter ma candidature.'}[mode]||'';
-  var pourquoi=c.n+' m’intéresse pour son environnement et les missions concrètes que votre structure peut proposer. Je souhaite m’intégrer dans une équipe où la rigueur, le service et l’apprentissage terrain ont une vraie place.';
-  var skillSection='Ma formation et mon parcours m’ont permis de développer des compétences en '+skills+'.';
-  if(S.motiv)skillSection+='\n\n'+S.motiv;
-  var cv=getCvContext();
-  if(cv)skillSection+=cv;
-  var closing={stage_nr:'Je reste disponible pour un entretien et pourrai vous transmettre mon CV en pièce jointe.',stage_r:'Je serais heureux(se) de vous rencontrer pour discuter du contenu et des conditions du stage.',alternance:'Je serais ravi(e) d’échanger avec vous sur une possible collaboration en alternance.',emploi:'Mon CV vous permettra de mieux cerner mon parcours. Je reste disponible pour un entretien.'}[mode]||'Je reste disponible pour un entretien.';
-  var objet={stage_nr:'Stage non rémunéré – '+diploma+' – '+prenom+' '+nom,stage_r:'Candidature stage rémunéré – '+diploma+' – '+prenom+' '+nom,alternance:'Candidature alternance – '+diploma+' – '+prenom+' '+nom,emploi:'Candidature spontanée – '+diploma+' – '+prenom+' '+nom}[mode];
-  return 'Objet : '+objet+'\n\n'+sal+'\n\n'+intro+'\n\n'+pourquoi+'\n\n'+skillSection+'\n\n'+closing+'\n\nCordialement,\n'+prenom+' '+nom+'\n'+(S.tel||'')+' · '+(S.email||'');
+  var vi=(v||0)%EMAIL_VARIANTS;
+  var periode=(s.debut&&s.fin)?' du '+s.debut+' au '+s.fin:'';
+  var periodeLabel=(s.debut&&s.fin)?' – Du '+s.debut+' au '+s.fin:'';
+
+  var sujets={
+    stage_nr:'Recherche de période en entreprise – '+diploma+' – '+prenom+' '+nom+periodeLabel,
+    stage_r:'Candidature stage rémunéré – '+diploma+' – '+prenom+' '+nom+periodeLabel,
+    alternance:'Candidature alternance – '+diploma+' – '+prenom+' '+nom,
+    emploi:'Candidature spontanée – '+diploma+' – '+prenom+' '+nom,
+  };
+  var objet='Objet : '+(sujets[mode]||sujets.stage_nr);
+
+  var intros={
+    stage_nr:[
+      'Je me permets de vous contacter dans le cadre de ma formation '+diploma+' au sein de '+etab+'. Je suis à la recherche d\'une période en entreprise non rémunérée'+periode+' afin de valider mon parcours en situation professionnelle réelle.',
+      'En formation '+diploma+' à '+etab+', je suis à la recherche d\'une structure pour effectuer ma période en entreprise obligatoire'+periode+'. Cette période, non rémunérée, constitue une étape clé dans la validation de mon diplôme.',
+    ],
+    stage_r:[
+      'En formation '+diploma+' à '+etab+', je suis à la recherche d\'un stage rémunéré'+periode+' afin de consolider mes compétences en situation professionnelle concrète.',
+      'Actuellement en formation '+diploma+' à '+etab+', je vous contacte pour candidater à un stage rémunéré'+periode+'. Je souhaite mettre mes acquis à l\'épreuve du terrain dans une structure comme la vôtre.',
+    ],
+    alternance:[
+      'Actuellement en formation '+diploma+', je suis en recherche d\'un contrat d\'alternance afin de combiner apprentissage théorique et expérience terrain dans une structure comme la vôtre.',
+      'En cours de formation '+diploma+' à '+etab+', je souhaite rejoindre une équipe en alternance. Ce format correspond à ma façon d\'apprendre : dans l\'action, aux côtés de professionnels.',
+    ],
+    emploi:[
+      'Titulaire (ou en cours de validation) d\'un '+diploma+', je suis en recherche active d\'un poste et souhaite vous adresser ma candidature spontanée.',
+      'Fort(e) d\'une formation en '+diploma+', je me permets de vous adresser ma candidature pour un poste en CDI ou CDD au sein de votre structure.',
+    ],
+  };
+  var intro=(intros[mode]||intros.stage_nr)[vi];
+
+  var ctxArr=_CTX[c.t]||_CTX.ESN;
+  var pourquoi=ctxArr[vi%ctxArr.length](c.n,label);
+
+  var skillsParas=[
+    'Ma formation m\'a permis de développer des compétences en '+skills+'.',
+    'Techniquement, mon parcours couvre '+skills+'. Au-delà des aspects techniques, j\'ai également travaillé ma capacité à m\'adapter, à communiquer et à trouver des solutions en autonomie.',
+  ];
+  var skillsPara=skillsParas[vi];
+  if(s.motiv)skillsPara+='\n\n'+s.motiv;
+
+  var closings={
+    stage_nr:[
+      'Je serais sincèrement heureux(se) de vous présenter mon projet lors d\'un entretien, à la date qui vous conviendra. Je reste disponible pour toute information complémentaire.',
+      'Je reste disponible pour un entretien à votre convenance et pourrai vous transmettre mon CV en pièce jointe sur demande.',
+    ],
+    stage_r:[
+      'Je serais heureux(se) de vous rencontrer pour discuter du contenu du stage et de vos attentes. Mon CV est disponible sur demande.',
+      'N\'hésitez pas à me contacter pour que nous puissions échanger. Je suis disponible pour un entretien dès que vous le souhaitez.',
+    ],
+    alternance:[
+      'Je serais ravi(e) d\'échanger avec vous sur les possibilités de collaboration en alternance, à votre convenance.',
+      'N\'hésitez pas à me contacter pour que nous puissions nous rencontrer et évoquer ensemble une possible alternance.',
+    ],
+    emploi:[
+      'Mon CV vous permettra de mieux cerner mon parcours. Je reste disponible pour un entretien dès que vous le souhaitez.',
+      'Je serais heureux(se) de vous rencontrer pour vous présenter mon profil et ma motivation. Je suis disponible selon vos disponibilités.',
+    ],
+  };
+  var closing=(closings[mode]||closings.stage_nr)[vi];
+
+  var formel=['Public','Santé','Lycées','Education','Banque'].includes(c.t)&&!ct;
+  var politesse=formel
+    ?'Dans l\'attente de votre retour, veuillez agréer, Madame, Monsieur, l\'expression de mes salutations distinguées.'
+    :'Cordialement,';
+
+  var sig=prenom+' '+nom+'\n'+(s.tel?s.tel+' · ':'')+s.email+'\n'+diploma+(etab?' – '+etab:'');
+
+  return objet+'\n\n'+sal+'\n\n'+intro+'\n\n'+pourquoi+'\n\n'+skillsPara+'\n\n'+closing+'\n\n'+politesse+'\n'+sig;
 }
 
 function renderEmail(){
@@ -1617,9 +1569,7 @@ function renderEmail(){
   if(!c){document.getElementById('ep').innerHTML='<div style="padding:2rem;text-align:center;color:var(--t4)">Sélectionne une entreprise</div>';return;}
   const crm=crmData[c.id]||{};
   const ct=(document.getElementById('e_contact').value||crm.contact||'').trim();
-  const arr=TMPLS[c.t]||TMPLS.ESN;
-  const useModeEmail=(S.mode&&S.mode!=='stage_nr')||!!S.cvText;
-  const txt=useModeEmail?buildModeEmail(c,ct):arr[emailVariant%arr.length](S,c,ct);
+  const txt=generateEmail(S,c,ct,emailVariant);
   window._email=txt;
   const lines=txt.split('\n');
   const obj=lines[0].startsWith('Objet :')?lines[0].replace('Objet :','').trim():'';
@@ -1630,7 +1580,7 @@ function renderEmail(){
     (obj?'<div class="ef"><span class="efl">Objet</span><strong class="efl2">'+esc(obj)+'</strong></div>':'')+
     '<div class="ef"><span class="efl">Mode</span><span style="font-size:.75rem;color:var(--t3)">'+esc(getModeLabel())+'</span></div>'+
     '</div><div class="ebody">'+esc(body)+'</div>';
-  document.getElementById('e_var_lbl').textContent=useModeEmail?'1/1':((emailVariant%arr.length+1)+'/'+arr.length);
+  document.getElementById('e_var_lbl').textContent=(emailVariant%EMAIL_VARIANTS+1)+'/'+EMAIL_VARIANTS;
   document.getElementById('e_contact_wrap').style.display='flex';
   const li=document.getElementById('e_li_btn');
   li.style.display='block';li.dataset.cid=c.id;
@@ -1639,8 +1589,8 @@ function renderEmail(){
   else{nb.className='notice n-info';nb.style.display='flex';nb.textContent='📧 Email : '+c.e;}
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function nextVar(){emailVariant++;renderEmail();}
-function prevVar(){emailVariant--;if(emailVariant<0)emailVariant=0;renderEmail();}
+function nextVar(){emailVariant=(emailVariant+1)%EMAIL_VARIANTS;renderEmail();}
+function prevVar(){emailVariant=(EMAIL_VARIANTS+emailVariant-1)%EMAIL_VARIANTS;renderEmail();}
 function copyEmail(){navigator.clipboard.writeText(window._email||'').then(()=>{const b=document.getElementById('copy-btn');b.textContent='✅ Copié !';b.style.background='var(--green)';setTimeout(()=>{b.textContent='📋 Copier';b.style.background='';},2500);});}
 
 function markEmailSent(){
