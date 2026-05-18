@@ -153,6 +153,13 @@ html[data-theme=dark] .b-Asso{color:#fbbf24}
 .col-acc .kb-title{color:var(--green)} .col-acc .kb-count{background:var(--green-l);color:var(--green)}
 
 /* ── ADDR AUTOCOMPLETE ──────────────────────────────── */
+
+.sector-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;min-height:24px}
+.sector-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:var(--blue-l);color:var(--blue);font-size:.74rem;font-weight:600}
+.sector-tag button{background:none;border:none;color:var(--blue);cursor:pointer;font-size:.85rem;padding:0;line-height:1;opacity:.7}
+.sector-tag button:hover{opacity:1}
+.formation-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;background:var(--blue-l);color:var(--blue);font-size:.78rem;font-weight:600;margin-top:4px}
+
 .addr-wrap{position:relative;flex:1}
 .addr-dd{position:absolute;top:calc(100% - 1px);left:0;right:0;background:var(--card);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 var(--r) var(--r);z-index:99;max-height:220px;overflow-y:auto;display:none;box-shadow:var(--shadow2)}
 .addr-item{padding:9px 13px;font-size:.8rem;cursor:pointer;color:var(--t2);border-bottom:.5px solid var(--brd);line-height:1.45}
@@ -230,6 +237,47 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
       <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
       <div class="fi full"><label>Organisme de formation *</label>
         <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, …" /></div>
+      <div class="fi full"><label>Formation / Métier *</label>
+        <select id="p_formation" onchange="onFormationChange()">
+          <option value="">— Sélectionner une formation —</option>
+          <option value="TIP">💻 Technicien Informatique de Proximité (TIP)</option>
+          <option value="Compta">📊 Comptabilité / Gestion</option>
+          <option value="Mecanique">🔧 Mécanique automobile</option>
+          <option value="Secretariat">📝 Secrétariat / Assistanat</option>
+          <option value="Commerce">🛍️ Commerce / Vente</option>
+          <option value="Electro">⚡ Électrotechnique / Électricité</option>
+          <option value="BTP">🏗️ Bâtiment / BTP</option>
+          <option value="Restauration">🍽️ Restauration / Hôtellerie</option>
+          <option value="Social">❤️ Aide à la personne / Social</option>
+          <option value="Logistique">📦 Logistique / Transport</option>
+          <option value="Custom">✏️ Autre (personnalisé)</option>
+        </select>
+        <div id="formation_badge" class="formation-badge" style="display:none"></div>
+      </div>
+      <div class="fi full" id="custom_formation_wrap" style="display:none">
+        <label>Nom exact de ta formation</label>
+        <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
+      </div>
+      <div class="fi full">
+        <label>Secteurs supplémentaires à cibler (optionnel)</label>
+        <div id="sector_tags" class="sector-tags"></div>
+        <div style="display:flex;gap:7px">
+          <input id="p_sector_input" placeholder="ex : Agroalimentaire, Aéronautique… + Entrée" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSector();}">
+          <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" style="flex-shrink:0">+ Ajouter</button>
+        </div>
+        <div style="font-size:.7rem;color:var(--t4);margin-top:3px">Ces secteurs s'ajouteront aux catégories du radar</div>
+      </div>
+      <div class="fi">
+        <label>🔍 Moteur de recherche par défaut</label>
+        <select id="p_search_engine">
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+          <option value="qwant">Qwant 🇫🇷</option>
+          <option value="ecosia">Ecosia 🌱</option>
+          <option value="brave">Brave</option>
+        </select>
+      </div>
       <div class="fi"><label>Début de stage</label><input id="p_debut" type="date" value="2026-06-05" /></div>
       <div class="fi"><label>Fin de stage</label><input id="p_fin" type="date" value="2026-07-31" /></div>
       <div class="fi full"><label>📍 Adresse (pour le radar de distance)</label>
@@ -366,6 +414,72 @@ const VERSION='4.0';
 const KM_STEP=5;
 const RADIUS_DEFAULT=30;
 
+
+const FORMATION_CONFIG={
+  TIP:{label:'Technicien Informatique de Proximité (TIP)',emoji:'💻',
+    diploma:'Titre Professionnel TIP',
+    sectors:['ESN','Public','Education','Lycées','Santé','Industrie','Banque'],
+    osmAmenities:['hospital','clinic','school','college','university','townhall','bank','coworking_space'],
+    nafCodes:['6202B','9511Z','6203Z','6209Z','6202A'],
+    skills:'support utilisateur N1/N2, helpdesk, déploiement Windows 10/11, Active Directory, GLPI, réseau TCP/IP/DNS/DHCP'},
+  Compta:{label:'Comptabilité / Gestion',emoji:'📊',
+    diploma:'Titre Professionnel / BTS Comptabilité-Gestion',
+    sectors:['PME','Banque','Public','Industrie'],
+    osmAmenities:['bank','townhall'],
+    nafCodes:['6920Z','6619B','6622Z','6491Z','8411Z'],
+    skills:'comptabilité générale et analytique, saisie et lettrage, TVA, rapprochement bancaire, Excel, logiciels comptables (Sage, Ciel, EBP)'},
+  Mecanique:{label:'Mécanique automobile',emoji:'🔧',
+    diploma:'CAP / Bac Pro Mécanique automobile',
+    sectors:['Garage','Industrie','Transport'],
+    osmAmenities:['car_repair','fuel'],
+    nafCodes:['4520A','4520B','4511Z','4519Z'],
+    skills:'diagnostic électronique, entretien courant, pneumatiques, freinage, distribution, vidange, mécanique générale'},
+  Secretariat:{label:'Secrétariat / Assistanat',emoji:'📝',
+    diploma:'Titre Professionnel / BTS Assistant de Manager',
+    sectors:['PME','Public','Santé','Banque','Industrie'],
+    osmAmenities:['townhall','hospital','bank'],
+    nafCodes:['8211Z','8219Z','8299Z','8411Z'],
+    skills:'gestion du courrier et des agendas, accueil, frappe et mise en forme de documents, Pack Office, outils collaboratifs'},
+  Commerce:{label:'Commerce / Vente',emoji:'🛍️',
+    diploma:'Titre Professionnel / BTS MCO / NDRC',
+    sectors:['PME','Industrie','Banque'],
+    osmAmenities:['supermarket','mall','bank'],
+    nafCodes:['4719B','4711A','4711D','4643Z'],
+    skills:'relation client, techniques de vente, merchandising, gestion de caisse, outils CRM, prospection commerciale'},
+  Electro:{label:'Électrotechnique / Électricité',emoji:'⚡',
+    diploma:'CAP / Bac Pro Électrotechnique',
+    sectors:['Industrie','Public','BTP'],
+    osmAmenities:['townhall'],
+    nafCodes:['4321A','4321B','2711Z','3320A'],
+    skills:'câblage et raccordement électrique, lecture de plans, habilitation électrique, dépannage, automatismes'},
+  BTP:{label:'Bâtiment / BTP',emoji:'🏗️',
+    diploma:'CAP / Bac Pro Bâtiment',
+    sectors:['BTP','Industrie','Public'],
+    osmAmenities:['townhall'],
+    nafCodes:['4120A','4120B','4211Z','4312A','4391A'],
+    skills:'lecture de plans, maçonnerie, coffrage, enduits, sécurité chantier, outils et matériaux de construction'},
+  Restauration:{label:'Restauration / Hôtellerie',emoji:'🍽️',
+    diploma:'CAP / Bac Pro Restauration',
+    sectors:['Restauration','Hôtellerie','Collectivité'],
+    osmAmenities:['restaurant','hotel','fast_food','cafe'],
+    nafCodes:['5610A','5610B','5621Z','5590Z'],
+    skills:'préparation culinaire, dressage, hygiène HACCP, service en salle, gestion des stocks, encaissement'},
+  Social:{label:'Aide à la personne / Social',emoji:'❤️',
+    diploma:'CAP AEPE / ADVF / BTS SP3S',
+    sectors:['Santé','Asso','Public'],
+    osmAmenities:['hospital','social_facility','townhall'],
+    nafCodes:['8810A','8810B','8899A','8899B'],
+    skills:'accompagnement de la personne, aide aux gestes de la vie quotidienne, écoute active, premiers secours, travail en équipe pluridisciplinaire'},
+  Logistique:{label:'Logistique / Transport',emoji:'📦',
+    diploma:'CAP / Bac Pro Logistique',
+    sectors:['Logistique','Industrie','Commerce'],
+    osmAmenities:['station'],
+    nafCodes:['4941A','4941B','5210B','5221Z','5224A'],
+    skills:'gestion des stocks, préparation de commandes, utilisation WMS/ERP, CACES (ou en cours), expéditions et réceptions'},
+  Custom:{label:'Autre formation (personnalisée)',emoji:'✏️',
+    diploma:'',sectors:[],osmAmenities:[],nafCodes:[],skills:''},
+};
+
 const CATS=[
   {id:'ESN',     ico:'💻', lbl:'IT & ESN',          osm:[],                    naf:['6202B','9511Z','6203Z','6209Z','6202A','6201Z']},
   {id:'Public',  ico:'🏛️', lbl:'Public & Admins',   osm:['townhall'],          naf:[]},
@@ -388,6 +502,20 @@ const CRM_COLS=[
   {id:'acc',    cls:'col-acc',  lbl:'Accepté',       ico:'🎉'},
 ];
 
+
+
+const SEARCH_ENGINES={
+  google:'https://www.google.com/search?q=',
+  bing:'https://www.bing.com/search?q=',
+  duckduckgo:'https://duckduckgo.com/?q=',
+  qwant:'https://www.qwant.com/?q=',
+  brave:'https://search.brave.com/search?q=',
+  ecosia:'https://www.ecosia.org/search?q=',
+};
+function searchUrl(query){
+  const e=SEARCH_ENGINES[S.searchEngine]||SEARCH_ENGINES.google;
+  return e+encodeURIComponent(query);
+}
 
 const PRELOADED=[
 {id:'p1',n:"Capgemini",t:"ESN",e:"recrutement.france@capgemini.com",v:"Parc du Millénaire, Montpellier",d:"Leader ESN, nombreux stages IT",lat:43.635,lng:3.872},
@@ -433,6 +561,62 @@ let crmData={};        // {id: {status, sentDate, notes, contact}}
 let activeCats=new Set(CATS.map(c=>c.id));
 let emailVariant=0;
 let emailCompanyId=null;
+
+
+// ── FORMATION & SECTEURS CUSTOM ─────────────────────────────────────────
+var _customSectors=[];
+
+function onFormationChange(){
+  var val=document.getElementById('p_formation').value;
+  var wrap=document.getElementById('custom_formation_wrap');
+  var badge=document.getElementById('formation_badge');
+  if(val==='Custom'){wrap.style.display='flex';}else{wrap.style.display='none';}
+  if(val&&FORMATION_CONFIG[val]){
+    var fc=FORMATION_CONFIG[val];
+    badge.style.display='inline-flex';
+    badge.textContent=fc.emoji+' '+fc.diploma;
+  }else{badge.style.display='none';}
+}
+
+function addCustomSector(){
+  var inp=document.getElementById('p_sector_input');
+  var val=(inp.value||'').trim();
+  if(!val)return;
+  val.split(',').forEach(function(v){
+    var s=v.trim();
+    if(s&&!_customSectors.includes(s))_customSectors.push(s);
+  });
+  inp.value='';
+  renderSectorTags();
+}
+
+function removeSector(i){
+  _customSectors.splice(i,1);
+  renderSectorTags();
+}
+
+function renderSectorTags(){
+  var container=document.getElementById('sector_tags');
+  if(!container)return;
+  container.innerHTML=_customSectors.map(function(s,i){
+    return'<span class="sector-tag">'+escH(s)+'<button onclick="removeSector('+i+')" title="Supprimer">×</button></span>';
+  }).join('');
+}
+
+function getFormationConfig(){
+  var fid=S.formation||'Custom';
+  var base=FORMATION_CONFIG[fid]||FORMATION_CONFIG.Custom;
+  // Fusionner avec secteurs custom
+  var merged=Object.assign({},base);
+  if(_customSectors.length){
+    merged.customSectorLabels=_customSectors;
+  }
+  return merged;
+}
+
+function getSearchUrl(query){
+  return searchUrl(query);
+}
 
 function persist(){try{localStorage.setItem('tip_v4',JSON.stringify({S,crmData,coords}));}catch(e){}}
 function restore(){
@@ -809,6 +993,7 @@ function radarCard(c){
     '</div>'+
     '<div class="ca">'+emailBtn+
       '<a class="btn btn-ghost btn-sm" href="https://www.google.com/search?q='+encodeURIComponent(c.n+' '+(c.v||'')+' recrutement contact email RH stage informatique')+'" target="_blank" rel="noopener" title="Rechercher sur Google">🔍</a>'+
+      '<a class="btn btn-ghost btn-sm" href="'+searchUrl(c.n+' '+(c.v?c.v.split(',')[0]:'')+' recrutement contact email RH stage')+'" target="_blank" rel="noopener" title="Rechercher sur '+((S&&S.searchEngine?S.searchEngine[0].toUpperCase()+S.searchEngine.slice(1):'Google'))+'">🔍</a>'+
       '<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="openLinkedInFor(this.dataset.cid)" title="LinkedIn">🔗</button>'+
       crmBtn+
       '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)">✉</button>'+
@@ -1246,7 +1431,16 @@ async function saveProfile(){
   }
   const fmt={day:'numeric',month:'long',year:'numeric'};
   const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
+  const _fid=document.getElementById('p_formation')?.value||'Custom';
+  const _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
+  const _customFName=f('p_custom_formation');
   S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab'),
+    formation:_fid,
+    formationLabel:_fid==='Custom'?(_customFName||'Formation personnalisée'):_fc.label,
+    formationDiploma:_fid==='Custom'?(_customFName||''):_fc.diploma,
+    formationEmoji:_fc.emoji||'✏️',
+    searchEngine:document.getElementById('p_search_engine')?.value||'google',
+    customSectors:[..._customSectors],
      debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase()};
@@ -1287,6 +1481,18 @@ function showPbar(){
 }
 
 function fillProfileForm(){
+  if(S.formation){
+    const sel=document.getElementById('p_formation');
+    if(sel)sel.value=S.formation;
+    onFormationChange();
+  }
+  if(S.searchEngine){
+    const sel=document.getElementById('p_search_engine');
+    if(sel)sel.value=S.searchEngine;
+  }
+  if(S.customSectors&&S.customSectors.length){
+    _customSectors=[...S.customSectors];renderSectorTags();
+  }
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
