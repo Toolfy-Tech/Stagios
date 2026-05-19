@@ -268,8 +268,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
       <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
       <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
       <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
-      <div class="fi full"><label>Organisme de formation *</label>
-        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, …" /></div>
+      <div class="fi full"><label>Organisme de formation</label>
+        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, … (optionnel)" /></div>
       <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
       <div class="fi full"><label>Formation / Métier *</label>
         <select id="p_formation" onchange="onFormationChange()">
@@ -302,7 +302,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
         <div style="font-size:.7rem;color:var(--t4);margin-top:3px">Ces secteurs s'ajouteront aux catégories du radar</div>
       </div>
       <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
-        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche *</label>
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
           <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
           <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
@@ -881,7 +881,7 @@ function autofillFromCv(text){
   }
 
   var addrMatch=t.match(/(\d+\s+(?:rue|avenue|boulevard|impasse|allée|chemin|place|route)[^\n,;]{5,50}[\s,]+\d{5}\s+[A-Za-zÀ-ÖØ-öø-ÿ\-\s]{2,30})/i)||t.match(/(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ\-\s]{3,25})/);
-  if(addrMatch){filled+=setField('p_addr',addrMatch[0].trim()); if(typeof fetchSugg==='function')fetchSugg(addrMatch[0].trim());}
+  if(addrMatch){filled+=setField('p_addr',addrMatch[0].trim());fetchSugg(addrMatch[0].trim());}
 
   var diplomaPatterns=[
     {rx:/Titre Professionnel\s+([^\n,;.]{5,60})/i,fid:'TIP',cust:''},
@@ -1751,6 +1751,7 @@ function generateEmail(s,c,ct,v){
   var label=fc.label||s.formationLabel||'ma formation';
   var skills=s.comp||fc.skills||'compétences acquises en formation';
   var prenom=s.prenom||'';var nom=s.nom||'';
+  var prenomNom=(prenom+' '+nom).trim()||'Étudiant(e)';
   var etab=s.etab||'mon organisme de formation';
   var sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
   var vi=(v||0)%EMAIL_VARIANTS;
@@ -1758,10 +1759,10 @@ function generateEmail(s,c,ct,v){
   var periodeLabel=(s.debut&&s.fin)?' – Du '+s.debut+' au '+s.fin:'';
 
   var sujets={
-    stage_nr:'Recherche de période en entreprise – '+diploma+' – '+prenom+' '+nom+periodeLabel,
-    stage_r:'Candidature stage rémunéré – '+diploma+' – '+prenom+' '+nom+periodeLabel,
-    alternance:'Candidature alternance – '+diploma+' – '+prenom+' '+nom,
-    emploi:'Candidature spontanée – '+diploma+' – '+prenom+' '+nom,
+    stage_nr:'Recherche de période en entreprise – '+diploma+' – '+prenomNom+periodeLabel,
+    stage_r:'Candidature stage rémunéré – '+diploma+' – '+prenomNom+periodeLabel,
+    alternance:'Candidature alternance – '+diploma+' – '+prenomNom,
+    emploi:'Candidature spontanée – '+diploma+' – '+prenomNom,
   };
   var objet='Objet : '+(sujets[mode]||sujets.stage_nr);
 
@@ -1833,7 +1834,7 @@ function generateEmail(s,c,ct,v){
     ?"Dans l\'attente de votre retour, veuillez agréer, Madame, Monsieur, l\'expression de mes salutations distinguées."
     :'Cordialement,';
 
-  var sig=prenom+' '+nom+'\n'+(s.tel?s.tel+' · ':'')+s.email+'\n'+diploma+(etab?' – '+etab:'');
+  var sig=prenomNom+'\n'+(s.tel?s.tel+' · ':'')+( s.email||'')+'\n'+diploma+(etab?' – '+etab:'');
 
   return objet+'\n\n'+sal+'\n\n'+intro+'\n\n'+pourquoi+'\n\n'+skillsPara+'\n\n'+closing+'\n\n'+politesse+'\n'+sig;
 }
@@ -1984,7 +1985,7 @@ function showPbar(){
   const pb=document.getElementById('pbar'),sg=document.getElementById('sg');
   if(!S.prenom)return;
   pb.style.display='flex';sg.style.display='grid';
-  var modeLabel=typeof getModeLabel==='function'?getModeLabel():'stage';
+  var modeLabel=getModeLabel();
   pb.innerHTML=`<div class="avatar">${S.ini||'?'}</div><div><div class="pbar-name">${S.prenom} ${S.nom}</div><div class="pbar-sub">${S.formationLabel||'Formation'} · ${modeLabel} · ${S.etab} · ${S.debut} au ${S.fin}${coords?' · 📍 position activée':''}</div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="goTab('profil')">Modifier</button>`;
   updateBadges();
 }
