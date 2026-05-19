@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#1d6ef5">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Stagios">
+<meta name="description" content="Trouve ton stage, alternance ou emploi avec le radar géographique">
+<link rel="manifest" href="manifest.json">
 <title>Stagios – Radar & CRM</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -594,6 +600,9 @@ function searchUrl(query){
   const e=SEARCH_ENGINES[S.searchEngine]||SEARCH_ENGINES.google;
   return e+encodeURIComponent(query);
 }
+
+// Hash déterministe pour IDs stables (blacklist persistante entre scans)
+function _hid(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return(h>>>0).toString(36);}
 
 const PRELOADED=[];
 
@@ -1229,7 +1238,7 @@ async function fetchAlternance(lat,lng,rKm){
     const _romesA=(_fcA.romeCodes&&_fcA.romeCodes.length?_fcA.romeCodes:['M1801','M1802']).join(',');
     const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=${_romesA}`);
     const d=await r.json();
-    return((d.results||d.matchas||[]).map(e=>({id:'alt_'+Math.random(),n:e.company?.name||e.enseigne||'',t:(_fcA.sectors&&_fcA.sectors[0])||'ESN',v:e.company?.city||'',d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true}))).filter(e=>e.n);
+    return((d.results||d.matchas||[]).map(e=>{const _n=e.company?.name||e.enseigne||'';const _v=e.company?.city||'';return{id:'lba_'+_hid(_n+_v+(e.company?.siret||'')),n:_n,t:(_fcA.sectors&&_fcA.sectors[0])||'ESN',v:_v,d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true};})).filter(e=>e.n);
   }catch(ex){return[];}
 }
 
@@ -1240,7 +1249,7 @@ async function fetchImmersion(lat,lng,rKm){
     const _sectorI=(_fcI.sectors&&_fcI.sectors[0])||'ESN';
     const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&romeCode=${_romeI}`);
     const d=await r.json();
-    return((d||[]).map(e=>({id:'imm_'+Math.random(),n:e.name||e.companyName||'',t:_sectorI,v:e.address?.city||'',d:'Ouvert aux PMSMP — '+(_fcI.label||''),e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true}))).filter(e=>e.n);
+    return((d||[]).map(e=>{const _n=e.name||e.companyName||'';const _v=e.address?.city||'';return{id:'imm_'+_hid(_n+_v+(e.siret||'')),n:_n,t:_sectorI,v:_v,d:'Ouvert aux PMSMP — '+(_fcI.label||''),e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true};})).filter(e=>e.n);
   }catch(ex){return[];}
 }
 
@@ -1256,12 +1265,12 @@ async function getFTToken(){
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body:'grant_type=client_credentials&client_id='+encodeURIComponent(_id)+'&client_secret='+encodeURIComponent(_sec)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre')
     });
-    if(!_r.ok){_ftToken=null;return null;}
+    if(!_r.ok){_ftToken=null;toast('France Travail : authentification échouée (code '+_r.status+') — les offres FT ne s\'afficheront pas.','warn');return null;}
     const _d=await _r.json();
     _ftToken=_d.access_token;
     _ftTokenExpiry=Date.now()+(_d.expires_in-60)*1000;
     return _ftToken;
-  }catch(e){_ftToken=null;return null;}
+  }catch(e){_ftToken=null;toast('France Travail inaccessible (CORS ou réseau) — les offres FT sont désactivées.','warn');return null;}
 }
 
 async function fetchFranceTravail(lat,lng,rKm){
@@ -1466,9 +1475,31 @@ function renderRadar(){
   );
   if(!fl.length){
     var blCount0=radarResults.filter(function(c){return _blacklist.has(c.id);}).length;
-    var msg='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';
-    if(blCount0>0)msg+='<div style="margin-top:.75rem;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between"><span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount0+' structure'+(blCount0>1?'s':'')+' masquée'+(blCount0>1?'s':'')+'</span><button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button></div>';
-    document.getElementById('r_list').innerHTML=msg;return;
+    var _emptyMsg='';
+    if(!radarResults.length){
+      _emptyMsg='<div class="empty" style="padding:2.5rem 1rem;text-align:center">'
+        +'<div style="font-size:2rem;margin-bottom:.5rem">🔍</div>'
+        +'<div style="font-weight:700;margin-bottom:.35rem">Lance le radar pour découvrir des structures</div>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Remplis ton profil avec une adresse, puis clique sur <strong>Scanner</strong></div>'
+        +'<button class="btn btn-primary" onclick="goTab(\'profil\')">Compléter mon profil →</button>'
+        +'</div>';
+    } else if(tf||q){
+      _emptyMsg='<div class="empty" style="padding:2rem 1rem;text-align:center">'
+        +'<div style="font-size:1.5rem;margin-bottom:.5rem">🔎</div>'
+        +'<div style="font-weight:700;margin-bottom:.35rem">Aucun résultat pour ces filtres</div>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">'+(tf?'Type : <strong>'+tf+'</strong>  ':'')+( q?'Recherche : <strong>'+q+'</strong>':'')+'</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'r_srch\').value=\'\';document.getElementById(\'r_type\').value=\'\';renderRadar()">Effacer les filtres</button>'
+        +'</div>';
+    } else {
+      _emptyMsg='<div class="empty" style="padding:2rem 1rem;text-align:center">'
+        +'<div style="font-size:1.5rem;margin-bottom:.5rem">📭</div>'
+        +'<div style="font-weight:700;margin-bottom:.35rem">Aucune structure dans cette zone</div>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Essaie d\'augmenter le rayon de recherche ou de changer d\'adresse</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="goTab(\'profil\')">Modifier le profil</button>'
+        +'</div>';
+    }
+    if(blCount0>0)_emptyMsg+='<div style="margin:.5rem 0 0;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between"><span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount0+' structure'+(blCount0>1?'s':'')+' masquée'+(blCount0>1?'s':'')+'</span><button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button></div>';
+    document.getElementById('r_list').innerHTML=_emptyMsg;return;
   }
 
   // Group by distance tier
@@ -1928,6 +1959,7 @@ async function saveProfile(){
   }
   const fmt={day:'numeric',month:'long',year:'numeric'};
   const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
+  if(d1&&d2&&new Date(d1)>=new Date(d2)){toast('La date de fin doit être après la date de début.','warn');return;}
   const _fid=document.getElementById('p_formation')?.value||'Custom';
   const _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
   const _customFName=f('p_custom_formation');
