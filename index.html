@@ -1269,18 +1269,43 @@ async function fetchFranceTravail(lat,lng,rKm){
   if(!token)return[];
   try{
     const _fcFT=FORMATION_CONFIG[S.formation]||{};
-    const _typeContrat={stage_nr:'STG',stage_r:'STG',alternance:'ALT',emploi:'CDI,CDD'}[S.mode]||'STG';
-    const _romesFT=(_fcFT.romeCodes||[]).join(',');
-    const _params=new URLSearchParams({latitude:lat,longitude:lng,distance:Math.min(rKm,35),typeContrat:_typeContrat,range:'0-49'});
-    if(_romesFT)_params.set('codeROME',_romesFT);
-    const _r=await fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+_params,{
-      headers:{Authorization:'Bearer '+token,Accept:'application/json'}
-    });
-    if(!_r.ok)return[];
-    const _d=await _r.json();
-    return(_d.resultats||[]).map(o=>{
-      const _lt=parseFloat(o.lieuTravail?.latitude)||lat;
-      const _ln=parseFloat(o.lieuTravail?.longitude)||lng;
+    const _romes=(_fcFT.romeCodes||[]).slice(0,3).join(',');
+    const _dist=Math.min(rKm,35);
+    const isAlt=(S.mode==='alternance');
+    const isEmploi=(S.mode==='emploi');
+
+    // Paramètres communs
+    const _base={nbrParPage:'50',sort:'1',distance:String(_dist)};
+    // Géolocalisation : commune INSEE si dispo, sinon lat/lng
+    if(S.communeInsee)_base.commune=S.communeInsee;
+    else{_base.latitude=String(lat);_base.longitude=String(lng);}
+    if(_romes)_base.codeROME=_romes;
+
+    const calls=[];
+
+    if(isAlt){
+      // Alternance : paramètre dédié (apprentissage + pro)
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,alternance:'true'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    } else if(isEmploi){
+      // Emploi classique CDI/CDD
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,typeContrat:'CDI,CDD'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    } else {
+      // Stage : CDD (les stages conventionnés apparaissent souvent en CDD court terme)
+      // + alternance pour proposer aussi de l'alternance à l'étudiant en stage
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,typeContrat:'CDD',nbrParPage:'30'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,alternance:'true',nbrParPage:'20'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    }
+
+    const results=await Promise.all(calls);
+    const seen=new Set();
+    return results.flatMap(d=>(d?.resultats||[]).map(o=>{
+      if(seen.has(o.id))return null;seen.add(o.id);
+      const _lt=parseFloat(o.lieuTravail?.latitude);
+      const _ln=parseFloat(o.lieuTravail?.longitude);
       return{
         id:'ft_'+o.id,
         n:o.entreprise?.nom||o.intitule,
@@ -1290,9 +1315,11 @@ async function fetchFranceTravail(lat,lng,rKm){
         e:'',
         web:'https://candidat.francetravail.fr/offres/recherche/detail/'+o.id,
         lat:isNaN(_lt)?lat:_lt,lng:isNaN(_ln)?lng:_ln,
-        src:'France Travail',hasOffer:true,ft:true
+        src:'France Travail',hasOffer:true,ft:true,
+        contractType:o.typeContrat?.libelle||'',
+        altOffer:!!(o.alternance)
       };
-    }).filter(o=>o.n&&o.n.length>1);
+    }).filter(Boolean)).filter(o=>o.n&&o.n.length>1);
   }catch(e){return[];}
 }
 
@@ -1481,7 +1508,10 @@ function radarCard(c){
   if(c.disc)badges+='<span class="disc-badge">découvert</span> ';
   if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
   if(c.alt)badges+='<span class="alt-badge">alternance</span>';
-  if(c.ft)badges+='<span class="ft-badge">France Travail</span>';
+  if(c.ft){
+    var _ftLabel='France Travail'+(c.contractType?' · '+c.contractType:'')+(c.altOffer?' · Alternance':'');
+    badges+='<span class="ft-badge">🎯 '+escH(_ftLabel)+'</span>';
+  }
 
   // Bouton email ou site
   var emailBtn='';
