@@ -835,7 +835,7 @@ async function extractPdfText(file){
   for(var i=1;i<=Math.min(pdf.numPages,6);i++){
     var page=await pdf.getPage(i);
     var content=await page.getTextContent();
-    texts.push(content.items.map(function(it){return it.str;}).join(' '));
+    texts.push(content.items.map(function(it){return it.str;}).join('\n'));
   }
   return texts.join('\n');
 }
@@ -849,13 +849,37 @@ function autofillFromCv(text){
   if(telMatch){filled+=setField('p_tel',telMatch[0].replace(/[\s.\-]/g,'').replace(/^33/,'+33'));}
 
   var chunks=t.split(/[\n.;]/).map(function(l){return l.trim();}).filter(function(l){return l.length>2&&l.length<70;});
-  for(var i=0;i<Math.min(15,chunks.length);i++){
+  var nameFound=false;
+  var _skipName=/^(rue|avenue|boulevard|mail|t[eé]l[eé]phone|mobile|email|adresse|curriculum|vitae|profil|formation|exp[eé]rience|comp[eé]tence|stage|agence|p[oô]le|centre)/i;
+  for(var i=0;i<Math.min(25,chunks.length)&&!nameFound;i++){
     var l=chunks[i];
-    var nameMatch=l.match(/^([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]+)\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜa-zàáâäéèêëîïôùúûü\-]+)$/);
-    if(nameMatch&&!nameMatch[0].match(/^(rue|avenue|boulevard|mail|téléphone|mobile|email|adresse)/i)){
-      filled+=setField('p_prenom',nameMatch[1]);
-      filled+=setField('p_nom',nameMatch[2]);
-      break;
+    // Prénom Nom ou Prénom NOM
+    var nm=l.match(/^([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]+)\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜa-zàáâäéèêëîïôùúûü\-]+)$/);
+    // PRENOM NOM ou NOM Prénom (tout caps)
+    if(!nm)nm=l.match(/^([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ]{2,20})\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ]{2,20})$/);
+    if(nm&&!_skipName.test(nm[0])){
+      var w1=nm[1],w2=nm[2];
+      // Détermine prénom (mixte/minuscule) vs nom (tout caps)
+      if(w1===w1.toUpperCase()&&w2!==w2.toUpperCase()){
+        filled+=setField('p_prenom',w2[0].toUpperCase()+w2.slice(1).toLowerCase());filled+=setField('p_nom',w1);
+      } else {
+        filled+=setField('p_prenom',w1);filled+=setField('p_nom',w2);
+      }
+      nameFound=true;
+    }
+  }
+  // Fallback : cherche prénom+nom dans les 400 premiers caractères (PDF sans sauts de ligne nets)
+  if(!nameFound){
+    var head=t.substring(0,400);
+    var nm2=head.match(/\b([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]{2,20})\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ]{2,20})\b/)||
+             head.match(/\b([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ]{2,20})\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]{2,20})\b/);
+    if(nm2&&!_skipName.test(nm2[0])){
+      var a=nm2[1],b=nm2[2];
+      if(a===a.toUpperCase()&&b!==b.toUpperCase()){
+        filled+=setField('p_prenom',b[0].toUpperCase()+b.slice(1).toLowerCase());filled+=setField('p_nom',a);
+      } else {
+        filled+=setField('p_prenom',a);filled+=setField('p_nom',b);
+      }
     }
   }
 
