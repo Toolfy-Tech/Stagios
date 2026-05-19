@@ -90,6 +90,12 @@ input::placeholder,textarea::placeholder{color:var(--t4)}
 html[data-theme=dark] .b-Santé{color:#f472b6}
 .b-Education,.b-Lycées{background:var(--amber-l);color:var(--amber)}
 .b-Industrie,.b-Logistique{background:var(--bg3);color:var(--t2)}
+.b-BTP{background:rgba(120,53,15,.1);color:#92400e}
+html[data-theme=dark] .b-BTP{color:#fbbf24}
+.b-Garage{background:rgba(71,85,105,.1);color:#475569}
+html[data-theme=dark] .b-Garage{color:#94a3b8}
+.b-Restauration,.b-Hôtellerie{background:rgba(217,70,239,.08);color:#a21caf}
+html[data-theme=dark] .b-Restauration,.b-Hôtellerie{color:#e879f9}
 .b-Banque{background:var(--purple-l);color:var(--purple)}
 .b-PME{background:rgba(194,65,12,.1);color:#c2410c}
 html[data-theme=dark] .b-PME{color:#fb923c}
@@ -551,16 +557,21 @@ const FORMATION_CONFIG={
 };
 
 const CATS=[
-  {id:'ESN',     ico:'💻', lbl:'IT & ESN',          osm:[],                    naf:['6202B','9511Z','6203Z','6209Z','6202A','6201Z']},
-  {id:'Public',  ico:'🏛️', lbl:'Public & Admins',   osm:['townhall'],          naf:[]},
-  {id:'Education',ico:'🎓',lbl:'Université & BTS',  osm:['university','college'],naf:[]},
-  {id:'Lycées',  ico:'🏫', lbl:'Lycées & Collèges', osm:['school'],             naf:[]},
-  {id:'Santé',   ico:'🏥', lbl:'Santé & Médical',   osm:['hospital','clinic'],  naf:[]},
-  {id:'Asso',    ico:'🤝', lbl:'Associatif & ONG',  osm:['social_facility'],    naf:['8899B','8810A','9499Z']},
-  {id:'Logistique',ico:'🚚',lbl:'Transport & Infra', osm:['station'],            naf:['4941A','4941B','5210B','5221Z']},
-  {id:'Coworking',ico:'🌱',lbl:'Coworking & Tech',  osm:['coworking_space'],    naf:[]},
-  {id:'PME',     ico:'🏢', lbl:'Commerce & Distrib.',osm:['mall'],              naf:['4719B','4711A','4711B','4711D']},
-  {id:'Médias',  ico:'📡', lbl:'Médias & Télécoms',  osm:['newspaper'],         naf:['5813Z','6020Z','6010Z','7311Z']},
+  {id:'ESN',        ico:'💻', lbl:'IT & ESN',           osm:[],                              naf:['6202B','9511Z','6203Z','6209Z','6202A','6201Z']},
+  {id:'Public',     ico:'🏛️', lbl:'Public & Admins',    osm:['townhall'],                    naf:['8411Z','8412Z','8413Z']},
+  {id:'Education',  ico:'🎓', lbl:'Université & BTS',   osm:['university','college'],         naf:[]},
+  {id:'Lycées',     ico:'🏫', lbl:'Lycées & Collèges',  osm:['school'],                      naf:[]},
+  {id:'Santé',      ico:'🏥', lbl:'Santé & Médical',    osm:['hospital','clinic','nursing_home'], naf:['8610Z','8621Z','8622A','8622B','8622C']},
+  {id:'Banque',     ico:'🏦', lbl:'Banque & Assurance', osm:['bank'],                        naf:['6920Z','6619B','6622Z','6491Z']},
+  {id:'Industrie',  ico:'🏭', lbl:'Industrie & Énergie',osm:[],                              naf:['4321A','4321B','2711Z','3320A']},
+  {id:'Garage',     ico:'🔧', lbl:'Auto & Mécanique',   osm:['car_repair','fuel'],            naf:['4520A','4520B','4511Z','4519Z','4531Z']},
+  {id:'BTP',        ico:'🏗️', lbl:'Bâtiment & BTP',    osm:[],                              naf:['4120A','4120B','4211Z','4312A','4391A']},
+  {id:'Restauration',ico:'🍽️',lbl:'Restauration & Hôtel',osm:['restaurant','fast_food','cafe','hotel'],naf:['5610A','5610B','5621Z','5590Z']},
+  {id:'Asso',       ico:'🤝', lbl:'Associatif & ONG',   osm:['social_facility'],              naf:['8810A','8810B','8899A','8899B','9499Z']},
+  {id:'Logistique', ico:'🚚', lbl:'Transport & Infra',  osm:['station'],                     naf:['4941A','4941B','5210B','5221Z','5224A']},
+  {id:'Coworking',  ico:'🌱', lbl:'Coworking & Tech',   osm:['coworking_space'],              naf:[]},
+  {id:'PME',        ico:'🏢', lbl:'Commerce & Distrib.',osm:['mall','supermarket'],           naf:['4719B','4711A','4711B','4711D','8211Z','8219Z']},
+  {id:'Médias',     ico:'📡', lbl:'Médias & Télécoms',  osm:['newspaper'],                   naf:['5813Z','6020Z','6010Z','7311Z']},
 ];
 
 const CRM_COLS=[
@@ -642,19 +653,20 @@ function getLaBonneAlternanceUrl(romes){
 var _customSectors=[];
 
 
+// Alias : secteur formation → id dans CATS
+var SECTOR_ALIAS={'Hôtellerie':'Restauration','Collectivité':'Public','Commerce':'PME','Social':'Asso'};
+
 function activateFormationCats(formationId){
   var fc=FORMATION_CONFIG[formationId];
   if(!fc||!fc.sectors||!fc.sectors.length)return;
-  // Désactiver tout d'abord
   activeCats.clear();
-  // Activer seulement les catégories pertinentes
   CATS.forEach(function(cat){
     var relevant=fc.sectors.some(function(s){
-      return s===cat.id||s.toLowerCase()===cat.lbl.toLowerCase();
+      var sid=SECTOR_ALIAS[s]||s;
+      return sid===cat.id;
     });
     if(relevant)activeCats.add(cat.id);
   });
-  // Refresh visuellement
   CATS.forEach(function(cat){
     var btn=document.getElementById('cat-'+cat.id);
     if(btn)btn.classList.toggle('on',activeCats.has(cat.id));
@@ -1246,9 +1258,19 @@ function buildCatGrid(){
   document.getElementById('cat-grid').innerHTML=CATS.map(c=>
     `<button class="cat-btn on" id="cat-${c.id}" onclick="toggleCat('${c.id}')">${c.ico} ${c.lbl}</button>`
   ).join('');
-  // Also populate type filter
+}
+
+function rebuildTypeFilter(){
   const sel=document.getElementById('r_type');
-  sel.innerHTML='<option value="">Tous les types</option>'+CATS.map(c=>`<option value="${c.t||c.id}">${c.ico} ${c.lbl}</option>`).join('');
+  const prev=sel.value;
+  // Types présents dans les résultats courants
+  const types=[...new Set(radarResults.map(c=>c.t).filter(Boolean))].sort();
+  const catById=Object.fromEntries(CATS.map(c=>[c.id,c]));
+  sel.innerHTML='<option value="">Tous les types</option>'+types.map(t=>{
+    const cat=catById[t];
+    return`<option value="${t}">${cat?cat.ico+' ':''} ${t}</option>`;
+  }).join('');
+  if(prev&&types.includes(prev))sel.value=prev;
 }
 
 function toggleCat(id){
@@ -1290,7 +1312,7 @@ async function launchRadar(){
   const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
   const _formationNaf=(_fc&&_fc.nafCodes)||[];
   const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf),..._formationNaf,...extraNaf])];
-  const osmOffices=['government','it','association'];
+  const osmOffices=['government','it','association','company'];
 
   const tasks=[];
   if(allAmenities.length||osmOffices.length){
@@ -1328,6 +1350,7 @@ async function launchRadar(){
   radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).filter(c=>c._dist===null||c._dist<=rKm).sort((a,b)=>(a._dist??999)-(b._dist??999));
 
   updateBadges();
+  rebuildTypeFilter();
   // Diagnostic clair
   const _preCount=PRELOADED.filter(c=>{const d=dist(c);return d===null||d<=rKm;}).length;
   const _newCount=radarResults.length-_preCount;
@@ -1933,6 +1956,6 @@ function fillProfileForm(){
   buildCatGrid();
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
 })();
-'</script>
+</script>
 </body>
 </html>
