@@ -135,6 +135,8 @@ html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
 .cat-grid{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
 .cat-btn{padding:6px 14px;border-radius:20px;font-size:.74rem;font-weight:600;cursor:pointer;border:1.5px solid var(--brd2);background:transparent;color:var(--t3);transition:all .15s;font-family:var(--ff-h)}
 .cat-btn.on{background:var(--primary-l);border-color:rgba(108,99,255,.55);color:var(--purple)}
+.pcat-btn{padding:5px 11px;border-radius:20px;font-size:.73rem;font-weight:600;cursor:pointer;border:1.5px solid var(--brd);background:transparent;color:var(--t4);transition:all .15s;font-family:var(--ff-h)}
+.pcat-btn.on{background:var(--primary-l);border-color:rgba(108,99,255,.50);color:var(--primary)}
 .search-banner{background:var(--primary-l);border:1px solid rgba(108,99,255,.25);border-radius:var(--rl);padding:.75rem 1.1rem;margin-bottom:.875rem;display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--purple)}
 .spin{width:16px;height:16px;border:2px solid rgba(108,99,255,.25);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -300,13 +302,15 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
       </div>
       <div class="fi full">
-        <label>Secteurs supplémentaires à cibler (optionnel)</label>
-        <div id="sector_tags" class="sector-tags"></div>
+        <label>Secteurs à scanner <span id="sector_count_lbl" style="font-size:.7rem;color:var(--t4);font-weight:400"></span></label>
+        <div style="font-size:.71rem;color:var(--t4);margin:.2rem 0 .5rem">Coche / décoche selon tes cibles — se synchro avec le radar</div>
+        <div id="sector_cats_grid" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+        <div style="margin-top:10px;font-size:.72rem;color:var(--t4);margin-bottom:4px">Secteur non listé ? Tape son nom :</div>
         <div style="display:flex;gap:7px">
           <input id="p_sector_input" placeholder="ex : Agroalimentaire, Aéronautique… + Entrée" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSector();}">
           <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" style="flex-shrink:0">+ Ajouter</button>
         </div>
-        <div style="font-size:.7rem;color:var(--t4);margin-top:3px">Ces secteurs s'ajouteront aux catégories du radar</div>
+        <div id="sector_tags" class="sector-tags" style="margin-top:6px"></div>
       </div>
       <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
         <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
@@ -488,76 +492,86 @@ const FT_CLIENT_SECRET = '__FT_CLIENT_SECRET__';
 const FORMATION_CONFIG={
   TIP:{label:'Technicien Informatique de Proximité (TIP)',emoji:'💻',
     diploma:'Titre Professionnel TIP',
-    sectors:['ESN','Public','Education','Lycées','Santé','Industrie','Banque'],
-    osmAmenities:['hospital','clinic','school','college','university','townhall','bank','coworking_space'],
-    nafCodes:['6202B','9511Z','6203Z','6209Z','6202A'],
+    sectors:['ESN','Public','Education','Lycées','Santé','Industrie','Banque','Asso'],
+    osmAmenities:['hospital','clinic','nursing_home','school','college','university','townhall','bank','coworking_space','social_facility'],
+    nafCodes:['6202B','9511Z','6203Z','6209Z','6202A','6201Z','9499Z','9411Z','9412Z'],
+    osmOffices:['government','it','association','company'],
     romeCodes:['M1801','M1802','M1803'],
     skills:'support utilisateur N1/N2, helpdesk, déploiement Windows 10/11, Active Directory, GLPI, réseau TCP/IP/DNS/DHCP'},
   Compta:{label:'Comptabilité / Gestion',emoji:'📊',
     diploma:'Titre Professionnel / BTS Comptabilité-Gestion',
-    sectors:['PME','Banque','Public','Industrie'],
-    osmAmenities:['bank','townhall'],
-    nafCodes:['6920Z','6619B','6622Z','6491Z','8411Z'],
+    sectors:['PME','Banque','Public','Industrie','Asso'],
+    osmAmenities:['bank','townhall','social_facility'],
+    nafCodes:['6920Z','6619B','6622Z','6491Z','8411Z','8219Z','9499Z'],
+    osmOffices:['government','company','association'],
     romeCodes:['M1203','M1206','M1205'],
     skills:'comptabilité générale et analytique, saisie et lettrage, TVA, rapprochement bancaire, Excel, logiciels comptables (Sage, Ciel, EBP)'},
   Mecanique:{label:'Mécanique automobile',emoji:'🔧',
     diploma:'CAP / Bac Pro Mécanique automobile',
     sectors:['Garage','Industrie','Logistique','PME'],
     osmAmenities:['car_repair','fuel'],
-    nafCodes:['4520A','4520B','4511Z','4519Z','4531Z','5010Z'],
+    nafCodes:['4520A','4520B','4511Z','4519Z','4531Z','5010Z','4532Z'],
+    osmOffices:['company'],
     romeCodes:['I1604','I1605','I1601'],
     skills:'diagnostic électronique, entretien courant, pneumatiques, freinage, distribution, vidange, mécanique générale'},
   Secretariat:{label:'Secrétariat / Assistanat',emoji:'📝',
     diploma:'Titre Professionnel / BTS Assistant de Manager',
-    sectors:['PME','Public','Santé','Banque','Industrie'],
-    osmAmenities:['townhall','hospital','bank'],
-    nafCodes:['8211Z','8219Z','8299Z','8411Z'],
+    sectors:['PME','Public','Santé','Banque','Industrie','Asso'],
+    osmAmenities:['townhall','hospital','bank','social_facility'],
+    nafCodes:['8211Z','8219Z','8299Z','8411Z','9499Z'],
+    osmOffices:['government','company','association'],
     romeCodes:['M1607','M1604','M1602'],
     skills:'gestion du courrier et des agendas, accueil, frappe et mise en forme de documents, Pack Office, outils collaboratifs'},
   Commerce:{label:'Commerce / Vente',emoji:'🛍️',
     diploma:'Titre Professionnel / BTS MCO / NDRC',
     sectors:['PME','Industrie','Banque'],
-    osmAmenities:['supermarket','mall','bank'],
-    nafCodes:['4719B','4711A','4711D','4643Z'],
+    osmAmenities:['supermarket','mall','bank','convenience','department_store'],
+    nafCodes:['4719B','4711A','4711D','4643Z','4619Z','4771Z','4759A'],
+    osmOffices:['company'],
     romeCodes:['D1402','D1403','D1501'],
     skills:'relation client, techniques de vente, merchandising, gestion de caisse, outils CRM, prospection commerciale'},
   Electro:{label:'Électrotechnique / Électricité',emoji:'⚡',
     diploma:'CAP / Bac Pro Électrotechnique',
     sectors:['Industrie','Public','BTP'],
     osmAmenities:['townhall'],
-    nafCodes:['4321A','4321B','2711Z','3320A'],
+    nafCodes:['4321A','4321B','2711Z','3320A','3513Z','4322A'],
+    osmOffices:['company','government'],
     romeCodes:['I1308','I1306','I1304'],
     skills:'câblage et raccordement électrique, lecture de plans, habilitation électrique, dépannage, automatismes'},
   BTP:{label:'Bâtiment / BTP',emoji:'🏗️',
     diploma:'CAP / Bac Pro Bâtiment',
     sectors:['BTP','Industrie','Public'],
     osmAmenities:['townhall'],
-    nafCodes:['4120A','4120B','4211Z','4312A','4391A'],
+    nafCodes:['4120A','4120B','4211Z','4312A','4391A','4331Z','4332A','4399C'],
+    osmOffices:['company','government'],
     romeCodes:['F1101','F1106','F1201'],
     skills:'lecture de plans, maçonnerie, coffrage, enduits, sécurité chantier, outils et matériaux de construction'},
   Restauration:{label:'Restauration / Hôtellerie',emoji:'🍽️',
     diploma:'CAP / Bac Pro Restauration',
     sectors:['Restauration','Hôtellerie','Collectivité'],
-    osmAmenities:['restaurant','hotel','fast_food','cafe'],
-    nafCodes:['5610A','5610B','5621Z','5590Z'],
+    osmAmenities:['restaurant','hotel','fast_food','cafe','bar','bakery'],
+    nafCodes:['5610A','5610B','5621Z','5590Z','5630Z'],
+    osmOffices:['company'],
     romeCodes:['G1602','G1603','G1404'],
     skills:'préparation culinaire, dressage, hygiène HACCP, service en salle, gestion des stocks, encaissement'},
   Social:{label:'Aide à la personne / Social',emoji:'❤️',
     diploma:'CAP AEPE / ADVF / BTS SP3S',
     sectors:['Santé','Asso','Public'],
-    osmAmenities:['hospital','social_facility','townhall'],
-    nafCodes:['8810A','8810B','8899A','8899B'],
+    osmAmenities:['hospital','social_facility','townhall','nursing_home','clinic'],
+    nafCodes:['8810A','8810B','8899A','8899B','8720A','8730A','8730B','8621Z'],
+    osmOffices:['government','association'],
     romeCodes:['K1302','K1207','K1205'],
     skills:'accompagnement de la personne, aide aux gestes de la vie quotidienne, écoute active, premiers secours, travail en équipe pluridisciplinaire'},
   Logistique:{label:'Logistique / Transport',emoji:'📦',
     diploma:'CAP / Bac Pro Logistique',
-    sectors:['Logistique','Industrie','Commerce'],
+    sectors:['Logistique','Industrie','Commerce','PME'],
     osmAmenities:['station'],
-    nafCodes:['4941A','4941B','5210B','5221Z','5224A'],
+    nafCodes:['4941A','4941B','5210B','5221Z','5224A','5224B','5229A'],
+    osmOffices:['company'],
     romeCodes:['N1103','N4101','N1301'],
     skills:'gestion des stocks, préparation de commandes, utilisation WMS/ERP, CACES (ou en cours), expéditions et réceptions'},
   Custom:{label:'Autre formation (personnalisée)',emoji:'✏️',
-    diploma:'',sectors:[],osmAmenities:[],nafCodes:[],romeCodes:[],skills:''},
+    diploma:'',sectors:[],osmAmenities:[],nafCodes:[],osmOffices:['government','association','company'],romeCodes:[],skills:''},
 };
 
 const CATS=[
@@ -678,6 +692,26 @@ function activateFormationCats(formationId){
     var btn=document.getElementById('cat-'+cat.id);
     if(btn)btn.classList.toggle('on',activeCats.has(cat.id));
   });
+  renderSectorCatsGrid();
+}
+
+function renderSectorCatsGrid(){
+  var container=document.getElementById('sector_cats_grid');
+  if(!container)return;
+  container.innerHTML=CATS.map(function(cat){
+    var on=activeCats.has(cat.id);
+    return'<button class="pcat-btn'+(on?' on':'')+'" onclick="toggleSectorCat(\''+cat.id+'\')" title="'+escH(cat.lbl)+'">'+cat.ico+' '+escH(cat.lbl)+'</button>';
+  }).join('');
+  var lbl=document.getElementById('sector_count_lbl');
+  if(lbl)lbl.textContent='('+activeCats.size+' actif'+(activeCats.size>1?'s':'')+')';
+}
+
+function toggleSectorCat(catId){
+  if(activeCats.has(catId))activeCats.delete(catId);
+  else activeCats.add(catId);
+  var radarBtn=document.getElementById('cat-'+catId);
+  if(radarBtn)radarBtn.classList.toggle('on',activeCats.has(catId));
+  renderSectorCatsGrid();
 }
 
 function onFormationChange(){
@@ -1190,16 +1224,17 @@ async function fetchOverpass(lat,lng,rm,amenities,offices){
 
 const NAF2T={
   '6201Z':'ESN','6202A':'ESN','6202B':'ESN','6203Z':'ESN','6209Z':'ESN','9511Z':'ESN','6190Z':'ESN',
-  '6920Z':'Banque','6619B':'Banque','6622Z':'Banque','6491Z':'Banque',
+  '6920Z':'Banque','6619B':'Banque','6622Z':'Banque','6491Z':'Banque','6511Z':'Banque','6512Z':'Banque',
   '8411Z':'Public','8412Z':'Public','8413Z':'Public',
-  '8211Z':'PME','8219Z':'PME','8299Z':'PME',
-  '4520A':'Garage','4520B':'Garage','4511Z':'Garage','4519Z':'Garage','4531Z':'Garage',
-  '4719B':'PME','4711A':'PME','4711B':'PME','4711D':'PME','4643Z':'PME',
-  '4321A':'Industrie','4321B':'Industrie','2711Z':'Industrie','3320A':'Industrie',
-  '4120A':'BTP','4120B':'BTP','4211Z':'BTP','4312A':'BTP','4391A':'BTP',
-  '5610A':'Restauration','5610B':'Restauration','5621Z':'Restauration','5590Z':'Restauration',
-  '8810A':'Asso','8810B':'Asso','8899A':'Asso','8899B':'Asso','9499Z':'Asso',
-  '4941A':'Logistique','4941B':'Logistique','5210B':'Logistique','5221Z':'Logistique','5224A':'Logistique',
+  '8211Z':'PME','8219Z':'PME','8299Z':'PME','4619Z':'PME','4771Z':'PME','4759A':'PME','4643Z':'PME',
+  '4520A':'Garage','4520B':'Garage','4511Z':'Garage','4519Z':'Garage','4531Z':'Garage','4532Z':'Garage',
+  '4719B':'PME','4711A':'PME','4711B':'PME','4711D':'PME',
+  '4321A':'Industrie','4321B':'Industrie','2711Z':'Industrie','3320A':'Industrie','3513Z':'Industrie','4322A':'Industrie',
+  '4120A':'BTP','4120B':'BTP','4211Z':'BTP','4312A':'BTP','4391A':'BTP','4331Z':'BTP','4332A':'BTP','4399C':'BTP',
+  '5610A':'Restauration','5610B':'Restauration','5621Z':'Restauration','5590Z':'Restauration','5630Z':'Restauration',
+  '8810A':'Asso','8810B':'Asso','8899A':'Asso','8899B':'Asso','9499Z':'Asso','9411Z':'Asso','9412Z':'Asso',
+  '8720A':'Santé','8730A':'Santé','8730B':'Santé','8731Z':'Santé','8732Z':'Santé',
+  '4941A':'Logistique','4941B':'Logistique','5210B':'Logistique','5221Z':'Logistique','5224A':'Logistique','5224B':'Logistique','5229A':'Logistique',
   '5010Z':'Logistique',
   '8610Z':'Santé','8621Z':'Santé','8622A':'Santé','8622B':'Santé','8622C':'Santé',
   '5813Z':'Médias','6020Z':'Médias','6010Z':'Médias','7311Z':'Médias',
@@ -1239,7 +1274,7 @@ async function fetchAlternance(lat,lng,rKm){
     const _romesA=(_fcA.romeCodes&&_fcA.romeCodes.length?_fcA.romeCodes:['M1801','M1802']).join(',');
     const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=${_romesA}`);
     const d=await r.json();
-    return((d.results||d.matchas||[]).map(e=>{const _n=e.company?.name||e.enseigne||'';const _v=e.company?.city||'';return{id:'lba_'+_hid(_n+_v+(e.company?.siret||'')),n:_n,t:(_fcA.sectors&&_fcA.sectors[0])||'ESN',v:_v,d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true};})).filter(e=>e.n);
+    return((d.results||d.matchas||[]).map(e=>{const _n=e.company?.name||e.enseigne||'';const _v=e.company?.city||'';const _naf=(e.company?.naf||e.company?.nafCode||'').replace(/\./g,'');return{id:'lba_'+_hid(_n+_v+(e.company?.siret||'')),n:_n,t:NAF2T[_naf]||(_fcA.sectors&&_fcA.sectors[0])||'PME',v:_v,d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true};})).filter(e=>e.n);
   }catch(ex){return[];}
 }
 
@@ -1247,10 +1282,10 @@ async function fetchImmersion(lat,lng,rKm){
   try{
     const _fcI=FORMATION_CONFIG[S.formation]||{};
     const _romeI=(_fcI.romeCodes&&_fcI.romeCodes[0])||'M1801';
-    const _sectorI=(_fcI.sectors&&_fcI.sectors[0])||'ESN';
+    const _sectorI=(_fcI.sectors&&_fcI.sectors[0])||'PME';
     const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&romeCode=${_romeI}`);
     const d=await r.json();
-    return((d||[]).map(e=>{const _n=e.name||e.companyName||'';const _v=e.address?.city||'';return{id:'imm_'+_hid(_n+_v+(e.siret||'')),n:_n,t:_sectorI,v:_v,d:'Ouvert aux PMSMP — '+(_fcI.label||''),e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true};})).filter(e=>e.n);
+    return((d||[]).map(e=>{const _n=e.name||e.companyName||'';const _v=e.address?.city||'';const _naf=(e.naf||e.nafCode||'').replace(/\./g,'');return{id:'imm_'+_hid(_n+_v+(e.siret||'')),n:_n,t:NAF2T[_naf]||_sectorI,v:_v,d:'Ouvert aux PMSMP — '+(_fcI.label||''),e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true};})).filter(e=>e.n);
   }catch(ex){return[];}
 }
 
@@ -1319,7 +1354,7 @@ async function fetchFranceTravail(lat,lng,rKm){
       return{
         id:'ft_'+o.id,
         n:o.entreprise?.nom||o.intitule,
-        t:(_fcFT.sectors&&_fcFT.sectors[0])||'ESN',
+        t:NAF2T[(o.entreprise?.codeNaf||'').replace(/\./g,'')]||(_fcFT.sectors&&_fcFT.sectors[0])||'PME',
         v:o.lieuTravail?.libelle||'',
         d:o.intitule+(o.salaire?.libelle?' — '+o.salaire.libelle:''),
         e:'',
@@ -1361,6 +1396,7 @@ function toggleCat(id){
   if(activeCats.has(id))activeCats.delete(id);else activeCats.add(id);
   const btn=document.getElementById('cat-'+id);
   btn.classList.toggle('on',activeCats.has(id));
+  renderSectorCatsGrid();
 }
 
 async function launchRadar(){
@@ -1396,7 +1432,7 @@ async function launchRadar(){
   const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
   const _formationNaf=(_fc&&_fc.nafCodes)||[];
   const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf),..._formationNaf,...extraNaf])];
-  const osmOffices=['government','it','association','company'];
+  const osmOffices=(_fc&&_fc.osmOffices)||['government','association','company'];
 
   const tasks=[];
   if(allAmenities.length||osmOffices.length){
@@ -2049,6 +2085,7 @@ function fillProfileForm(){
   if(S.customSectors&&S.customSectors.length){
     _customSectors=[...S.customSectors];renderSectorTags();
   }
+  renderSectorCatsGrid();
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
@@ -2067,6 +2104,7 @@ function fillProfileForm(){
   loadBlacklist();
   restore();
   buildCatGrid();
+  renderSectorCatsGrid();
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
 })();
 </script>
