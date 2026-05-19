@@ -1,223 +1,230 @@
 <!DOCTYPE html>
-<html lang="fr" data-theme="light">
+<html lang="fr" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#6C63FF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Stagios">
+<meta name="description" content="Trouve ton stage, alternance ou emploi avec le radar géographique">
+<link rel="manifest" href="manifest.json">
 <title>Stagios – Radar & CRM</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap');
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f1f5f9;--card:#fff;--inp:#fff;--bg2:#f8fafc;--bg3:#e2e8f0;
-  --t1:#0f172a;--t2:#334155;--t3:#64748b;--t4:#94a3b8;
-  --brd:#e2e8f0;--brd2:#cbd5e1;
-  --blue:#1d6ef5;--blue-d:#1558cc;--blue-l:#e8f0fe;--blue-t:rgba(29,110,245,.1);
-  --teal:#0a9587;--teal-d:#087a6f;--teal-l:#e0f5f3;
-  --green:#15803d;--green-l:#dcfce7;
-  --amber:#b45309;--amber-l:#fef3c7;
-  --red:#dc2626;--red-l:#fee2e2;
-  --purple:#7c3aed;--purple-l:#ede9fe;
-  --shadow:0 1px 3px rgba(0,0,0,.07);--shadow2:0 4px 14px rgba(0,0,0,.09);
-  --r:8px;--rl:12px;
+  --primary:#6C63FF;--primary-h:#8B7CFF;--primary-l:rgba(108,99,255,.15);--primary-t:rgba(108,99,255,.10);
+  --primary-glow:0 0 20px rgba(108,99,255,.35);
+  --cyan:#5EEAD4;--cyan-l:rgba(94,234,212,.12);
+  --green:#43E97B;--green-l:rgba(67,233,123,.12);
+  --amber:#FF9F0A;--amber-l:rgba(255,159,10,.15);
+  --red:#FF5252;--red-l:rgba(255,82,82,.10);
+  --purple:#A78BFA;--purple-l:rgba(167,139,250,.12);
+  --pink:#FF6584;
+  /* aliases compat */
+  --blue:var(--primary);--blue-d:var(--primary-h);--blue-l:var(--primary-l);--blue-t:var(--primary-t);
+  --teal:var(--cyan);--teal-l:var(--cyan-l);--teal-d:var(--cyan);
+  /* dark (défaut) */
+  --bg:#0F0F1A;--bg2:#151528;--bg3:rgba(255,255,255,.06);
+  --card:#1A1A2E;--inp:rgba(255,255,255,.08);
+  --t1:#FFFFFF;--t2:#E2E8F0;--t3:#B0B0C3;--t4:#64748B;
+  --brd:rgba(255,255,255,.08);--brd2:rgba(255,255,255,.18);
+  --shadow:0 4px 24px rgba(0,0,0,.55);--shadow2:0 8px 32px rgba(0,0,0,.60);
+  --r:12px;--rl:20px;
+  --ff-h:'Poppins',sans-serif;--ff-b:'Inter',sans-serif;
 }
-html[data-theme=dark]{
-  --bg:#0d1117;--card:#161b22;--inp:#21262d;--bg2:#0d1117;--bg3:#21262d;
-  --t1:#e6edf3;--t2:#c9d1d9;--t3:#8b949e;--t4:#6e7681;
-  --brd:#30363d;--brd2:#484f58;
-  --blue:#58a6ff;--blue-d:#79b8ff;--blue-l:rgba(56,139,253,.12);--blue-t:rgba(56,139,253,.1);
-  --teal:#3fb950;--teal-d:#56d364;--teal-l:rgba(63,185,80,.1);
-  --green:#3fb950;--green-l:rgba(63,185,80,.1);
-  --amber:#e3b341;--amber-l:rgba(187,128,9,.15);
-  --red:#f85149;--red-l:rgba(248,81,73,.1);
-  --purple:#a78bfa;--purple-l:rgba(124,58,237,.12);
-  --shadow:0 1px 3px rgba(0,0,0,.3);--shadow2:0 4px 16px rgba(0,0,0,.4);
+html[data-theme=light]{
+  --bg:#F0EFFF;--bg2:#E8E6FF;--bg3:rgba(108,99,255,.07);
+  --card:#FFFFFF;--inp:#FFFFFF;
+  --t1:#1A1A2E;--t2:#334155;--t3:#64748B;--t4:#94A3B8;
+  --brd:rgba(108,99,255,.15);--brd2:rgba(108,99,255,.28);
+  --shadow:0 2px 12px rgba(108,99,255,.10);--shadow2:0 4px 24px rgba(108,99,255,.16);
+  --green:#16a34a;--green-l:rgba(22,163,74,.12);
+  --amber:#d97706;--amber-l:rgba(217,119,6,.13);
+  --red:#dc2626;--red-l:rgba(220,38,38,.10);
 }
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t1);line-height:1.55;font-size:15px}
+body{font-family:var(--ff-b);background:var(--bg);color:var(--t1);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
 
 /* ── HEADER ─────────────────────────────────────────── */
-.hdr{background:#010409;height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;position:sticky;top:0;z-index:300;border-bottom:1px solid rgba(255,255,255,.06)}
-html[data-theme=light] .hdr{background:#0f172a}
-.logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:700;font-size:.95rem;flex-shrink:0}
-.logo-sq{width:28px;height:28px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.hdr{background:rgba(15,15,26,.90);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;position:sticky;top:0;z-index:300;border-bottom:1px solid var(--brd);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+html[data-theme=light] .hdr{background:rgba(240,239,255,.92)}
+.logo{display:flex;align-items:center;gap:10px;color:var(--t1);font-weight:700;font-size:.95rem;font-family:var(--ff-h);flex-shrink:0}
+.logo-sq{width:30px;height:30px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;box-shadow:var(--primary-glow)}
 .hdr-r{display:flex;align-items:center;gap:6px}
-.tbtn{background:transparent;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.7);padding:4px 9px;border-radius:6px;cursor:pointer;font-size:.75rem;font-family:inherit}
-.tbtn:hover{background:rgba(255,255,255,.1);color:#fff}
+.tbtn{background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.35);color:var(--t2);padding:5px 11px;border-radius:20px;cursor:pointer;font-size:.75rem;font-family:var(--ff-h);font-weight:600;transition:all .15s}
+.tbtn:hover{background:rgba(108,99,255,.25);color:var(--t1)}
 
-/* ── TAB NAV ─────────────────────────────────────────── */
-.tabnav{background:var(--card);border-bottom:1px solid var(--brd);display:flex;overflow-x:auto;padding:0 1rem;position:sticky;top:56px;z-index:200}
-.tabnav::-webkit-scrollbar{display:none}
-.tab{display:flex;align-items:center;gap:6px;padding:0 14px;height:44px;font-size:.82rem;font-weight:600;color:var(--t3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;flex-shrink:0}
-.tab:hover{color:var(--t2)}
-.tab.on{color:var(--blue);border-bottom-color:var(--blue)}
-.tab-badge{min-width:18px;height:18px;padding:0 4px;border-radius:20px;background:var(--blue-l);color:var(--blue);font-size:.65rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+/* ── BOTTOM PILL NAV ────────────────────────────────── */
+.tabnav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:8px;background:linear-gradient(135deg,rgba(30,41,59,.90) 0%,rgba(15,23,42,.95) 45%,rgba(11,16,32,.97) 100%);border:1.5px solid rgba(108,99,255,.40);border-radius:40px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 10px 28px rgba(108,99,255,.28),0 14px 24px rgba(0,0,0,.55);z-index:200;white-space:nowrap}
+html[data-theme=light] .tabnav{background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(240,239,255,.98) 100%);border-color:rgba(108,99,255,.30);box-shadow:0 8px 24px rgba(108,99,255,.18),0 12px 20px rgba(0,0,0,.08)}
+.tab{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:28px;cursor:pointer;color:#64748B;font-family:var(--ff-h);font-size:.78rem;font-weight:600;transition:background .2s,color .2s,box-shadow .2s;border:1.5px solid transparent;background:transparent}
+html[data-theme=light] .tab{color:#94A3B8}
+.tab:hover{color:var(--t2);background:rgba(108,99,255,.08)}
+.tab.on{background:linear-gradient(135deg,rgba(108,99,255,.45) 0%,rgba(108,99,255,.20) 50%,rgba(49,46,129,.55) 100%);border-color:rgba(108,99,255,.65);color:#FFFFFF;box-shadow:0 0 18px rgba(108,99,255,.40),0 0 12px rgba(34,211,238,.15)}
+html[data-theme=light] .tab.on{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 4px 16px rgba(108,99,255,.35)}
+.tab-badge{min-width:16px;height:16px;padding:0 4px;border-radius:20px;background:rgba(108,99,255,.30);color:var(--purple);font-size:.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.tab.on .tab-badge{background:rgba(255,255,255,.20);color:#fff}
 
 /* ── LAYOUT ─────────────────────────────────────────── */
-.main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 3rem}
+.main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 7rem}
 .page{display:none}.page.on{display:block}
 
 /* ── CARDS ──────────────────────────────────────────── */
 .card{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);box-shadow:var(--shadow);padding:1.25rem}
 .card+.card{margin-top:1rem}
-.ct{font-size:1rem;font-weight:700;color:var(--t1);margin-bottom:.2rem}
+.ct{font-size:1rem;font-weight:700;color:var(--t1);font-family:var(--ff-h);margin-bottom:.2rem}
 .cs{font-size:.8rem;color:var(--t3);margin-bottom:1.1rem}
 .row{display:flex;gap:1rem;flex-wrap:wrap}
 .col{flex:1;min-width:200px}
 
 /* ── FORM ───────────────────────────────────────────── */
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
-.fi{display:flex;flex-direction:column;gap:3px}.fi.full{grid-column:1/-1}
-.fi label{font-size:.71rem;font-weight:700;color:var(--t3);letter-spacing:.04em;text-transform:uppercase}
-input,select,textarea{width:100%;padding:8px 11px;border:1.5px solid var(--brd);border-radius:var(--r);font-size:.875rem;color:var(--t1);background:var(--inp);font-family:inherit;transition:border-color .15s,box-shadow .15s}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-t)}
+.fi{display:flex;flex-direction:column;gap:4px}.fi.full{grid-column:1/-1}
+.fi label{font-size:.71rem;font-weight:600;color:var(--t4);letter-spacing:.05em;text-transform:uppercase;font-family:var(--ff-h)}
+input,select,textarea{width:100%;padding:10px 14px;border:1px solid var(--brd2);border-radius:var(--r);font-size:.875rem;color:var(--t1);background:var(--inp);font-family:var(--ff-b);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:rgba(108,99,255,.80);border-width:1.5px;box-shadow:0 0 0 3px rgba(108,99,255,.12)}
 textarea{resize:vertical;min-height:68px;line-height:1.5}
 input::placeholder,textarea::placeholder{color:var(--t4)}
+html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
 
 /* ── BUTTONS ────────────────────────────────────────── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:var(--r);font-size:.825rem;font-weight:600;cursor:pointer;border:1.5px solid transparent;font-family:inherit;transition:all .15s;white-space:nowrap;text-decoration:none}
-.btn-primary{background:var(--blue);color:#fff;border-color:var(--blue)}.btn-primary:hover{background:var(--blue-d)}
-.btn-teal{background:var(--teal);color:#fff}.btn-teal:hover{background:var(--teal-d)}
-.btn-ghost{background:transparent;color:var(--t2);border-color:var(--brd2)}.btn-ghost:hover{background:var(--bg3)}
-.btn-green{background:var(--green);color:#fff}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r);font-size:.82rem;font-weight:600;cursor:pointer;border:1.5px solid transparent;font-family:var(--ff-h);transition:all .18s;white-space:nowrap;text-decoration:none}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 16px rgba(108,99,255,.35)}.btn-primary:hover{background:var(--primary-h);box-shadow:0 6px 22px rgba(108,99,255,.50)}.btn-primary:active{transform:scale(.97)}
+.btn-teal{background:var(--cyan);color:#0F0F1A}.btn-teal:hover{filter:brightness(1.1)}
+.btn-ghost{background:transparent;color:var(--t2);border-color:var(--brd2)}.btn-ghost:hover{background:var(--bg3);border-color:rgba(108,99,255,.35)}
+.btn-green{background:var(--green);color:#0F0F1A}
 .btn-red{background:var(--red);color:#fff}
-.btn-sm{padding:4px 10px;font-size:.76rem}
-.btn-lg{padding:10px 22px;font-size:.9rem}
-.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn-sm{padding:5px 11px;font-size:.75rem}
+.btn-lg{padding:12px 24px;font-size:.9rem}
+.btn:disabled{opacity:.35;cursor:not-allowed}
 
 /* ── BADGES ─────────────────────────────────────────── */
-.badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:.66rem;font-weight:700}
-.b-ESN{background:var(--blue-l);color:var(--blue)}
-.b-Public{background:var(--green-l);color:var(--green)}
-.b-Santé{background:rgba(190,24,93,.1);color:#be185d}
-html[data-theme=dark] .b-Santé{color:#f472b6}
-.b-Education,.b-Lycées{background:var(--amber-l);color:var(--amber)}
-.b-Industrie,.b-Logistique{background:var(--bg3);color:var(--t2)}
-.b-BTP{background:rgba(120,53,15,.1);color:#92400e}
-html[data-theme=dark] .b-BTP{color:#fbbf24}
-.b-Garage{background:rgba(71,85,105,.1);color:#475569}
-html[data-theme=dark] .b-Garage{color:#94a3b8}
-.b-Restauration,.b-Hôtellerie{background:rgba(217,70,239,.08);color:#a21caf}
-html[data-theme=dark] .b-Restauration,.b-Hôtellerie{color:#e879f9}
-.b-Banque{background:var(--purple-l);color:var(--purple)}
-.b-PME{background:rgba(194,65,12,.1);color:#c2410c}
-html[data-theme=dark] .b-PME{color:#fb923c}
-.b-Télécom,.b-Médias{background:rgba(8,145,178,.1);color:#0891b2}
-html[data-theme=dark] .b-Télécom,.b-Médias{color:#22d3ee}
-.b-Asso{background:rgba(234,179,8,.1);color:#a16207}
-html[data-theme=dark] .b-Asso{color:#fbbf24}
-.b-Coworking{background:var(--purple-l);color:#5b21b6}
-.disc-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--purple-l);color:var(--purple);font-weight:700}
-.pmsmp-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--teal-l);color:var(--teal);font-weight:700}
-.alt-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:var(--amber-l);color:var(--amber);font-weight:700}
-.ft-badge{font-size:.63rem;padding:1px 5px;border-radius:20px;background:#e0f2fe;color:#0369a1;font-weight:700}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:.66rem;font-weight:700;font-family:var(--ff-h);border:1px solid transparent}
+.b-ESN{background:var(--primary-l);color:var(--purple);border-color:rgba(108,99,255,.30)}
+.b-Public{background:var(--green-l);color:var(--green);border-color:rgba(67,233,123,.30)}
+.b-Santé{background:rgba(255,101,132,.10);color:#FF6584;border-color:rgba(255,101,132,.25)}
+.b-Education,.b-Lycées{background:var(--amber-l);color:var(--amber);border-color:rgba(255,159,10,.28)}
+.b-Industrie,.b-Logistique{background:var(--bg3);color:var(--t3);border-color:var(--brd)}
+.b-BTP{background:rgba(255,107,53,.10);color:#FF6B35;border-color:rgba(255,107,53,.25)}
+.b-Garage{background:rgba(148,163,184,.10);color:#94A3B8;border-color:rgba(148,163,184,.20)}
+.b-Restauration,.b-Hôtellerie{background:rgba(255,215,0,.10);color:#FFD700;border-color:rgba(255,215,0,.25)}
+.b-Banque{background:var(--purple-l);color:var(--purple);border-color:rgba(167,139,250,.30)}
+.b-PME{background:rgba(255,107,53,.10);color:#FF6B35;border-color:rgba(255,107,53,.25)}
+.b-Télécom,.b-Médias{background:var(--cyan-l);color:var(--cyan);border-color:rgba(94,234,212,.28)}
+.b-Asso{background:rgba(255,215,0,.10);color:#FFD700;border-color:rgba(255,215,0,.25)}
+.b-Coworking{background:var(--primary-l);color:var(--purple);border-color:rgba(108,99,255,.25)}
+.disc-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--purple-l);color:var(--purple);font-weight:700;border:1px solid rgba(167,139,250,.30)}
+.pmsmp-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--cyan-l);color:var(--cyan);font-weight:700;border:1px solid rgba(94,234,212,.30)}
+.alt-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--amber-l);color:var(--amber);font-weight:700;border:1px solid rgba(255,159,10,.28)}
+.ft-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--primary-l);color:var(--purple);font-weight:700;border:1px solid rgba(108,99,255,.35)}
 
 /* ── TIER DISTANCE ──────────────────────────────────── */
-.tier{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:20px;font-size:.65rem;font-weight:700}
-.t1{background:var(--green-l);color:var(--green)}.t2{background:var(--blue-l);color:var(--blue)}
-.t3{background:var(--amber-l);color:var(--amber)}.t4{background:var(--red-l);color:var(--red)}
-.sdiv-dist{font-size:.73rem;font-weight:800;margin:1rem 0 .4rem;display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:6px}
-.sdiv-dist::after{content:'';flex:1;height:1px;background:currentColor;opacity:.15}
-.sdiv-dist.t1{background:rgba(21,128,61,.07);color:var(--green)}
-.sdiv-dist.t2{background:var(--blue-t);color:var(--blue)}
-.sdiv-dist.t3{background:rgba(180,83,9,.07);color:var(--amber)}
-.sdiv-dist.t4{background:rgba(220,38,38,.06);color:var(--red)}
+.tier{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:700;border:1px solid transparent}
+.t1{background:var(--green-l);color:var(--green);border-color:rgba(67,233,123,.25)}.t2{background:var(--primary-l);color:var(--purple);border-color:rgba(108,99,255,.25)}
+.t3{background:var(--amber-l);color:var(--amber);border-color:rgba(255,159,10,.25)}.t4{background:var(--red-l);color:var(--red);border-color:rgba(255,82,82,.25)}
+.sdiv-dist{font-size:.73rem;font-weight:700;margin:1rem 0 .4rem;display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:10px;font-family:var(--ff-h)}
+.sdiv-dist::after{content:'';flex:1;height:1px;background:currentColor;opacity:.12}
+.sdiv-dist.t1{background:rgba(67,233,123,.07);color:var(--green)}
+.sdiv-dist.t2{background:rgba(108,99,255,.08);color:var(--purple)}
+.sdiv-dist.t3{background:rgba(255,159,10,.07);color:var(--amber)}
+.sdiv-dist.t4{background:rgba(255,82,82,.06);color:var(--red)}
 
 /* ── RADAR ──────────────────────────────────────────── */
 .radar-controls{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
-.cat-grid{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:1rem}
-.cat-btn{padding:5px 12px;border-radius:20px;font-size:.75rem;font-weight:600;cursor:pointer;border:1.5px solid var(--brd);background:var(--card);color:var(--t3);transition:all .15s}
-.cat-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
-.search-banner{background:var(--blue-l);border:1px solid rgba(29,110,245,.2);border-radius:var(--rl);padding:.75rem 1.1rem;margin-bottom:.875rem;display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--blue)}
-.spin{width:16px;height:16px;border:2px solid rgba(29,110,245,.2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.cat-grid{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.cat-btn{padding:6px 14px;border-radius:20px;font-size:.74rem;font-weight:600;cursor:pointer;border:1.5px solid var(--brd2);background:transparent;color:var(--t3);transition:all .15s;font-family:var(--ff-h)}
+.cat-btn.on{background:var(--primary-l);border-color:rgba(108,99,255,.55);color:var(--purple)}
+.search-banner{background:var(--primary-l);border:1px solid rgba(108,99,255,.25);border-radius:var(--rl);padding:.75rem 1.1rem;margin-bottom:.875rem;display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--purple)}
+.spin{width:16px;height:16px;border:2px solid rgba(108,99,255,.25);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
 @keyframes spin{to{transform:rotate(360deg)}}
-.clist{display:flex;flex-direction:column;gap:6px}
-.cc{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--rl);padding:.75rem 1rem;display:flex;align-items:center;gap:10px;transition:border-color .15s}
-.cc:hover{border-color:var(--blue);box-shadow:0 2px 8px var(--blue-t)}
-.clog{width:36px;height:36px;border-radius:var(--r);background:var(--bg3);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3);flex-shrink:0}
-.ci{flex:1;min-width:0}.cn{font-weight:700;font-size:.84rem;color:var(--t1)}
-.cd{font-size:.73rem;color:var(--t3);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ce{font-size:.69rem;color:var(--blue);margin-top:2px;font-family:monospace}
+.clist{display:flex;flex-direction:column;gap:8px}
+.cc{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);padding:.875rem 1rem;display:flex;align-items:center;gap:12px;transition:border-color .2s,box-shadow .2s}
+.cc:hover{border-color:rgba(108,99,255,.45);box-shadow:0 4px 20px rgba(108,99,255,.15),var(--shadow)}
+.clog{width:38px;height:38px;border-radius:10px;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--purple);flex-shrink:0;border:1px solid rgba(108,99,255,.20)}
+.ci{flex:1;min-width:0}.cn{font-weight:700;font-size:.84rem;color:var(--t1);font-family:var(--ff-h)}
+.cd{font-size:.73rem;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ce{font-size:.69rem;color:var(--primary);margin-top:2px;font-family:monospace;opacity:.9}
 .ca{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
 .toolbar{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap}.toolbar input{flex:1;min-width:160px}
 .empty{text-align:center;padding:2.5rem;color:var(--t4);font-size:.875rem}
 
 /* ── KANBAN ─────────────────────────────────────────── */
 .kanban{display:grid;grid-template-columns:repeat(6,minmax(180px,1fr));gap:10px;overflow-x:auto;padding-bottom:.5rem}
-.kb-col{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:.75rem;min-height:80px;display:flex;flex-direction:column;gap:8px}
+.kb-col{background:rgba(255,255,255,.03);border:1px solid var(--brd);border-radius:var(--rl);padding:.875rem;min-height:80px;display:flex;flex-direction:column;gap:8px}
 .kb-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
-.kb-title{font-size:.77rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
-.kb-count{min-width:20px;height:20px;padding:0 5px;border-radius:20px;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center}
-.kb-card{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--r);padding:.7rem .875rem;cursor:pointer;transition:all .15s}
-.kb-card:hover{border-color:var(--blue);box-shadow:0 2px 8px var(--blue-t)}
+.kb-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-family:var(--ff-h)}
+.kb-count{min-width:20px;height:20px;padding:0 5px;border-radius:20px;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.kb-card{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:.7rem .875rem;cursor:pointer;transition:all .18s}
+.kb-card:hover{border-color:rgba(108,99,255,.45);box-shadow:0 4px 16px rgba(108,99,255,.15)}
 .kb-card.j7{border-left:3px solid var(--amber)}
-.kb-cname{font-size:.82rem;font-weight:700;color:var(--t1);margin-bottom:3px}
+.kb-cname{font-size:.82rem;font-weight:700;color:var(--t1);margin-bottom:3px;font-family:var(--ff-h)}
 .kb-meta{font-size:.71rem;color:var(--t3);display:flex;gap:5px;flex-wrap:wrap;align-items:center}
-.kb-j7{font-size:.68rem;font-weight:700;color:var(--amber);background:var(--amber-l);padding:1px 6px;border-radius:20px}
+.kb-j7{font-size:.68rem;font-weight:700;color:var(--amber);background:var(--amber-l);padding:2px 7px;border-radius:20px}
 .kb-actions{margin-top:8px;display:flex;gap:4px;flex-wrap:wrap}
-.col-todo .kb-title{color:var(--t3)} .col-todo .kb-count{background:var(--bg3);color:var(--t3)}
-.col-sent .kb-title{color:var(--blue)} .col-sent .kb-count{background:var(--blue-l);color:var(--blue)}
+.col-todo .kb-title{color:var(--t4)} .col-todo .kb-count{background:var(--bg3);color:var(--t4)}
+.col-sent .kb-title{color:var(--purple)} .col-sent .kb-count{background:var(--primary-l);color:var(--purple)}
 .col-follow .kb-title{color:var(--amber)} .col-follow .kb-count{background:var(--amber-l);color:var(--amber)}
 .col-int .kb-title{color:var(--purple)} .col-int .kb-count{background:var(--purple-l);color:var(--purple)}
 .col-rej .kb-title{color:var(--red)} .col-rej .kb-count{background:var(--red-l);color:var(--red)}
 .col-acc .kb-title{color:var(--green)} .col-acc .kb-count{background:var(--green-l);color:var(--green)}
 
-/* ── ADDR AUTOCOMPLETE ──────────────────────────────── */
-
+/* ── ADDR / SECTEUR ─────────────────────────────────── */
 .sector-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;min-height:24px}
-.sector-tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;background:var(--blue-l);color:var(--blue);font-size:.74rem;font-weight:600}
-.sector-tag button{background:none;border:none;color:var(--blue);cursor:pointer;font-size:.85rem;padding:0;line-height:1;opacity:.7}
-.sector-tag button:hover{opacity:1}
+.sector-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:var(--primary-l);color:var(--purple);font-size:.74rem;font-weight:600;border:1px solid rgba(108,99,255,.25)}
+.sector-tag button{background:none;border:none;color:var(--purple);cursor:pointer;font-size:.85rem;padding:0;line-height:1;opacity:.7}.sector-tag button:hover{opacity:1}
 .formation-badge{display:none;padding:10px 14px;border-radius:var(--rl);background:var(--bg2);border:1px solid var(--brd);margin-top:6px}
-.mode-opt{display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:var(--r);border:1.5px solid var(--brd);background:var(--card);color:var(--t2);font-size:.78rem;cursor:pointer;transition:all .15s}
-.mode-opt:hover{border-color:var(--blue);background:var(--blue-l)}
-.mode-opt:has(input:checked){border-color:var(--blue);background:var(--blue);color:#fff;font-weight:700}
+.mode-opt{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--brd2);background:transparent;color:var(--t3);font-size:.78rem;cursor:pointer;transition:all .18s;font-family:var(--ff-h);font-weight:600}
+.mode-opt:hover{border-color:rgba(108,99,255,.45);background:var(--primary-l);color:var(--t2)}
+.mode-opt:has(input:checked){border-color:var(--primary);background:var(--primary);color:#fff}
 .mode-opt input{display:none}
-
 .addr-wrap{position:relative;flex:1}
-.addr-dd{position:absolute;top:calc(100% - 1px);left:0;right:0;background:var(--card);border:1.5px solid var(--blue);border-top:none;border-radius:0 0 var(--r) var(--r);z-index:99;max-height:220px;overflow-y:auto;display:none;box-shadow:var(--shadow2)}
+.addr-dd{position:absolute;top:calc(100% - 1px);left:0;right:0;background:var(--card);border:1.5px solid var(--primary);border-top:none;border-radius:0 0 var(--r) var(--r);z-index:99;max-height:220px;overflow-y:auto;display:none;box-shadow:var(--shadow2)}
 .addr-item{padding:9px 13px;font-size:.8rem;cursor:pointer;color:var(--t2);border-bottom:.5px solid var(--brd);line-height:1.45}
-.addr-item:hover,.addr-item.focused{background:var(--blue-l);color:var(--blue)}
+.addr-item:hover,.addr-item.focused{background:var(--primary-l);color:var(--purple)}
 .addr-item:last-child{border-bottom:none}
 .addr-tag{font-size:.69rem;color:var(--t4);display:block;margin-top:1px}
 
 /* ── EMAIL PAGE ─────────────────────────────────────── */
-.ep{background:var(--card);border:1.5px solid var(--brd);border-radius:var(--rl);overflow:hidden}
+.ep{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);overflow:hidden}
 .eh{background:var(--bg2);border-bottom:1px solid var(--brd);padding:1rem 1.25rem}
 .ef{display:flex;gap:8px;font-size:.8rem;color:var(--t2);margin-bottom:3px}
-.efl{font-weight:700;color:var(--t4);min-width:52px;font-size:.71rem;text-transform:uppercase}
+.efl{font-weight:700;color:var(--t4);min-width:52px;font-size:.71rem;text-transform:uppercase;font-family:var(--ff-h)}
 .efl2{font-weight:700;color:var(--t1)}
 .ebody{padding:1.25rem;font-size:.86rem;line-height:1.8;color:var(--t1);white-space:pre-wrap;min-height:200px}
 
 /* ── PROFILE BAR ────────────────────────────────────── */
-.pbar{background:var(--blue-l);border:1.5px solid rgba(29,110,245,.2);border-radius:var(--rl);padding:.875rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:1.25rem}
-.avatar{width:38px;height:38px;border-radius:50%;background:var(--blue);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.88rem;flex-shrink:0}
-.pbar-name{font-weight:700;color:var(--t1);font-size:.88rem}.pbar-sub{font-size:.74rem;color:var(--t3)}
+.pbar{background:var(--primary-l);border:1.5px solid rgba(108,99,255,.25);border-radius:var(--rl);padding:.875rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;box-shadow:var(--primary-glow)}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-h));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.88rem;flex-shrink:0;font-family:var(--ff-h);box-shadow:0 0 12px rgba(108,99,255,.40)}
+.pbar-name{font-weight:700;color:var(--t1);font-size:.88rem;font-family:var(--ff-h)}.pbar-sub{font-size:.74rem;color:var(--t3)}
 
-/* ── STATS BAR ──────────────────────────────────────── */
+/* ── STATS ──────────────────────────────────────────── */
 .sg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
-.sc{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:.7rem;text-align:center}
-.sn{font-size:1.35rem;font-weight:800;color:var(--blue)}.sl{font-size:.67rem;color:var(--t3);font-weight:500;margin-top:1px}
+.sc{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:.875rem;text-align:center}
+.sn{font-size:1.35rem;font-weight:700;color:var(--primary);font-family:var(--ff-h)}.sl{font-size:.67rem;color:var(--t4);font-weight:500;margin-top:2px}
 
-/* ── NOTICE ─────────────────────────────────────────── */
-.notice{border-radius:var(--r);padding:9px 14px;font-size:.79rem;margin-bottom:1rem;border:1px solid;display:flex;gap:8px;align-items:flex-start}
-.n-warn{background:var(--amber-l);border-color:var(--amber);color:var(--amber)}
-.n-info{background:var(--blue-l);border-color:rgba(29,110,245,.3);color:var(--blue)}
-.n-ok{background:var(--green-l);border-color:var(--green);color:var(--green)}
+/* ── NOTICES ────────────────────────────────────────── */
+.notice{border-radius:var(--r);padding:10px 14px;font-size:.79rem;margin-bottom:1rem;border:1px solid;display:flex;gap:8px;align-items:flex-start}
+.n-warn{background:var(--amber-l);border-color:rgba(255,159,10,.35);color:var(--amber)}
+.n-info{background:var(--primary-l);border-color:rgba(108,99,255,.30);color:var(--purple)}
+.n-ok{background:var(--green-l);border-color:rgba(67,233,123,.30);color:var(--green)}
 
 /* ── MISC ───────────────────────────────────────────── */
-.sdiv{font-size:.7rem;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.07em;margin:.9rem 0 .4rem;display:flex;align-items:center;gap:8px}
+.sdiv{font-size:.7rem;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;margin:.9rem 0 .4rem;display:flex;align-items:center;gap:8px;font-family:var(--ff-h)}
 .sdiv::after{content:'';flex:1;height:1px;background:var(--brd)}
-code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:.79rem;color:var(--t2)}
+code{background:var(--bg3);padding:2px 6px;border-radius:6px;font-size:.79rem;color:var(--purple);border:1px solid rgba(108,99,255,.15)}
 .tipsbox{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:1rem 1.25rem;margin-top:1.25rem}
-.tipsbox-title{font-size:.82rem;font-weight:700;color:var(--t2);margin-bottom:.5rem}
+.tipsbox-title{font-size:.82rem;font-weight:700;color:var(--t2);margin-bottom:.5rem;font-family:var(--ff-h)}
 .tipsbox ol{padding-left:1.2rem;font-size:.8rem;color:var(--t3);line-height:1.95}
-select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
+select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
-@media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}}
-@media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(140px,1fr))}}
+@media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}}
+@media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(140px,1fr))}.tab{padding:7px 10px;font-size:.68rem;gap:4px}}
 
 /* ── TOASTS ──────────────────────────────────────────── */
-#toast-container{position:fixed;bottom:1.25rem;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;align-items:flex-end}
-.toast{padding:10px 16px;border-radius:var(--rl);font-size:.82rem;font-weight:600;color:#fff;box-shadow:var(--shadow2);pointer-events:auto;max-width:360px;line-height:1.45;transition:opacity .2s,transform .2s}
-.toast-ok{background:var(--green)}.toast-warn{background:var(--amber)}.toast-err{background:var(--red)}.toast-info{background:var(--blue)}
+#toast-container{position:fixed;bottom:88px;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;align-items:flex-end}
+.toast{padding:11px 16px;border-radius:var(--rl);font-size:.82rem;font-weight:600;color:#fff;box-shadow:var(--shadow2);pointer-events:auto;max-width:360px;line-height:1.45;transition:opacity .2s,transform .2s;font-family:var(--ff-h)}
+.toast-ok{background:var(--green)}.toast-warn{background:var(--amber)}.toast-err{background:var(--red)}.toast-info{background:var(--primary)}
 @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
 .toast{animation:toastIn .22s ease}
 </style>
@@ -268,8 +275,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
       <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
       <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
       <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
-      <div class="fi full"><label>Organisme de formation *</label>
-        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, …" /></div>
+      <div class="fi full"><label>Organisme de formation</label>
+        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, … (optionnel)" /></div>
       <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
       <div class="fi full"><label>Formation / Métier *</label>
         <select id="p_formation" onchange="onFormationChange()">
@@ -302,7 +309,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
         <div style="font-size:.7rem;color:var(--t4);margin-top:3px">Ces secteurs s'ajouteront aux catégories du radar</div>
       </div>
       <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
-        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche *</label>
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
         <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
           <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
           <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
@@ -347,19 +354,10 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
       <div class="fi full"><label>Motivation (optionnel)</label>
         <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
     </div>
-      <details class="fi full" style="border:1.5px solid rgba(29,110,245,.2);border-radius:var(--rl);padding:.875rem">
-        <summary style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;list-style:none">
-          🔑 API France Travail <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3);font-size:.75rem;margin-left:4px">— offres réelles dans le radar (optionnel)</span>
-        </summary>
-        <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:10px">
-          <div style="font-size:.74rem;color:var(--t3);line-height:1.6">Inscris-toi gratuitement sur <strong>francetravail.io/partenaire</strong> → crée une appli → récupère <em>Client ID</em> et <em>Client Secret</em>.<br>Une fois configuré, les offres réelles de stage / alternance / emploi apparaissent dans le radar avec un badge <strong>France Travail</strong>.</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div><label style="font-size:.73rem;color:var(--t3)">Client ID</label><input id="p_ft_id" placeholder="PAR_xxxx…" autocomplete="off" style="margin-top:3px"/></div>
-            <div><label style="font-size:.73rem;color:var(--t3)">Client Secret</label><input id="p_ft_secret" type="password" placeholder="••••••••" autocomplete="new-password" style="margin-top:3px"/></div>
-          </div>
-          <div id="ft_status" style="font-size:.71rem;color:var(--t4)">Non configuré — les offres France Travail n'apparaîtront pas dans le radar</div>
-        </div>
-      </details>
+      <div class="fi full" style="border:1.5px solid rgba(29,110,245,.15);border-radius:var(--rl);padding:.75rem;font-size:.74rem;color:var(--t3);line-height:1.5;display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.2rem">🎯</span>
+        <span>Les offres <strong style="color:var(--blue)">France Travail</strong> (stage, alternance, emploi) sont <strong>intégrées automatiquement</strong> dans le radar — aucune configuration requise.</span>
+      </div>
     <div style="display:flex;justify-content:flex-end;margin-top:.75rem">
       <button class="btn btn-primary btn-lg" onclick="saveProfile()">Sauvegarder & Lancer le Radar →</button>
     </div>
@@ -480,6 +478,12 @@ const VERSION='4.0';
 const KM_STEP=5;
 const RADIUS_DEFAULT=30;
 
+// ─── France Travail API ───────────────────────────────────────────────────────
+// Inscris l'app sur francetravail.io/partenaire, récupère Client ID + Secret,
+// colle-les ici. Tous les étudiants bénéficient des offres sans configuration.
+const FT_CLIENT_ID     = '__FT_CLIENT_ID__';
+const FT_CLIENT_SECRET = '__FT_CLIENT_SECRET__';
+// ─────────────────────────────────────────────────────────────────────────────
 
 const FORMATION_CONFIG={
   TIP:{label:'Technicien Informatique de Proximité (TIP)',emoji:'💻',
@@ -597,6 +601,9 @@ function searchUrl(query){
   const e=SEARCH_ENGINES[S.searchEngine]||SEARCH_ENGINES.google;
   return e+encodeURIComponent(query);
 }
+
+// Hash déterministe pour IDs stables (blacklist persistante entre scans)
+function _hid(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return(h>>>0).toString(36);}
 
 const PRELOADED=[];
 
@@ -884,7 +891,7 @@ function autofillFromCv(text){
   }
 
   var addrMatch=t.match(/(\d+\s+(?:rue|avenue|boulevard|impasse|allée|chemin|place|route)[^\n,;]{5,50}[\s,]+\d{5}\s+[A-Za-zÀ-ÖØ-öø-ÿ\-\s]{2,30})/i)||t.match(/(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ\-\s]{3,25})/);
-  if(addrMatch){filled+=setField('p_addr',addrMatch[0].trim()); if(typeof fetchSugg==='function')fetchSugg(addrMatch[0].trim());}
+  if(addrMatch){filled+=setField('p_addr',addrMatch[0].trim());fetchSugg(addrMatch[0].trim());}
 
   var diplomaPatterns=[
     {rx:/Titre Professionnel\s+([^\n,;.]{5,60})/i,fid:'TIP',cust:''},
@@ -1143,14 +1150,16 @@ async function fetchOverpass(lat,lng,rm,amenities,offices){
     return(d.elements||[])
       .filter(e=>{
         if(!e.tags||!e.tags.name||e.tags.name.length<2)return false;
-        // Filtre qualité OSM : exclure les noeuds sans info de contact NI adresse complète
-        const hasContact=e.tags.email||e.tags['contact:email']||e.tags.website||e.tags['contact:website']||e.tags.phone||e.tags['contact:phone'];
-        const hasAddress=e.tags['addr:city']||(e.tags['addr:street']&&e.tags['addr:housenumber']);
-        if(!hasContact&&!hasAddress)return false;
-        // Exclure noms trop génériques ou trop courts
         const n=e.tags.name.trim();
         if(n.length<3||/^\d+$/.test(n))return false;
-        return true;
+        // Les établissements institutionnels (écoles, hôpitaux, mairies…) sont légitimes sans contact
+        const am=e.tags.amenity||'';
+        const isInstitution=/^(school|college|university|hospital|clinic|nursing_home|townhall|bank|social_facility)$/.test(am);
+        if(isInstitution)return true;
+        // Pour les autres : exiger au moins contact OU adresse partielle
+        const hasContact=e.tags.email||e.tags['contact:email']||e.tags.website||e.tags['contact:website']||e.tags.phone||e.tags['contact:phone'];
+        const hasAddress=e.tags['addr:city']||e.tags['addr:street']||e.tags['addr:postcode'];
+        return !!(hasContact||hasAddress);
       })
       .map(e=>{
         const lt = e.type==='node' ? e.lat : (e.center ? e.center.lat : null);
@@ -1210,10 +1219,9 @@ async function fetchEntreprises(lat,lng,rKm,naf){
         // 1. Exclure les non-employeurs (auto-entrepreneurs sans salarié)
         const te=e.tranche_effectif_salarie;
         if(te==='NN'||te==='00')return;
-        // 2. Exclure sans commune (pas d'adresse du tout)
+        // 2. Exclure sans commune ni code postal
         if(!sie.libelle_commune&&!sie.code_postal)return;
-        // 3. Exclure les noms qui ressemblent à des personnes physiques pures
-        //    (tout en majuscules, pas de forme juridique, pas de sigle connu)
+        // 3. Exclure noms de personnes physiques pures (DUPONT JEAN sans forme juridique)
         const hasJuridique=/\b(SARL|SAS|SASU|SA\b|EURL|EARL|SCI|SCOP|ASSO|UNION|CENTRE|MAIRIE|CHU|CHR|EHPAD|CCAS|CAF|CARSAT|CPAM|CRAM|CROUS|METRO|MAISON|FOYER|SERVICE|DEPARTEMENT|REGION|COMMUNE|CONSEIL|AGENCE|LYCEE|ECOLE|COLLEGE|IUT|UNIV|INSTI|FOND|LIGUE|CROIX|SNCF|ENEDIS|LA POSTE)\b/i;
         if(/^[A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ\s\-]+$/.test(nom)&&nom.split(' ').length<=4&&!hasJuridique.test(nom))return;
         const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
@@ -1231,7 +1239,7 @@ async function fetchAlternance(lat,lng,rKm){
     const _romesA=(_fcA.romeCodes&&_fcA.romeCodes.length?_fcA.romeCodes:['M1801','M1802']).join(',');
     const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=${_romesA}`);
     const d=await r.json();
-    return((d.results||d.matchas||[]).map(e=>({id:'alt_'+Math.random(),n:e.company?.name||e.enseigne||'',t:(_fcA.sectors&&_fcA.sectors[0])||'ESN',v:e.company?.city||'',d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true}))).filter(e=>e.n);
+    return((d.results||d.matchas||[]).map(e=>{const _n=e.company?.name||e.enseigne||'';const _v=e.company?.city||'';return{id:'lba_'+_hid(_n+_v+(e.company?.siret||'')),n:_n,t:(_fcA.sectors&&_fcA.sectors[0])||'ESN',v:_v,d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true};})).filter(e=>e.n);
   }catch(ex){return[];}
 }
 
@@ -1242,25 +1250,28 @@ async function fetchImmersion(lat,lng,rKm){
     const _sectorI=(_fcI.sectors&&_fcI.sectors[0])||'ESN';
     const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&romeCode=${_romeI}`);
     const d=await r.json();
-    return((d||[]).map(e=>({id:'imm_'+Math.random(),n:e.name||e.companyName||'',t:_sectorI,v:e.address?.city||'',d:'Ouvert aux PMSMP — '+(_fcI.label||''),e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true}))).filter(e=>e.n);
+    return((d||[]).map(e=>{const _n=e.name||e.companyName||'';const _v=e.address?.city||'';return{id:'imm_'+_hid(_n+_v+(e.siret||'')),n:_n,t:_sectorI,v:_v,d:'Ouvert aux PMSMP — '+(_fcI.label||''),e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true};})).filter(e=>e.n);
   }catch(ex){return[];}
 }
 
 async function getFTToken(){
   if(_ftToken&&Date.now()<_ftTokenExpiry)return _ftToken;
-  if(!S.ftClientId||!S.ftClientSecret)return null;
+  // Constantes globales (injectées par CI), sinon credentials du profil (legacy)
+  const _id=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))?FT_CLIENT_ID:(S.ftClientId||'');
+  const _sec=(FT_CLIENT_SECRET&&!FT_CLIENT_SECRET.startsWith('__'))?FT_CLIENT_SECRET:(S.ftClientSecret||'');
+  if(!_id||!_sec)return null;
   try{
     const _r=await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire',{
       method:'POST',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:'grant_type=client_credentials&client_id='+encodeURIComponent(S.ftClientId)+'&client_secret='+encodeURIComponent(S.ftClientSecret)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre')
+      body:'grant_type=client_credentials&client_id='+encodeURIComponent(_id)+'&client_secret='+encodeURIComponent(_sec)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre')
     });
-    if(!_r.ok){_ftToken=null;return null;}
+    if(!_r.ok){_ftToken=null;toast('France Travail : authentification échouée (code '+_r.status+') — les offres FT ne s\'afficheront pas.','warn');return null;}
     const _d=await _r.json();
     _ftToken=_d.access_token;
     _ftTokenExpiry=Date.now()+(_d.expires_in-60)*1000;
     return _ftToken;
-  }catch(e){_ftToken=null;return null;}
+  }catch(e){_ftToken=null;toast('France Travail inaccessible (CORS ou réseau) — les offres FT sont désactivées.','warn');return null;}
 }
 
 async function fetchFranceTravail(lat,lng,rKm){
@@ -1268,18 +1279,43 @@ async function fetchFranceTravail(lat,lng,rKm){
   if(!token)return[];
   try{
     const _fcFT=FORMATION_CONFIG[S.formation]||{};
-    const _typeContrat={stage_nr:'STG',stage_r:'STG',alternance:'ALT',emploi:'CDI,CDD'}[S.mode]||'STG';
-    const _romesFT=(_fcFT.romeCodes||[]).join(',');
-    const _params=new URLSearchParams({latitude:lat,longitude:lng,distance:Math.min(rKm,35),typeContrat:_typeContrat,range:'0-49'});
-    if(_romesFT)_params.set('codeROME',_romesFT);
-    const _r=await fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+_params,{
-      headers:{Authorization:'Bearer '+token,Accept:'application/json'}
-    });
-    if(!_r.ok)return[];
-    const _d=await _r.json();
-    return(_d.resultats||[]).map(o=>{
-      const _lt=parseFloat(o.lieuTravail?.latitude)||lat;
-      const _ln=parseFloat(o.lieuTravail?.longitude)||lng;
+    const _romes=(_fcFT.romeCodes||[]).slice(0,3).join(',');
+    const _dist=Math.min(rKm,35);
+    const isAlt=(S.mode==='alternance');
+    const isEmploi=(S.mode==='emploi');
+
+    // Paramètres communs
+    const _base={nbrParPage:'50',sort:'1',distance:String(_dist)};
+    // Géolocalisation : commune INSEE si dispo, sinon lat/lng
+    if(S.communeInsee)_base.commune=S.communeInsee;
+    else{_base.latitude=String(lat);_base.longitude=String(lng);}
+    if(_romes)_base.codeROME=_romes;
+
+    const calls=[];
+
+    if(isAlt){
+      // Alternance : paramètre dédié (apprentissage + pro)
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,alternance:'true'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    } else if(isEmploi){
+      // Emploi classique CDI/CDD
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,typeContrat:'CDI,CDD'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    } else {
+      // Stage : CDD (les stages conventionnés apparaissent souvent en CDD court terme)
+      // + alternance pour proposer aussi de l'alternance à l'étudiant en stage
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,typeContrat:'CDD',nbrParPage:'30'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,alternance:'true',nbrParPage:'20'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    }
+
+    const results=await Promise.all(calls);
+    const seen=new Set();
+    return results.flatMap(d=>(d?.resultats||[]).map(o=>{
+      if(seen.has(o.id))return null;seen.add(o.id);
+      const _lt=parseFloat(o.lieuTravail?.latitude);
+      const _ln=parseFloat(o.lieuTravail?.longitude);
       return{
         id:'ft_'+o.id,
         n:o.entreprise?.nom||o.intitule,
@@ -1289,9 +1325,11 @@ async function fetchFranceTravail(lat,lng,rKm){
         e:'',
         web:'https://candidat.francetravail.fr/offres/recherche/detail/'+o.id,
         lat:isNaN(_lt)?lat:_lt,lng:isNaN(_ln)?lng:_ln,
-        src:'France Travail',hasOffer:true,ft:true
+        src:'France Travail',hasOffer:true,ft:true,
+        contractType:o.typeContrat?.libelle||'',
+        altOffer:!!(o.alternance)
       };
-    }).filter(o=>o.n&&o.n.length>1);
+    }).filter(Boolean)).filter(o=>o.n&&o.n.length>1);
   }catch(e){return[];}
 }
 
@@ -1377,7 +1415,7 @@ async function launchRadar(){
     msg('🔍 Immersion Facilitée (PMSMP)…');
     tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
   }
-  if(S.ftClientId&&S.ftClientSecret){
+  if(FT_CLIENT_ID||S.ftClientId){
     msg('🔍 France Travail — offres réelles…');
     tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
   }
@@ -1438,9 +1476,31 @@ function renderRadar(){
   );
   if(!fl.length){
     var blCount0=radarResults.filter(function(c){return _blacklist.has(c.id);}).length;
-    var msg='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';
-    if(blCount0>0)msg+='<div style="margin-top:.75rem;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between"><span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount0+' structure'+(blCount0>1?'s':'')+' masquée'+(blCount0>1?'s':'')+'</span><button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button></div>';
-    document.getElementById('r_list').innerHTML=msg;return;
+    var _emptyMsg='';
+    if(!radarResults.length){
+      _emptyMsg='<div class="empty" style="padding:2.5rem 1rem;text-align:center">'
+        +'<div style="font-size:2rem;margin-bottom:.5rem">🔍</div>'
+        +'<div style="font-weight:700;margin-bottom:.35rem">Lance le radar pour découvrir des structures</div>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Remplis ton profil avec une adresse, puis clique sur <strong>Scanner</strong></div>'
+        +'<button class="btn btn-primary" onclick="goTab(\'profil\')">Compléter mon profil →</button>'
+        +'</div>';
+    } else if(tf||q){
+      _emptyMsg='<div class="empty" style="padding:2rem 1rem;text-align:center">'
+        +'<div style="font-size:1.5rem;margin-bottom:.5rem">🔎</div>'
+        +'<div style="font-weight:700;margin-bottom:.35rem">Aucun résultat pour ces filtres</div>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">'+(tf?'Type : <strong>'+tf+'</strong>  ':'')+( q?'Recherche : <strong>'+q+'</strong>':'')+'</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'r_srch\').value=\'\';document.getElementById(\'r_type\').value=\'\';renderRadar()">Effacer les filtres</button>'
+        +'</div>';
+    } else {
+      _emptyMsg='<div class="empty" style="padding:2rem 1rem;text-align:center">'
+        +'<div style="font-size:1.5rem;margin-bottom:.5rem">📭</div>'
+        +'<div style="font-weight:700;margin-bottom:.35rem">Aucune structure dans cette zone</div>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Essaie d\'augmenter le rayon de recherche ou de changer d\'adresse</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="goTab(\'profil\')">Modifier le profil</button>'
+        +'</div>';
+    }
+    if(blCount0>0)_emptyMsg+='<div style="margin:.5rem 0 0;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between"><span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount0+' structure'+(blCount0>1?'s':'')+' masquée'+(blCount0>1?'s':'')+'</span><button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button></div>';
+    document.getElementById('r_list').innerHTML=_emptyMsg;return;
   }
 
   // Group by distance tier
@@ -1480,7 +1540,10 @@ function radarCard(c){
   if(c.disc)badges+='<span class="disc-badge">découvert</span> ';
   if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
   if(c.alt)badges+='<span class="alt-badge">alternance</span>';
-  if(c.ft)badges+='<span class="ft-badge">France Travail</span>';
+  if(c.ft){
+    var _ftLabel='France Travail'+(c.contractType?' · '+c.contractType:'')+(c.altOffer?' · Alternance':'');
+    badges+='<span class="ft-badge">🎯 '+escH(_ftLabel)+'</span>';
+  }
 
   // Bouton email ou site
   var emailBtn='';
@@ -1720,6 +1783,7 @@ function generateEmail(s,c,ct,v){
   var label=fc.label||s.formationLabel||'ma formation';
   var skills=s.comp||fc.skills||'compétences acquises en formation';
   var prenom=s.prenom||'';var nom=s.nom||'';
+  var prenomNom=(prenom+' '+nom).trim()||'Étudiant(e)';
   var etab=s.etab||'mon organisme de formation';
   var sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
   var vi=(v||0)%EMAIL_VARIANTS;
@@ -1727,10 +1791,10 @@ function generateEmail(s,c,ct,v){
   var periodeLabel=(s.debut&&s.fin)?' – Du '+s.debut+' au '+s.fin:'';
 
   var sujets={
-    stage_nr:'Recherche de période en entreprise – '+diploma+' – '+prenom+' '+nom+periodeLabel,
-    stage_r:'Candidature stage rémunéré – '+diploma+' – '+prenom+' '+nom+periodeLabel,
-    alternance:'Candidature alternance – '+diploma+' – '+prenom+' '+nom,
-    emploi:'Candidature spontanée – '+diploma+' – '+prenom+' '+nom,
+    stage_nr:'Recherche de période en entreprise – '+diploma+' – '+prenomNom+periodeLabel,
+    stage_r:'Candidature stage rémunéré – '+diploma+' – '+prenomNom+periodeLabel,
+    alternance:'Candidature alternance – '+diploma+' – '+prenomNom,
+    emploi:'Candidature spontanée – '+diploma+' – '+prenomNom,
   };
   var objet='Objet : '+(sujets[mode]||sujets.stage_nr);
 
@@ -1802,7 +1866,7 @@ function generateEmail(s,c,ct,v){
     ?"Dans l\'attente de votre retour, veuillez agréer, Madame, Monsieur, l\'expression de mes salutations distinguées."
     :'Cordialement,';
 
-  var sig=prenom+' '+nom+'\n'+(s.tel?s.tel+' · ':'')+s.email+'\n'+diploma+(etab?' – '+etab:'');
+  var sig=prenomNom+'\n'+(s.tel?s.tel+' · ':'')+( s.email||'')+'\n'+diploma+(etab?' – '+etab:'');
 
   return objet+'\n\n'+sal+'\n\n'+intro+'\n\n'+pourquoi+'\n\n'+skillsPara+'\n\n'+closing+'\n\n'+politesse+'\n'+sig;
 }
@@ -1896,6 +1960,7 @@ async function saveProfile(){
   }
   const fmt={day:'numeric',month:'long',year:'numeric'};
   const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
+  if(d1&&d2&&new Date(d1)>=new Date(d2)){toast('La date de fin doit être après la date de début.','warn');return;}
   const _fid=document.getElementById('p_formation')?.value||'Custom';
   const _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
   const _customFName=f('p_custom_formation');
@@ -1916,7 +1981,6 @@ async function saveProfile(){
      debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
-    ftClientId:f('p_ft_id'),ftClientSecret:f('p_ft_secret'),
     cvParsed:_oldCvParsed,
     addr:f('p_addr'),debutRaw:d1||'2026-06-05',finRaw:d2||'2026-07-31'};
   persist();
@@ -1954,7 +2018,7 @@ function showPbar(){
   const pb=document.getElementById('pbar'),sg=document.getElementById('sg');
   if(!S.prenom)return;
   pb.style.display='flex';sg.style.display='grid';
-  var modeLabel=typeof getModeLabel==='function'?getModeLabel():'stage';
+  var modeLabel=getModeLabel();
   pb.innerHTML=`<div class="avatar">${S.ini||'?'}</div><div><div class="pbar-name">${S.prenom} ${S.nom}</div><div class="pbar-sub">${S.formationLabel||'Formation'} · ${modeLabel} · ${S.etab} · ${S.debut} au ${S.fin}${coords?' · 📍 position activée':''}</div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="goTab('profil')">Modifier</button>`;
   updateBadges();
 }
@@ -1985,10 +2049,6 @@ function fillProfileForm(){
   if(S.customSectors&&S.customSectors.length){
     _customSectors=[...S.customSectors];renderSectorTags();
   }
-  if(S.ftClientId){const _ftEl=document.getElementById('p_ft_id');if(_ftEl)_ftEl.value=S.ftClientId;}
-  if(S.ftClientSecret){const _ftSEl=document.getElementById('p_ft_secret');if(_ftSEl)_ftSEl.value=S.ftClientSecret;}
-  const _ftSt=document.getElementById('ft_status');
-  if(_ftSt)_ftSt.textContent=S.ftClientId?'✅ Configuré — offres France Travail actives dans le radar':'Non configuré — les offres France Travail n\'apparaîtront pas dans le radar';
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
