@@ -820,6 +820,7 @@ async function handleCvUpload(event){
     if(!text||text.length<30){if(status)status.textContent='⚠️ CV vide ou illisible — essaie en .txt';return;}
     S.cvText=text;
     S.cvFileName=file.name;
+    S.cvParsed=parseCvForEmail(text);
     var filled=autofillFromCv(text);
     if(status)status.textContent='✅ CV chargé : '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
     if(preview){preview.style.display='block';preview.textContent=text.substring(0,350)+(text.length>350?'…':'');}
@@ -896,8 +897,6 @@ function autofillFromCv(text){
   var techLines=lines.filter(function(l){return techWords.some(function(w){return l.toLowerCase().includes(w.toLowerCase());});});
   if(techLines.length)filled+=setField('p_comp',techLines.slice(0,5).join(', ').substring(0,400));
 
-  var expMatch=t.match(/(?:exp[eé]rience|stage|mission)[^\n]{0,20}\n([\s\S]{20,300}?)(?:\n\n|\n[A-Z])/i);
-  if(expMatch)filled+=setField('p_motiv',expMatch[1].replace(/\s+/g,' ').trim().substring(0,300));
   return filled;
 }
 
@@ -907,10 +906,44 @@ function setField(id,val){
   return 0;
 }
 
-function getCvContext(){
-  if(!S.cvText)return'';
-  var excerpt=S.cvText.substring(0,450).replace(/\s+/g,' ').trim();
-  return excerpt?'\n\nParcours / CV : '+excerpt+(S.cvText.length>450?'…':''):'';
+function parseCvForEmail(text){
+  var result={experiences:[],certifs:[]};
+  var seen=new Set();
+
+  // Expériences : stage/alternance/poste chez X
+  var expRxList=[
+    /(?:stage|alternance|mission|apprentissage|contrat|CDD|CDI|int[eé]rim)\s+(?:\w+\s+){0,3}(?:chez|au sein de|au|à|en)\s+([^\n,;.(]{3,50})/gi,
+    /(?:technicien|assistant|agent|employ[eé]|op[eé]rateur|aide[- ]?\w*|charg[eé]|responsable)\s+(?:\w+\s+){0,2}(?:chez|au sein de|au|à|en)\s+([^\n,;.(]{3,50})/gi,
+  ];
+  expRxList.forEach(function(rx){
+    var m;
+    while((m=rx.exec(text))!==null){
+      var entry=m[0].replace(/\s+/g,' ').trim().substring(0,80);
+      var key=entry.toLowerCase().substring(0,25);
+      if(!seen.has(key)){seen.add(key);result.experiences.push(entry);}
+      if(result.experiences.length>=2)break;
+    }
+  });
+
+  // Certifications : CACES, habilitation, permis, TOEIC, PSC1, HACCP…
+  var certifRxList=[
+    /CACES\s*(?:R\s*\d+\s*)?\d+[^\n,;.]{0,15}/gi,
+    /habilitation\s+[eé]lectrique[^\n,;.]{0,25}/gi,
+    /permis\s+[A-Z][^\n,;.]{0,12}/gi,
+    /TOEIC[^\n,;.]{0,20}/gi,
+    /PSC\s*1\b|SST\b/g,
+    /HACCP[^\n,;.]{0,10}/gi,
+  ];
+  certifRxList.forEach(function(rx){
+    var m;
+    while((m=rx.exec(text))!==null){
+      var certif=m[0].replace(/\s+/g,' ').trim().substring(0,50);
+      if(!result.certifs.includes(certif))result.certifs.push(certif);
+      if(result.certifs.length>=4)break;
+    }
+  });
+
+  return(result.experiences.length||result.certifs.length)?result:null;
 }
 
 function persist(){try{localStorage.setItem('tip_v4',JSON.stringify({S,crmData,coords}));}catch(e){}}
@@ -1649,6 +1682,19 @@ function generateEmail(s,c,ct,v){
   ];
   var skillsPara=skillsParas[vi];
   if(s.motiv)skillsPara+='\n\n'+s.motiv;
+  if(s.cvParsed){
+    var _cvAdd=[];
+    if(s.cvParsed.experiences&&s.cvParsed.experiences.length){
+      _cvAdd.push('Mon parcours comprend '+s.cvParsed.experiences[0].toLowerCase()+', une expérience qui m\'a permis de confronter mes acquis à la réalité du terrain.');
+    }
+    if(s.cvParsed.certifs&&s.cvParsed.certifs.length){
+      var _cStr=s.cvParsed.certifs.length===1
+        ?'titulaire du '+s.cvParsed.certifs[0]
+        :'titulaire de '+s.cvParsed.certifs.join(', ');
+      _cvAdd.push('Je suis par ailleurs '+_cStr+'.');
+    }
+    if(_cvAdd.length)skillsPara+='\n\n'+_cvAdd.join(' ');
+  }
 
   var closings={
     stage_nr:[
@@ -1773,6 +1819,7 @@ async function saveProfile(){
   const _customFName=f('p_custom_formation');
   const _oldCvText=S.cvText||'';
   const _oldCvFileName=S.cvFileName||'';
+  const _oldCvParsed=S.cvParsed||null;
   S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab')||'mon organisme de formation',
     formation:_fid,
     formationLabel:_fid==='Custom'?(_customFName||'Formation personnalisée'):_fc.label,
@@ -1787,7 +1834,8 @@ async function saveProfile(){
      debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
-    ftClientId:f('p_ft_id'),ftClientSecret:f('p_ft_secret')};
+    ftClientId:f('p_ft_id'),ftClientSecret:f('p_ft_secret'),
+    cvParsed:_oldCvParsed};
   persist();
   showPbar();
   goTab('radar');
