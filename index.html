@@ -347,19 +347,10 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
       <div class="fi full"><label>Motivation (optionnel)</label>
         <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
     </div>
-      <details class="fi full" style="border:1.5px solid rgba(29,110,245,.2);border-radius:var(--rl);padding:.875rem">
-        <summary style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;list-style:none">
-          🔑 API France Travail <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--t3);font-size:.75rem;margin-left:4px">— offres réelles dans le radar (optionnel)</span>
-        </summary>
-        <div style="margin-top:.75rem;display:flex;flex-direction:column;gap:10px">
-          <div style="font-size:.74rem;color:var(--t3);line-height:1.6">Inscris-toi gratuitement sur <strong>francetravail.io/partenaire</strong> → crée une appli → récupère <em>Client ID</em> et <em>Client Secret</em>.<br>Une fois configuré, les offres réelles de stage / alternance / emploi apparaissent dans le radar avec un badge <strong>France Travail</strong>.</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-            <div><label style="font-size:.73rem;color:var(--t3)">Client ID</label><input id="p_ft_id" placeholder="PAR_xxxx…" autocomplete="off" style="margin-top:3px"/></div>
-            <div><label style="font-size:.73rem;color:var(--t3)">Client Secret</label><input id="p_ft_secret" type="password" placeholder="••••••••" autocomplete="new-password" style="margin-top:3px"/></div>
-          </div>
-          <div id="ft_status" style="font-size:.71rem;color:var(--t4)">Non configuré — les offres France Travail n'apparaîtront pas dans le radar</div>
-        </div>
-      </details>
+      <div class="fi full" style="border:1.5px solid rgba(29,110,245,.15);border-radius:var(--rl);padding:.75rem;font-size:.74rem;color:var(--t3);line-height:1.5;display:flex;align-items:center;gap:10px">
+        <span style="font-size:1.2rem">🎯</span>
+        <span>Les offres <strong style="color:var(--blue)">France Travail</strong> (stage, alternance, emploi) sont <strong>intégrées automatiquement</strong> dans le radar — aucune configuration requise.</span>
+      </div>
     <div style="display:flex;justify-content:flex-end;margin-top:.75rem">
       <button class="btn btn-primary btn-lg" onclick="saveProfile()">Sauvegarder & Lancer le Radar →</button>
     </div>
@@ -480,6 +471,12 @@ const VERSION='4.0';
 const KM_STEP=5;
 const RADIUS_DEFAULT=30;
 
+// ─── France Travail API ───────────────────────────────────────────────────────
+// Inscris l'app sur francetravail.io/partenaire, récupère Client ID + Secret,
+// colle-les ici. Tous les étudiants bénéficient des offres sans configuration.
+const FT_CLIENT_ID     = '';
+const FT_CLIENT_SECRET = '';
+// ─────────────────────────────────────────────────────────────────────────────
 
 const FORMATION_CONFIG={
   TIP:{label:'Technicien Informatique de Proximité (TIP)',emoji:'💻',
@@ -1249,12 +1246,15 @@ async function fetchImmersion(lat,lng,rKm){
 
 async function getFTToken(){
   if(_ftToken&&Date.now()<_ftTokenExpiry)return _ftToken;
-  if(!S.ftClientId||!S.ftClientSecret)return null;
+  // Constantes globales en priorité, sinon credentials du profil (legacy)
+  const _id=FT_CLIENT_ID||S.ftClientId||'';
+  const _sec=FT_CLIENT_SECRET||S.ftClientSecret||'';
+  if(!_id||!_sec)return null;
   try{
     const _r=await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire',{
       method:'POST',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:'grant_type=client_credentials&client_id='+encodeURIComponent(S.ftClientId)+'&client_secret='+encodeURIComponent(S.ftClientSecret)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre')
+      body:'grant_type=client_credentials&client_id='+encodeURIComponent(_id)+'&client_secret='+encodeURIComponent(_sec)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre')
     });
     if(!_r.ok){_ftToken=null;return null;}
     const _d=await _r.json();
@@ -1405,7 +1405,7 @@ async function launchRadar(){
     msg('🔍 Immersion Facilitée (PMSMP)…');
     tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
   }
-  if(S.ftClientId&&S.ftClientSecret){
+  if(FT_CLIENT_ID||S.ftClientId){
     msg('🔍 France Travail — offres réelles…');
     tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
   }
@@ -1947,7 +1947,6 @@ async function saveProfile(){
      debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
-    ftClientId:f('p_ft_id'),ftClientSecret:f('p_ft_secret'),
     cvParsed:_oldCvParsed,
     addr:f('p_addr'),debutRaw:d1||'2026-06-05',finRaw:d2||'2026-07-31'};
   persist();
@@ -2016,10 +2015,6 @@ function fillProfileForm(){
   if(S.customSectors&&S.customSectors.length){
     _customSectors=[...S.customSectors];renderSectorTags();
   }
-  if(S.ftClientId){const _ftEl=document.getElementById('p_ft_id');if(_ftEl)_ftEl.value=S.ftClientId;}
-  if(S.ftClientSecret){const _ftSEl=document.getElementById('p_ft_secret');if(_ftSEl)_ftSEl.value=S.ftClientSecret;}
-  const _ftSt=document.getElementById('ft_status');
-  if(_ftSt)_ftSt.textContent=S.ftClientId?'✅ Configuré — offres France Travail actives dans le radar':'Non configuré — les offres France Travail n\'apparaîtront pas dans le radar';
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
