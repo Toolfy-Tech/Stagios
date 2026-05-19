@@ -324,6 +324,11 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       </div>
       <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
       <div class="fi">
+        <label>Codes ROME (optionnel)</label>
+        <input id="p_rome_codes" placeholder="ex : M1801, M1802, K1302" title="Codes ROME pour cibler les offres France Travail, LBA et Immersion">
+        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Si tu connais ton code ROME, ajoute-le ici. S'ajoute aux codes de ta formation.</div>
+      </div>
+      <div class="fi">
         <label>Codes NAF supplémentaires (optionnel)</label>
         <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
         <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
@@ -1271,7 +1276,8 @@ async function fetchEntreprises(lat,lng,rKm,naf){
 async function fetchAlternance(lat,lng,rKm){
   try{
     const _fcA=FORMATION_CONFIG[S.formation]||{};
-    const _romesA=(_fcA.romeCodes&&_fcA.romeCodes.length?_fcA.romeCodes:['M1801','M1802']).join(',');
+    const _extraR=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+    const _romesA=[...new Set([...(_fcA.romeCodes&&_fcA.romeCodes.length?_fcA.romeCodes:['M1801','M1802']),..._extraR])].join(',');
     const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=${_romesA}`);
     const d=await r.json();
     return((d.results||d.matchas||[]).map(e=>{const _n=e.company?.name||e.enseigne||'';const _v=e.company?.city||'';const _naf=(e.company?.naf||e.company?.nafCode||'').replace(/\./g,'');return{id:'lba_'+_hid(_n+_v+(e.company?.siret||'')),n:_n,t:NAF2T[_naf]||(_fcA.sectors&&_fcA.sectors[0])||'PME',v:_v,d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true};})).filter(e=>e.n);
@@ -1281,7 +1287,8 @@ async function fetchAlternance(lat,lng,rKm){
 async function fetchImmersion(lat,lng,rKm){
   try{
     const _fcI=FORMATION_CONFIG[S.formation]||{};
-    const _romeI=(_fcI.romeCodes&&_fcI.romeCodes[0])||'M1801';
+    const _extraRI=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+    const _romeI=_extraRI[0]||(_fcI.romeCodes&&_fcI.romeCodes[0])||'M1801';
     const _sectorI=(_fcI.sectors&&_fcI.sectors[0])||'PME';
     const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&romeCode=${_romeI}`);
     const d=await r.json();
@@ -1314,7 +1321,8 @@ async function fetchFranceTravail(lat,lng,rKm){
   if(!token)return[];
   try{
     const _fcFT=FORMATION_CONFIG[S.formation]||{};
-    const _romes=(_fcFT.romeCodes||[]).slice(0,3).join(',');
+    const _extraRFT=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+    const _romes=[...new Set([...(_fcFT.romeCodes||[]),..._extraRFT])].slice(0,5).join(',');
     const _dist=Math.min(rKm,35);
     const isAlt=(S.mode==='alternance');
     const isEmploi=(S.mode==='emploi');
@@ -2010,6 +2018,7 @@ async function saveProfile(){
     formationEmoji:_fc.emoji||'✏️',
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
     mode:getMode(),
+    extraRomeCodes:f('p_rome_codes'),
     extraNafCodes:f('p_naf_codes'),
     cvText:_oldCvText,
     cvFileName:_oldCvFileName,
@@ -2073,6 +2082,10 @@ function fillProfileForm(){
     const modeEl=document.querySelector('input[name="p_mode"][value="'+S.mode+'"]');
     if(modeEl)modeEl.checked=true;
     onModeChange();
+  }
+  if(S.extraRomeCodes){
+    const romeEl=document.getElementById('p_rome_codes');
+    if(romeEl)romeEl.value=S.extraRomeCodes;
   }
   if(S.extraNafCodes){
     const nafEl=document.getElementById('p_naf_codes');
