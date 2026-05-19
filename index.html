@@ -1117,15 +1117,23 @@ async function fetchOverpass(lat,lng,rm,amenities,offices){
       station:'Logistique',
     };
     return(d.elements||[])
-      .filter(e=>e.tags&&e.tags.name&&e.tags.name.length>1)
+      .filter(e=>{
+        if(!e.tags||!e.tags.name||e.tags.name.length<2)return false;
+        // Filtre qualité OSM : exclure sans contact ET sans adresse
+        const hasContact=e.tags.email||e.tags['contact:email']||e.tags.website||e.tags['contact:website']||e.tags.phone||e.tags['contact:phone'];
+        const hasAddress=e.tags['addr:city']||(e.tags['addr:street']&&e.tags['addr:housenumber']);
+        if(!hasContact&&!hasAddress)return false;
+        const n=e.tags.name.trim();
+        if(n.length<3||/^\d+$/.test(n))return false;
+        return true;
+      })
       .map(e=>{
-        // Coordonnées : node → e.lat/e.lon, way/relation → e.center.lat/e.center.lon
         const lt = e.type==='node' ? e.lat : (e.center ? e.center.lat : null);
         const ln = e.type==='node' ? e.lon : (e.center ? e.center.lon : null);
-        if(!lt||!ln) return null; // Pas de coordonnées → on ignore
+        if(!lt||!ln) return null;
         const a=e.tags.amenity||e.tags.office||'';
         const t=am2t[a]||null;
-        if(!t) return null; // Type non pertinent → on ignore
+        if(!t) return null;
         const addr=[e.tags['addr:housenumber'],e.tags['addr:street'],
                     e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')
                    ||e.tags['addr:city']||'';
@@ -1139,7 +1147,7 @@ async function fetchOverpass(lat,lng,rm,amenities,offices){
           src:'OpenStreetMap'
         };
       })
-      .filter(Boolean); // Supprimer les null
+      .filter(Boolean);
   }catch(ex){
     console.warn('Overpass error:',ex);
     return[];
@@ -1170,9 +1178,21 @@ async function fetchEntreprises(lat,lng,rKm,naf){
       const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&long=${lng}&radius=${rKm}&activite_principale=${code}&per_page=20&etat_administratif=A`);
       const d=await r.json();
       (d.results||[]).forEach(e=>{
-        if(!e.nom_complet&&!e.nom_raison_sociale)return;
-        const sie=e.siege||{};const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
-        res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,t:NAF2T[code]||'PME',v:sie.libelle_commune||'',d:'NAF '+code,e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,siren:e.siren,src:'Annuaire Entreprises'});
+        const nom=e.nom_complet||e.nom_raison_sociale;
+        if(!nom)return;
+        const sie=e.siege||{};
+        // Filtre qualité SIRENE :
+        // 1. Exclure les non-employeurs (auto-entrepreneurs sans salarié)
+        const te=e.tranche_effectif_salarie;
+        if(te==='NN'||te==='00')return;
+        // 2. Exclure sans commune ni code postal
+        if(!sie.libelle_commune&&!sie.code_postal)return;
+        // 3. Exclure noms de personnes physiques pures (DUPONT JEAN sans forme juridique)
+        const hasJuridique=/\b(SARL|SAS|SASU|SA\b|EURL|EARL|SCI|SCOP|ASSO|UNION|CENTRE|MAIRIE|CHU|CHR|EHPAD|CCAS|CAF|CARSAT|CPAM|CRAM|CROUS|METRO|MAISON|FOYER|SERVICE|DEPARTEMENT|REGION|COMMUNE|CONSEIL|AGENCE|LYCEE|ECOLE|COLLEGE|IUT|UNIV|INSTI|FOND|LIGUE|CROIX|SNCF|ENEDIS|LA POSTE)\b/i;
+        if(/^[A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ\s\-]+$/.test(nom)&&nom.split(' ').length<=4&&!hasJuridique.test(nom))return;
+        const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
+        const adresse=sie.adresse||(sie.libelle_commune||'');
+        res.push({id:'ent_'+e.siren,n:nom,t:NAF2T[code]||'PME',v:adresse,d:'NAF '+code,e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,siren:e.siren,src:'Annuaire Entreprises'});
       });
     }catch(ex){}
   }));
