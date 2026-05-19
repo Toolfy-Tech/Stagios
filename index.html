@@ -1386,9 +1386,16 @@ function renderRadar(){
   const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
   const tf=document.getElementById('r_type')?.value||'';
   let fl=radarResults.filter(c=>
-    (!tf||c.t===tf)&&(!q||(c.n||'').toLowerCase().includes(q)||(c.t||'').toLowerCase().includes(q)||(c.v||'').toLowerCase().includes(q))
+    !_blacklist.has(c.id)&&
+    (!tf||c.t===tf)&&
+    (!q||(c.n||'').toLowerCase().includes(q)||(c.t||'').toLowerCase().includes(q)||(c.v||'').toLowerCase().includes(q))
   );
-  if(!fl.length){document.getElementById('r_list').innerHTML='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';return;}
+  if(!fl.length){
+    var blCount0=radarResults.filter(function(c){return _blacklist.has(c.id);}).length;
+    var msg='<div class="empty">Aucun résultat — lance le radar ou ajuste les filtres.</div>';
+    if(blCount0>0)msg+='<div style="margin-top:.75rem;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between"><span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount0+' structure'+(blCount0>1?'s':'')+' masquée'+(blCount0>1?'s':'')+'</span><button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button></div>';
+    document.getElementById('r_list').innerHTML=msg;return;
+  }
 
   // Group by distance tier
   const tiers=[
