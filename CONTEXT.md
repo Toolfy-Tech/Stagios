@@ -1,7 +1,10 @@
 # Stagios — Contexte projet pour Claude Code
 
 ## Ce qu'est ce projet
-Outil HTML standalone de recherche de stage, alternance et emploi pour adultes en formation professionnelle. Créé pour Florent HOGUIN (formateur OFIAQ Montpellier, TP TIP).
+Outil HTML standalone de recherche de stage, alternance et emploi pour adultes en formation professionnelle. Créé **par** Florent HOGUIN, élève en TP TIP à OFIAQ Montpellier, pour sa classe et ses camarades de formation.
+
+- **Florent** = l'élève créateur du projet, pas le formateur
+- **`professeurs.html`** = dashboard destiné au formateur (l'enseignant), pas à Florent
 
 Hébergé sur GitHub Pages : `https://toolfy-tech.github.io/Stagios/`
 Repo GitHub : `https://github.com/Toolfy-Tech/Stagios`
