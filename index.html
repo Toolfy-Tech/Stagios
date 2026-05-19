@@ -474,8 +474,8 @@ const RADIUS_DEFAULT=30;
 // ─── France Travail API ───────────────────────────────────────────────────────
 // Inscris l'app sur francetravail.io/partenaire, récupère Client ID + Secret,
 // colle-les ici. Tous les étudiants bénéficient des offres sans configuration.
-const FT_CLIENT_ID     = '';
-const FT_CLIENT_SECRET = '';
+const FT_CLIENT_ID     = '__FT_CLIENT_ID__';
+const FT_CLIENT_SECRET = '__FT_CLIENT_SECRET__';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FORMATION_CONFIG={
@@ -1246,9 +1246,9 @@ async function fetchImmersion(lat,lng,rKm){
 
 async function getFTToken(){
   if(_ftToken&&Date.now()<_ftTokenExpiry)return _ftToken;
-  // Constantes globales en priorité, sinon credentials du profil (legacy)
-  const _id=FT_CLIENT_ID||S.ftClientId||'';
-  const _sec=FT_CLIENT_SECRET||S.ftClientSecret||'';
+  // Constantes globales (injectées par CI), sinon credentials du profil (legacy)
+  const _id=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))?FT_CLIENT_ID:(S.ftClientId||'');
+  const _sec=(FT_CLIENT_SECRET&&!FT_CLIENT_SECRET.startsWith('__'))?FT_CLIENT_SECRET:(S.ftClientSecret||'');
   if(!_id||!_sec)return null;
   try{
     const _r=await fetch('https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire',{
