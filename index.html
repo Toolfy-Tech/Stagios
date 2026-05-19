@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Stage TIP – Radar & CRM – Montpellier</title>
+<title>Stagios – Radar & CRM</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -135,7 +135,7 @@ html[data-theme=dark] .b-Asso{color:#fbbf24}
 
 /* ── KANBAN ─────────────────────────────────────────── */
 .kanban{display:grid;grid-template-columns:repeat(6,minmax(180px,1fr));gap:10px;overflow-x:auto;padding-bottom:.5rem}
-.kb-col{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:.75rem;min-height:300px;display:flex;flex-direction:column;gap:8px}
+.kb-col{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:.75rem;min-height:80px;display:flex;flex-direction:column;gap:8px}
 .kb-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
 .kb-title{font-size:.77rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
 .kb-count{min-width:20px;height:20px;padding:0 5px;border-radius:20px;font-size:.68rem;font-weight:700;display:flex;align-items:center;justify-content:center}
@@ -206,6 +206,14 @@ code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:.79rem;co
 select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
 @media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}}
+@media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(140px,1fr))}}
+
+/* ── TOASTS ──────────────────────────────────────────── */
+#toast-container{position:fixed;bottom:1.25rem;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;align-items:flex-end}
+.toast{padding:10px 16px;border-radius:var(--rl);font-size:.82rem;font-weight:600;color:#fff;box-shadow:var(--shadow2);pointer-events:auto;max-width:360px;line-height:1.45;transition:opacity .2s,transform .2s}
+.toast-ok{background:var(--green)}.toast-warn{background:var(--amber)}.toast-err{background:var(--red)}.toast-info{background:var(--blue)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.toast{animation:toastIn .22s ease}
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 </head>
@@ -213,7 +221,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
 
 <!-- HEADER -->
 <header class="hdr">
-  <div class="logo"><div class="logo-sq">🎯</div><span>Stage TIP – Radar & CRM</span></div>
+  <div class="logo"><div class="logo-sq" id="logo-sq">🎯</div><span id="logo-text">Stagios – Radar & CRM</span></div>
   <div class="hdr-r">
     <button class="tbtn" onclick="exportJSON()" title="Sauvegarder ma progression">💾 Sauvegarder</button>
     <label class="tbtn" title="Charger une sauvegarde" style="cursor:pointer">📂 Charger<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
@@ -235,7 +243,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
 <div class="page on" id="page-profil">
   <div class="card">
     <div class="ct">👤 Mon profil</div>
-    <div class="cs">Formation pour adultes — Titre Professionnel TIP. Ces informations personnalisent tes emails et activent le radar géographique.</div>
+    <div class="cs" id="profil-cs">Ces informations personnalisent tes emails de candidature et activent le radar géographique. Commence par importer ton CV ou remplis les champs.</div>
     <div class="fg">
       <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
         <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
@@ -249,12 +257,14 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
         <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
         <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV peut remplir automatiquement le profil, la formation, l'adresse et les compétences.</div>
       </div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Identité</div></div>
       <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
       <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
       <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
       <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
       <div class="fi full"><label>Organisme de formation *</label>
         <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, …" /></div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
       <div class="fi full"><label>Formation / Métier *</label>
         <select id="p_formation" onchange="onFormationChange()">
           <option value="">— Sélectionner une formation —</option>
@@ -295,6 +305,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
         </div>
         <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
       </div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
       <div class="fi">
         <label>Codes NAF supplémentaires (optionnel)</label>
         <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
@@ -313,6 +324,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
       </div>
       <div class="fi"><label>Début de stage</label><input id="p_debut" type="date" value="2026-06-05" /></div>
       <div class="fi"><label>Fin de stage</label><input id="p_fin" type="date" value="2026-07-31" /></div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Localisation & candidature</div></div>
       <div class="fi full"><label>📍 Adresse (pour le radar de distance)</label>
         <div style="display:flex;gap:8px">
           <div class="addr-wrap">
@@ -372,6 +384,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
   <div id="radar-banner" class="search-banner" style="display:none">
     <div class="spin"></div><span id="radar-msg">Initialisation…</span>
   </div>
+  <div id="api-diag" style="display:none;padding:9px 14px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);font-size:.75rem;color:var(--t3);line-height:1.7;margin-bottom:.75rem"></div>
 
   <div class="card">
     <div class="toolbar">
@@ -451,6 +464,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 6px}
 </div>
 
 </div><!-- /main -->
+<div id="toast-container"></div>
 
 <script>
 // ════════════════════════════════════════════════════════════
@@ -573,38 +587,7 @@ function searchUrl(query){
   return e+encodeURIComponent(query);
 }
 
-const PRELOADED=[
-{id:'p1',n:"Capgemini",t:"ESN",e:"recrutement.france@capgemini.com",v:"Parc du Millénaire, Montpellier",d:"Leader ESN, nombreux stages IT",lat:43.635,lng:3.872},
-{id:'p2',n:"Sopra Steria",t:"ESN",e:"recrutement@soprasteria.com",v:"Montpellier",d:"ESN européenne, Occitanie",lat:43.610,lng:3.877},
-{id:'p3',n:"Inetum",t:"ESN",e:"recrutement@inetum.com",v:"Montpellier",d:"Support et infra IT",ok:1,lat:43.612,lng:3.875},
-{id:'p4',n:"Atos",t:"ESN",e:"candidature@atos.net",v:"Montpellier",d:"IT international",lat:43.613,lng:3.878},
-{id:'p5',n:"CGI France",t:"ESN",e:"recrutement@cgi.com",v:"Montpellier",d:"Grande ESN",ok:1,lat:43.611,lng:3.876},
-{id:'p6',n:"Axians Occitanie",t:"ESN",e:"recrutement-occitanie@axians.com",v:"Montpellier",d:"Réseaux IT, VINCI",lat:43.615,lng:3.871},
-{id:'p7',n:"Devoteam",t:"ESN",e:"recrutement@devoteam.com",v:"Montpellier",d:"Cloud & cybersécurité",ok:1,lat:43.613,lng:3.874},
-{id:'p8',n:"Keyrus",t:"ESN",e:"recrutement@keyrus.com",v:"Montpellier",d:"Data & IT",ok:1,lat:43.611,lng:3.877},
-{id:'p9',n:"SCC France",t:"ESN",e:"recrutement@scc.fr",v:"Montpellier",d:"Intégrateur IT terrain",ok:1,lat:43.612,lng:3.877},
-{id:'p10',n:"IBM Montpellier",t:"ESN",e:"stages.france@fr.ibm.com",v:"Montpellier",d:"Cloud et infrastructure",lat:43.636,lng:3.870},
-{id:'p11',n:"Mairie de Montpellier",t:"Public",e:"recrutement@montpellier.fr",v:"1 pl. Georges Frêche",d:"DSI ville",lat:43.606,lng:3.877},
-{id:'p12',n:"Conseil Départemental 34",t:"Public",e:"recrutement@herault.fr",v:"1000 rue d'Alco",d:"DSI département",lat:43.633,lng:3.858},
-{id:'p13',n:"Région Occitanie",t:"Public",e:"recrutement@laregion.fr",v:"Montpellier",d:"DSI régionale",lat:43.610,lng:3.872},
-{id:'p14',n:"Métropole de Montpellier",t:"Public",e:"dsi@montpellier3m.fr",v:"50 pl. Zeus",d:"IT métropole",lat:43.628,lng:3.857},
-{id:'p15',n:"SNCF Occitanie",t:"Public",e:"stages-occitanie@sncf.fr",v:"Gare St-Roch",d:"IT régional",lat:43.605,lng:3.880},
-{id:'p16',n:"CHU de Montpellier",t:"Santé",e:"dsi@chu-montpellier.fr",v:"191 av. Doyen Giraud",d:"Plus grand CHU du Sud",lat:43.627,lng:3.858},
-{id:'p17',n:"Clinique du Millénaire",t:"Santé",e:"rh@clinique-millenaire.com",v:"Parc du Millénaire",d:"Clinique privée IT interne",lat:43.628,lng:3.873},
-{id:'p18',n:"CPAM de l'Hérault",t:"Santé",e:"recrutement.herault@cpam.fr",v:"Montpellier",d:"Sécurité sociale",lat:43.610,lng:3.870},
-{id:'p19',n:"Université de Montpellier",t:"Education",e:"dsi@umontpellier.fr",v:"163 r. Broussonet",d:"DSI campus",lat:43.632,lng:3.863},
-{id:'p20',n:"IUT Montpellier-Sète",t:"Education",e:"informatique@iut-montpellier.fr",v:"99 av. d'Occitanie",d:"Stages IT fréquents",lat:43.618,lng:3.867},
-{id:'p21',n:"Rectorat Académie",t:"Education",e:"dsin@ac-montpellier.fr",v:"31 r. de l'Université",d:"DSI académique",lat:43.613,lng:3.875},
-{id:'p22',n:"Lycée Jean Jaurès",t:"Lycées",e:"ce.0342002t@ac-montpellier.fr",v:"Montpellier",d:"Grand lycée polyvalent",lat:43.607,lng:3.882},
-{id:'p23',n:"Lycée Georges Frêche",t:"Lycées",e:"ce.0341932j@ac-montpellier.fr",v:"Montpellier",d:"Lycée hôtelier",lat:43.593,lng:3.885},
-{id:'p24',n:"Lycée Clémenceau",t:"Lycées",e:"ce.0341079t@ac-montpellier.fr",v:"Montpellier",d:"Lycée général",lat:43.616,lng:3.875},
-{id:'p25',n:"Crédit Agricole du Languedoc",t:"Banque",e:"recrutement@ca-languedoc.fr",v:"Mas de Saporta, Lattes",d:"Banque régionale",lat:43.568,lng:3.907},
-{id:'p26',n:"Groupama Méditerranée",t:"Banque",e:"recrutement@groupama-mediterranee.fr",v:"Montpellier",d:"Assurance régionale",lat:43.610,lng:3.878},
-{id:'p27',n:"Thales Montpellier",t:"Industrie",e:"stages.montpellier@thalesgroup.com",v:"Montpellier",d:"Défense, IT embarqué",lat:43.610,lng:3.877},
-{id:'p28',n:"Sanofi Montpellier",t:"Industrie",e:"stages.france@sanofi.com",v:"Montpellier",d:"Pharma, DSI site",lat:43.600,lng:3.868},
-{id:'p29',n:"Enedis Hérault",t:"Public",e:"stages.occitanie@enedis.fr",v:"Montpellier",d:"Distributeur énergie",lat:43.610,lng:3.860},
-{id:'p30',n:"La Poste Groupe (34)",t:"Industrie",e:"stages@laposte.fr",v:"Montpellier",d:"Numérique, IT agences",lat:43.608,lng:3.878},
-];
+const PRELOADED=[];
 
 
 // ════════════════════════════════════════════════════════════
@@ -623,8 +606,8 @@ let _ftToken=null;let _ftTokenExpiry=0;
 var MODE_HINTS={
   stage_nr:'Recherche de stages de formation non rémunérés — lettres de motivation ciblées',
   stage_r:'Recherche de stages conventionnés rémunérés — approche plus professionnelle',
-  alternance:'Recherche de contrats d’apprentissage ou de professionnalisation — liens alternance mis en avant',
-  emploi:'Recherche d’emploi CDI/CDD — candidature orientée poste et expérience'
+  alternance:"Recherche de contrats d'apprentissage ou de professionnalisation — liens alternance mis en avant",
+  emploi:"Recherche d'emploi CDI/CDD — candidature orientée poste et expérience"
 };
 function getMode(){
   var el=document.querySelector('input[name="p_mode"]:checked');
@@ -957,6 +940,28 @@ function restore(){
   }catch(e){}
 }
 
+function toast(msg,type){
+  type=type||'info';
+  var c=document.getElementById('toast-container');
+  var t=document.createElement('div');
+  t.className='toast toast-'+type;t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(8px)';setTimeout(function(){if(t.parentNode)t.remove();},220);},3200);
+}
+
+function updateBranding(){
+  var fc=FORMATION_CONFIG[S.formation]||{};
+  var label=fc.label||S.formationLabel||'Stagios';
+  var emoji=fc.emoji||'🎯';
+  var lsq=document.getElementById('logo-sq');
+  if(lsq)lsq.textContent=emoji;
+  var lt=document.getElementById('logo-text');
+  if(lt)lt.textContent=(S.prenom?S.prenom+' · ':'')+label;
+  document.title='Stagios — '+(label||'Radar & CRM');
+  var cs=document.getElementById('profil-cs');
+  if(cs&&S.prenom)cs.textContent=label+(S.etab?' · '+S.etab:'')+' — ces informations personnalisent tes emails et activent le radar géographique.';
+}
+
 // ════════════════════════════════════════════════════════════
 // SECTION 3 — MODULE THÈME & NAVIGATION
 // ════════════════════════════════════════════════════════════
@@ -1071,18 +1076,12 @@ function tier(d){
 // SECTION 5 — MODULE API (Overpass + Entreprises + Alternance)
 // ════════════════════════════════════════════════════════════
 async function fetchOverpass(lat,lng,rm,amenities,offices){
-  // Uniquement les catégories pertinentes pour un stage TIP
-  const relevantAmenities=['hospital','clinic','doctors','school','college','university','townhall','bank','coworking_space'];
-  const filteredAmenities=amenities.filter(a=>relevantAmenities.includes(a));
-  const relevantOffices=['government','it','association'];
-  const filteredOffices=offices.filter(o=>relevantOffices.includes(o));
-
   const cond=[
-    ...filteredAmenities.flatMap(a=>[
+    ...amenities.flatMap(a=>[
       `node["amenity"="${a}"](around:${rm},${lat},${lng});`,
       `way["amenity"="${a}"](around:${rm},${lat},${lng});`
     ]),
-    ...filteredOffices.flatMap(o=>[
+    ...offices.flatMap(o=>[
       `node["office"="${o}"](around:${rm},${lat},${lng});`,
       `way["office"="${o}"](around:${rm},${lat},${lng});`
     ]),
@@ -1095,11 +1094,15 @@ async function fetchOverpass(lat,lng,rm,amenities,offices){
     const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
     const d=await r.json();
     const am2t={
-      hospital:'Santé',clinic:'Santé',doctors:'Santé',
+      hospital:'Santé',clinic:'Santé',doctors:'Santé',nursing_home:'Santé',social_facility:'Asso',
       school:'Lycées',college:'Education',university:'Education',
       townhall:'Public',government:'Public',
       coworking_space:'Coworking',bank:'Banque',
       association:'Asso',it:'ESN',
+      car_repair:'Garage',car_parts:'Garage',fuel:'Garage',
+      restaurant:'Restauration',fast_food:'Restauration',cafe:'Restauration',hotel:'Restauration',
+      supermarket:'PME',mall:'PME',
+      station:'Logistique',
     };
     return(d.elements||[])
       .filter(e=>e.tags&&e.tags.name&&e.tags.name.length>1)
@@ -1255,7 +1258,7 @@ function toggleCat(id){
 }
 
 async function launchRadar(){
-  if(!coords){alert("Définis d’abord ton adresse dans l’onglet Profil et sélectionne une suggestion.");return;}
+  if(!coords){toast("Définis d'abord ton adresse dans l'onglet Profil et sélectionne une suggestion.",'warn');return;}
   if(radarRunning)return;
   radarRunning=true;
   const rKm=parseInt(document.getElementById('r_km').value);
@@ -1282,10 +1285,12 @@ async function launchRadar(){
   }
 
   const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
-  const allAmenities=[...new Set(activeCatDefs.flatMap(c=>c.osm))];
+  const _formationAmenities=(_fc&&_fc.osmAmenities)||[];
+  const allAmenities=[...new Set([...activeCatDefs.flatMap(c=>c.osm),..._formationAmenities])];
   const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
-  const allNaf=[...new Set(activeCatDefs.flatMap(c=>c.naf).concat(extraNaf))];
-  const osmOffices=['government'];
+  const _formationNaf=(_fc&&_fc.nafCodes)||[];
+  const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf),..._formationNaf,...extraNaf])];
+  const osmOffices=['government','it','association'];
 
   const tasks=[];
   if(allAmenities.length||osmOffices.length){
@@ -1344,7 +1349,7 @@ async function launchRadar(){
       _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
       _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
       _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
-      _diag+='Les APIs externes (Overpass, Annuaire Entreprises) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s’affichent.';
+      _diag+="Les APIs externes (Overpass, Annuaire Entreprises) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
     }
     _diagEl.innerHTML=_diag;_diagEl.style.display='block';
   }
@@ -1422,7 +1427,7 @@ function radarCard(c){
   // Bouton CRM
   var crmCol=inCRM?CRM_COLS.find(function(x){return x.id===inCRM.status;}):null;
   var crmBtn=inCRM
-    ?'<button class="btn btn-ghost btn-sm" onclick="goTab(\'suivi\')" style="color:var(--green)">📋 '+escH(crmCol?crmCol.lbl:'Suivi')+'</button>'
+    ?"<button class=\"btn btn-ghost btn-sm\" onclick=\"goTab(\'suivi\')\" style=\"color:var(--green)\">📋 "+escH(crmCol?crmCol.lbl:'Suivi')+'</button>'
     :'<button class="btn btn-primary btn-sm" data-cid="'+cid+'" onclick="addToSuivi(this.dataset.cid)">➕ Suivi</button>';
 
   // Bouton blacklist
@@ -1437,7 +1442,7 @@ function radarCard(c){
 
   var _dom=c.web?(c.web.replace(/https?:\/\//,'').split('/')[0].split('?')[0]):'';
   var _logoInner=_dom
-    ?'<img src="https://logo.clearbit.com/'+escA(_dom)+'" width="36" height="36" style="border-radius:var(--r);object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+    ?'<img src="https://logo.clearbit.com/'+escA(_dom)+"\" width=\"36\" height=\"36\" style=\"border-radius:var(--r);object-fit:contain\" onerror=\"this.style.display=\'none\';this.nextSibling.style.display=\'flex\'\">"
      +'<span style="display:none;width:36px;height:36px;border-radius:var(--r);background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>'
     :'<span style="display:flex;width:36px;height:36px;border-radius:var(--r);background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>';
 
@@ -1614,11 +1619,11 @@ function refreshEmailList(){
     radarResults.forEach(function(c){
       var inSuivi=!!crmData[c.id];
       var style=inSuivi?'':' style="color:var(--t4)"';
-      var note=inSuivi?'':' — ajouter au suivi d’abord';
+      var note=inSuivi?'':" — ajouter au suivi d'abord";
       opts+='<option value="'+escA(c.id)+'"'+style+'>'+escH(c.n)+' ('+escH(c.t)+')'+escH(note)+'</option>';
     });
   } else {
-    opts+='<option disabled>Lance d’abord le radar</option>';
+    opts+="<option disabled>Lance d'abord le radar</option>";
   }
   sel.innerHTML=opts;
   if(current)sel.value=current;
@@ -1655,20 +1660,20 @@ function generateEmail(s,c,ct,v){
 
   var intros={
     stage_nr:[
-      'Je me permets de vous contacter dans le cadre de ma formation '+diploma+' au sein de '+etab+'. Je suis à la recherche d\'une période en entreprise non rémunérée'+periode+' afin de valider mon parcours en situation professionnelle réelle.',
-      'En formation '+diploma+' à '+etab+', je suis à la recherche d\'une structure pour effectuer ma période en entreprise obligatoire'+periode+'. Cette période, non rémunérée, constitue une étape clé dans la validation de mon diplôme.',
+      'Je me permets de vous contacter dans le cadre de ma formation '+diploma+' au sein de '+etab+". Je suis à la recherche d\'une période en entreprise non rémunérée"+periode+' afin de valider mon parcours en situation professionnelle réelle.',
+      'En formation '+diploma+' à '+etab+", je suis à la recherche d\'une structure pour effectuer ma période en entreprise obligatoire"+periode+'. Cette période, non rémunérée, constitue une étape clé dans la validation de mon diplôme.',
     ],
     stage_r:[
-      'En formation '+diploma+' à '+etab+', je suis à la recherche d\'un stage rémunéré'+periode+' afin de consolider mes compétences en situation professionnelle concrète.',
-      'Actuellement en formation '+diploma+' à '+etab+', je vous contacte pour candidater à un stage rémunéré'+periode+'. Je souhaite mettre mes acquis à l\'épreuve du terrain dans une structure comme la vôtre.',
+      'En formation '+diploma+' à '+etab+", je suis à la recherche d\'un stage rémunéré"+periode+' afin de consolider mes compétences en situation professionnelle concrète.',
+      'Actuellement en formation '+diploma+' à '+etab+', je vous contacte pour candidater à un stage rémunéré'+periode+". Je souhaite mettre mes acquis à l\'épreuve du terrain dans une structure comme la vôtre.",
     ],
     alternance:[
-      'Actuellement en formation '+diploma+', je suis en recherche d\'un contrat d\'alternance afin de combiner apprentissage théorique et expérience terrain dans une structure comme la vôtre.',
-      'En cours de formation '+diploma+' à '+etab+', je souhaite rejoindre une équipe en alternance. Ce format correspond à ma façon d\'apprendre : dans l\'action, aux côtés de professionnels.',
+      'Actuellement en formation '+diploma+", je suis en recherche d\'un contrat d\'alternance afin de combiner apprentissage théorique et expérience terrain dans une structure comme la vôtre.",
+      'En cours de formation '+diploma+' à '+etab+", je souhaite rejoindre une équipe en alternance. Ce format correspond à ma façon d\'apprendre : dans l\'action, aux côtés de professionnels.",
     ],
     emploi:[
-      'Titulaire (ou en cours de validation) d\'un '+diploma+', je suis en recherche active d\'un poste et souhaite vous adresser ma candidature spontanée.',
-      'Fort(e) d\'une formation en '+diploma+', je me permets de vous adresser ma candidature pour un poste en CDI ou CDD au sein de votre structure.',
+      "Titulaire (ou en cours de validation) d\'un "+diploma+", je suis en recherche active d\'un poste et souhaite vous adresser ma candidature spontanée.",
+      "Fort(e) d\'une formation en "+diploma+', je me permets de vous adresser ma candidature pour un poste en CDI ou CDD au sein de votre structure.',
     ],
   };
   var intro=(intros[mode]||intros.stage_nr)[vi];
@@ -1677,15 +1682,15 @@ function generateEmail(s,c,ct,v){
   var pourquoi=ctxArr[vi%ctxArr.length](c.n,label);
 
   var skillsParas=[
-    'Ma formation m\'a permis de développer des compétences en '+skills+'.',
-    'Techniquement, mon parcours couvre '+skills+'. Au-delà des aspects techniques, j\'ai également travaillé ma capacité à m\'adapter, à communiquer et à trouver des solutions en autonomie.',
+    "Ma formation m\'a permis de développer des compétences en "+skills+'.',
+    'Techniquement, mon parcours couvre '+skills+". Au-delà des aspects techniques, j\'ai également travaillé ma capacité à m\'adapter, à communiquer et à trouver des solutions en autonomie.",
   ];
   var skillsPara=skillsParas[vi];
   if(s.motiv)skillsPara+='\n\n'+s.motiv;
   if(s.cvParsed){
     var _cvAdd=[];
     if(s.cvParsed.experiences&&s.cvParsed.experiences.length){
-      _cvAdd.push('Mon parcours comprend '+s.cvParsed.experiences[0].toLowerCase()+', une expérience qui m\'a permis de confronter mes acquis à la réalité du terrain.');
+      _cvAdd.push('Mon parcours comprend '+s.cvParsed.experiences[0].toLowerCase()+", une expérience qui m\'a permis de confronter mes acquis à la réalité du terrain.");
     }
     if(s.cvParsed.certifs&&s.cvParsed.certifs.length){
       var _cStr=s.cvParsed.certifs.length===1
@@ -1698,16 +1703,16 @@ function generateEmail(s,c,ct,v){
 
   var closings={
     stage_nr:[
-      'Je serais sincèrement heureux(se) de vous présenter mon projet lors d\'un entretien, à la date qui vous conviendra. Je reste disponible pour toute information complémentaire.',
+      "Je serais sincèrement heureux(se) de vous présenter mon projet lors d\'un entretien, à la date qui vous conviendra. Je reste disponible pour toute information complémentaire.",
       'Je reste disponible pour un entretien à votre convenance et pourrai vous transmettre mon CV en pièce jointe sur demande.',
     ],
     stage_r:[
       'Je serais heureux(se) de vous rencontrer pour discuter du contenu du stage et de vos attentes. Mon CV est disponible sur demande.',
-      'N\'hésitez pas à me contacter pour que nous puissions échanger. Je suis disponible pour un entretien dès que vous le souhaitez.',
+      "N\'hésitez pas à me contacter pour que nous puissions échanger. Je suis disponible pour un entretien dès que vous le souhaitez.",
     ],
     alternance:[
-      'Je serais ravi(e) d\'échanger avec vous sur les possibilités de collaboration en alternance, à votre convenance.',
-      'N\'hésitez pas à me contacter pour que nous puissions nous rencontrer et évoquer ensemble une possible alternance.',
+      "Je serais ravi(e) d\'échanger avec vous sur les possibilités de collaboration en alternance, à votre convenance.",
+      "N\'hésitez pas à me contacter pour que nous puissions nous rencontrer et évoquer ensemble une possible alternance.",
     ],
     emploi:[
       'Mon CV vous permettra de mieux cerner mon parcours. Je reste disponible pour un entretien dès que vous le souhaitez.',
@@ -1718,7 +1723,7 @@ function generateEmail(s,c,ct,v){
 
   var formel=['Public','Santé','Lycées','Education','Banque'].includes(c.t)&&!ct;
   var politesse=formel
-    ?'Dans l\'attente de votre retour, veuillez agréer, Madame, Monsieur, l\'expression de mes salutations distinguées.'
+    ?"Dans l\'attente de votre retour, veuillez agréer, Madame, Monsieur, l\'expression de mes salutations distinguées."
     :'Cordialement,';
 
   var sig=prenom+' '+nom+'\n'+(s.tel?s.tel+' · ':'')+s.email+'\n'+diploma+(etab?' – '+etab:'');
@@ -1742,12 +1747,13 @@ function renderEmail(){
     (obj?'<div class="ef"><span class="efl">Objet</span><strong class="efl2">'+esc(obj)+'</strong></div>':'')+
     '<div class="ef"><span class="efl">Mode</span><span style="font-size:.75rem;color:var(--t3)">'+esc(getModeLabel())+'</span></div>'+
     '</div><div class="ebody">'+esc(body)+'</div>';
-  document.getElementById('e_var_lbl').textContent=(emailVariant%EMAIL_VARIANTS+1)+'/'+EMAIL_VARIANTS;
+  var _vLabels=['Formelle & élaborée','Claire & directe'];
+  document.getElementById('e_var_lbl').textContent=_vLabels[emailVariant%EMAIL_VARIANTS]||((emailVariant%EMAIL_VARIANTS+1)+'/'+EMAIL_VARIANTS);
   document.getElementById('e_contact_wrap').style.display='flex';
   const li=document.getElementById('e_li_btn');
   li.style.display='block';li.dataset.cid=c.id;
   const nb=document.getElementById('e_notice');
-  if(!c.e){nb.className='notice n-warn';nb.style.display='flex';nb.innerHTML='⚠️ Pas d’email vérifié — <a href="'+escA(searchUrl(c.n+' recrutement contact email RH'))+'" target="_blank" style="color:var(--amber);font-weight:700">chercher le contact</a>.';}
+  if(!c.e){nb.className='notice n-warn';nb.style.display='flex';nb.innerHTML='⚠️ Pas d\'email vérifié — <a href="'+escA(searchUrl(c.n+' recrutement contact email RH'))+'" target="_blank" style="color:var(--amber);font-weight:700">chercher le contact</a>.';}
   else{nb.className='notice n-info';nb.style.display='flex';nb.textContent='📧 Email : '+c.e;}
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
@@ -1796,8 +1802,8 @@ function importJSON(ev){
       if(d.radarResults)radarResults=d.radarResults;if(d.crmData)crmData=d.crmData;
     if(d.blacklist)_blacklist=new Set(d.blacklist);
       persist();fillProfileForm();updateBadges();
-      alert(`✅ Sauvegarde restaurée — ${Object.keys(crmData).length} entreprises en suivi.`);
-    }catch(err){alert("Fichier JSON invalide.");}
+      toast('Sauvegarde restaurée — '+Object.keys(crmData).length+' entreprises en suivi','ok');
+    }catch(err){toast('Fichier JSON invalide','err');}
   };r.readAsText(f);
 }
 function dl(data,name,type){
@@ -1810,7 +1816,7 @@ function dl(data,name,type){
 async function saveProfile(){
   const f=id=>document.getElementById(id)?.value.trim()||'';
   if(!f('p_prenom')||!f('p_nom')||!f('p_tel')||!f('p_email')){
-    alert("Merci de remplir les champs obligatoires (*)");return;
+    toast('Merci de remplir les champs obligatoires : prénom, nom, téléphone et email.','warn');return;
   }
   const fmt={day:'numeric',month:'long',year:'numeric'};
   const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
@@ -1835,14 +1841,16 @@ async function saveProfile(){
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
     ftClientId:f('p_ft_id'),ftClientSecret:f('p_ft_secret'),
-    cvParsed:_oldCvParsed};
+    cvParsed:_oldCvParsed,
+    addr:f('p_addr'),debutRaw:d1||'2026-06-05',finRaw:d2||'2026-07-31'};
   persist();
+  updateBranding();
   showPbar();
   goTab('radar');
   // Géocoder l'adresse si elle a changé ou n'est pas encore géocodée
   const _currentAddr=f('p_addr');
   if(_currentAddr && _currentAddr!==_lastAddrForCoords && !_currentAddr.startsWith('GPS')){
-    document.getElementById('geo_st').textContent='🔍 Géocodage de l’adresse…';
+    document.getElementById('geo_st').textContent='🔍 Géocodage de l\'adresse…';
     try{
       const _gr=await fetch('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(_currentAddr)+'&limit=1');
       const _gd=await _gr.json();
@@ -1904,10 +1912,14 @@ function fillProfileForm(){
   if(S.ftClientId){const _ftEl=document.getElementById('p_ft_id');if(_ftEl)_ftEl.value=S.ftClientId;}
   if(S.ftClientSecret){const _ftSEl=document.getElementById('p_ft_secret');if(_ftSEl)_ftSEl.value=S.ftClientSecret;}
   const _ftSt=document.getElementById('ft_status');
-  if(_ftSt)_ftSt.textContent=S.ftClientId?'✅ Configuré — offres France Travail actives dans le radar':'Non configuré — les offres France Travail n’apparaîtront pas dans le radar';
+  if(_ftSt)_ftSt.textContent=S.ftClientId?'✅ Configuré — offres France Travail actives dans le radar':'Non configuré — les offres France Travail n\'apparaîtront pas dans le radar';
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
+  if(S.addr){const _adEl=document.getElementById('p_addr');if(_adEl)_adEl.value=S.addr;}
+  if(S.debutRaw){const _dbEl=document.getElementById('p_debut');if(_dbEl)_dbEl.value=S.debutRaw;}
+  if(S.finRaw){const _dfEl=document.getElementById('p_fin');if(_dfEl)_dfEl.value=S.finRaw;}
+  updateBranding();
   showPbar();
 }
 
@@ -1919,8 +1931,8 @@ function fillProfileForm(){
   loadBlacklist();
   restore();
   buildCatGrid();
-  if(S.prenom){fillProfileForm();radarResults=[...PRELOADED];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
+  if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
 })();
-</script>
+'</script>
 </body>
 </html>
