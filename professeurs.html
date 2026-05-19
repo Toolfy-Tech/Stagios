@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dashboard Formateur — Stagios</title>
+<style>
+:root{
+  --bg:#f8fafc;--card:#fff;--blue:#1d6ef5;--blue-l:#eff6ff;
+  --green:#15803d;--green-l:#dcfce7;--amber:#b45309;--amber-l:#fef3c7;
+  --red:#dc2626;--red-l:#fee2e2;--t1:#0f172a;--t2:#334155;--t3:#64748b;--t4:#94a3b8;
+  --border:#e2e8f0;--r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--t1);font-size:14px;min-height:100vh}
+
+header{background:var(--blue);color:#fff;padding:1rem 1.5rem;display:flex;align-items:center;gap:12px}
+header h1{font-size:1.05rem;font-weight:700}
+header p{font-size:.77rem;opacity:.75;margin-top:1px}
+
+.container{max-width:1280px;margin:0 auto;padding:1.5rem}
+
+/* Drop zone */
+.drop-zone{border:2px dashed #cbd5e1;border-radius:var(--r);padding:2.5rem 2rem;text-align:center;background:var(--card);margin-bottom:1.5rem;transition:all .2s;cursor:pointer}
+.drop-zone.over{border-color:var(--blue);background:var(--blue-l)}
+.drop-zone.has-files{border-style:solid;border-color:var(--green);background:var(--green-l)}
+.drop-zone-icon{font-size:2rem;margin-bottom:.5rem}
+.drop-zone h2{font-size:.95rem;font-weight:700;margin-bottom:.25rem}
+.drop-zone p{font-size:.78rem;color:var(--t3);margin-bottom:.5rem}
+.drop-link{color:var(--blue);font-weight:600;cursor:pointer;text-decoration:underline}
+
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.25rem}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:.875rem 1rem;text-align:center}
+.stat-n{font-size:1.75rem;font-weight:800;line-height:1}
+.stat-l{font-size:.7rem;color:var(--t3);margin-top:4px}
+
+/* Actions */
+.actions{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap;align-items:center}
+.actions-right{margin-left:auto}
+.btn{padding:.42rem .9rem;border-radius:var(--r);border:none;font-size:.8rem;cursor:pointer;font-weight:600;transition:opacity .15s}
+.btn:hover{opacity:.85}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-ghost{background:#fff;border:1.5px solid var(--border);color:var(--t2)}
+.btn-danger{background:var(--red-l);color:var(--red);border:1.5px solid #fca5a5}
+
+/* Table */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;margin-bottom:1rem}
+table{width:100%;border-collapse:collapse}
+thead th{background:#f1f5f9;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.55rem .75rem;text-align:left;color:var(--t3);white-space:nowrap;border-bottom:1px solid var(--border)}
+td{padding:.6rem .75rem;border-top:1px solid #f8fafc;vertical-align:middle}
+.student-row{cursor:pointer;transition:background .1s}
+.student-row:hover{background:#f8fafc}
+.student-row.expanded{background:var(--blue-l)}
+.detail-row{display:none}
+.detail-row.open{display:table-row}
+.detail-row>td{padding:0;background:#f8fafc;border-top:none}
+
+/* Chips */
+.chip{display:inline-block;font-size:.67rem;font-weight:700;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.chip-formation{background:#f1f5f9;color:var(--t2)}
+.chip-mode{background:var(--blue-l);color:var(--blue)}
+.chip-acc{background:var(--green-l);color:var(--green)}
+.chip-int{background:var(--blue-l);color:var(--blue)}
+.chip-rej{background:var(--red-l);color:var(--red)}
+.chip-follow{background:var(--amber-l);color:var(--amber)}
+.chip-sent{background:#f0fdf4;color:#166534}
+.chip-todo{background:#f1f5f9;color:var(--t3)}
+.chip-alert{background:var(--red-l);color:var(--red)}
+.chip-warn{background:var(--amber-l);color:var(--amber)}
+
+.num{text-align:center;font-size:.88rem;font-weight:700}
+.num-z{color:#cbd5e1;font-weight:400;text-align:center;font-size:.8rem}
+
+/* Sub-table (detail) */
+.detail-inner{padding:.75rem 1rem 1rem}
+.detail-inner h4{font-size:.75rem;font-weight:700;color:var(--t3);margin-bottom:.5rem;text-transform:uppercase;letter-spacing:.04em}
+.detail-inner table{font-size:.78rem}
+.detail-inner thead th{font-size:.63rem;padding:.4rem .6rem;background:#eef2f7}
+.detail-inner td{padding:.38rem .6rem;border-top:1px solid #eef2f7}
+.detail-inner tr:first-child td{border-top:none}
+
+/* Empty */
+.empty-state{text-align:center;padding:4rem 2rem;color:var(--t3)}
+.empty-state p{margin-top:.5rem;font-size:.85rem}
+
+.search-input{padding:.4rem .75rem;border:1.5px solid var(--border);border-radius:var(--r);font-size:.82rem;width:220px;outline:none}
+.search-input:focus{border-color:var(--blue)}
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:1.6rem">📊</span>
+  <div>
+    <h1>Dashboard Formateur — Stagios</h1>
+    <p>Suivi de la recherche de stage / alternance / emploi de vos stagiaires</p>
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Drop zone -->
+  <div class="drop-zone" id="drop-zone"
+    ondragover="event.preventDefault();this.classList.add('over')"
+    ondragleave="this.classList.remove('over')"
+    ondrop="onDrop(event)">
+    <div class="drop-zone-icon">📂</div>
+    <h2>Glissez ici les sauvegardes JSON de vos stagiaires</h2>
+    <p>Fichiers exportés depuis Stagios via le bouton 💾 Sauvegarder</p>
+    <label class="drop-link" for="file-input">Choisir les fichiers</label>
+    <input type="file" id="file-input" accept=".json" multiple style="display:none" onchange="onFileInput(event)">
+  </div>
+
+  <!-- Stats -->
+  <div class="stats" id="stats" style="display:none">
+    <div class="stat-card"><div class="stat-n" id="st-total" style="color:var(--blue)">0</div><div class="stat-l">Stagiaires</div></div>
+    <div class="stat-card"><div class="stat-n" id="st-active">0</div><div class="stat-l">Ont contacté ≥ 1</div></div>
+    <div class="stat-card"><div class="stat-n" id="st-sent">0</div><div class="stat-l">Emails envoyés (total)</div></div>
+    <div class="stat-card"><div class="stat-n" id="st-int" style="color:var(--blue)">0</div><div class="stat-l">En entretien</div></div>
+    <div class="stat-card"><div class="stat-n" id="st-acc" style="color:var(--green)">0</div><div class="stat-l">✅ Accepté(s)</div></div>
+    <div class="stat-card"><div class="stat-n" id="st-warn" style="color:var(--amber)">0</div><div class="stat-l">⏰ Sans réponse &gt;7j</div></div>
+    <div class="stat-card"><div class="stat-n" id="st-inactive" style="color:var(--red)">0</div><div class="stat-l">🚨 Aucun contact</div></div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions" id="actions" style="display:none">
+    <label class="btn btn-ghost" for="file-input">➕ Ajouter des fichiers</label>
+    <button class="btn btn-danger" onclick="clearAll()">🗑 Vider</button>
+    <div class="actions-right" style="display:flex;gap:8px;align-items:center">
+      <input class="search-input" id="search" placeholder="🔍 Rechercher un stagiaire…" oninput="renderTable()">
+      <button class="btn btn-primary" onclick="exportCSV()">📥 Export CSV</button>
+    </div>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap" id="table-wrap" style="display:none">
+    <table>
+      <thead>
+        <tr>
+          <th style="cursor:pointer" onclick="sortBy('name')">Stagiaire ↕</th>
+          <th>Formation</th>
+          <th>Objectif</th>
+          <th class="num" title="À contacter">📭</th>
+          <th class="num" title="Envoyé">📤</th>
+          <th class="num" title="Relance">⏰</th>
+          <th class="num" title="Entretien">🤝</th>
+          <th class="num" title="Refus">❌</th>
+          <th class="num" title="Accepté">🎉</th>
+          <th>Alertes</th>
+          <th style="cursor:pointer" onclick="sortBy('date')">Dernière activité ↕</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <div id="empty-state" class="empty-state" style="display:none">
+    <div style="font-size:3rem">📋</div>
+    <p>Aucune donnée — glissez les fichiers JSON de vos stagiaires ci-dessus</p>
+  </div>
+
+</div>
+
+<script>
+let students=[];
+let sortKey='name';
+let sortDir=1;
+
+const MODE_LABELS={
+  stage_nr:'📋 Stage non rém.',
+  stage_r:'💰 Stage rémunéré',
+  alternance:'🔄 Alternance',
+  emploi:'💼 Emploi CDI/CDD',
+};
+const STATUS_LABELS={todo:'📭 À contacter',sent:'📤 Envoyé',follow:'⏰ Relance',int:'🤝 Entretien',rej:'❌ Refus',acc:'🎉 Accepté'};
+const STATUS_CLS={todo:'chip-todo',sent:'chip-sent',follow:'chip-follow',int:'chip-int',rej:'chip-rej',acc:'chip-acc'};
+
+function onDrop(ev){
+  ev.preventDefault();
+  document.getElementById('drop-zone').classList.remove('over');
+  loadFiles([...ev.dataTransfer.files].filter(f=>f.name.endsWith('.json')));
+}
+function onFileInput(ev){loadFiles([...ev.target.files]);ev.target.value='';}
+
+function loadFiles(files){
+  let pending=files.length;
+  if(!pending)return;
+  files.forEach(file=>{
+    const r=new FileReader();
+    r.onload=e=>{
+      try{
+        const d=JSON.parse(e.target.result);
+        const profil=d.profil||d.S;
+        if(profil&&(profil.prenom||profil.nom)){
+          const uid=(profil.prenom||'')+'\x00'+(profil.nom||'');
+          if(!students.find(s=>s._uid===uid)){
+            students.push({_uid:uid,_file:file.name,profil,crmData:d.crmData||{},radarResults:d.radarResults||[],date:d.date,_stats:null});
+          }
+        }
+      }catch(err){console.warn('Fichier JSON invalide :',file.name);}
+      if(--pending===0){recompute();render();}
+    };
+    r.readAsText(file);
+  });
+}
+
+function daysSince(dateStr){
+  if(!dateStr)return null;
+  return Math.floor((Date.now()-new Date(dateStr))/86400000);
+}
+
+function computeStudentStats(st){
+  const crm=st.crmData;
+  const counts={todo:0,sent:0,follow:0,int:0,rej:0,acc:0};
+  let lastDate=null,waiting7j=0;
+  Object.values(crm).forEach(e=>{
+    counts[e.status]=(counts[e.status]||0)+1;
+    if(e.sentDate){
+      if(!lastDate||e.sentDate>lastDate)lastDate=e.sentDate;
+      if(e.status==='sent'&&daysSince(e.sentDate)>=7)waiting7j++;
+    }
+  });
+  return{counts,lastDate,waiting7j,total:Object.keys(crm).length};
+}
+
+function recompute(){
+  students.forEach(st=>{st._stats=computeStudentStats(st);});
+}
+
+function render(){
+  updateGlobalStats();
+  renderTable();
+  const hasData=students.length>0;
+  document.getElementById('stats').style.display=hasData?'grid':'none';
+  document.getElementById('actions').style.display=hasData?'flex':'none';
+  document.getElementById('table-wrap').style.display=hasData?'block':'none';
+  document.getElementById('empty-state').style.display=hasData?'none':'flex';
+  if(hasData)document.getElementById('drop-zone').classList.add('has-files');
+}
+
+function updateGlobalStats(){
+  let total=students.length,active=0,sent=0,int_=0,acc=0,warn=0,inactive=0;
+  students.forEach(st=>{
+    const s=st._stats;
+    const contacted=s.total;
+    if(contacted>0)active++;else inactive++;
+    sent+=s.counts.sent+s.counts.follow+s.counts.int+s.counts.rej+s.counts.acc;
+    if(s.counts.int>0)int_++;
+    if(s.counts.acc>0)acc++;
+    if(s.waiting7j>0)warn++;
+  });
+  document.getElementById('st-total').textContent=total;
+  document.getElementById('st-active').textContent=active;
+  document.getElementById('st-sent').textContent=sent;
+  document.getElementById('st-int').textContent=int_;
+  document.getElementById('st-acc').textContent=acc;
+  document.getElementById('st-warn').textContent=warn;
+  document.getElementById('st-inactive').textContent=inactive;
+}
+
+function renderTable(){
+  const query=(document.getElementById('search')?.value||'').toLowerCase();
+  const tbody=document.getElementById('table-body');
+  tbody.innerHTML='';
+
+  let list=[...students];
+  if(query)list=list.filter(st=>{
+    const p=st.profil;
+    return(p.prenom||'').toLowerCase().includes(query)||(p.nom||'').toLowerCase().includes(query)||(p.formationLabel||'').toLowerCase().includes(query);
+  });
+
+  list.sort((a,b)=>{
+    if(sortKey==='name'){
+      const na=(a.profil.nom||a.profil.prenom||'').toLowerCase();
+      const nb=(b.profil.nom||b.profil.prenom||'').toLowerCase();
+      return na<nb?-sortDir:na>nb?sortDir:0;
+    }
+    if(sortKey==='date'){
+      const da=a._stats.lastDate||'';
+      const db=b._stats.lastDate||'';
+      return da<db?sortDir:da>db?-sortDir:0;
+    }
+    return 0;
+  });
+
+  list.forEach((st,i)=>{
+    const p=st.profil;
+    const s=st._stats;
+    const name=[(p.prenom||''),(p.nom||'')].filter(Boolean).join(' ')||st._file;
+    const formation=p.formationLabel||p.formation||'—';
+    const mode=MODE_LABELS[p.mode]||p.mode||'—';
+
+    const alerts=[];
+    if(s.total===0)alerts.push('<span class="chip chip-alert">🚨 Aucun contact</span>');
+    if(s.waiting7j>0)alerts.push(`<span class="chip chip-warn">⏰ ${s.waiting7j} sans réponse &gt;7j</span>`);
+    if(s.counts.acc>0)alerts.push('<span class="chip chip-acc">🎉 Accepté !</span>');
+    if(s.counts.int>0&&!s.counts.acc)alerts.push('<span class="chip chip-int">🤝 Entretien en cours</span>');
+
+    const lastStr=s.lastDate?new Date(s.lastDate).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'2-digit'}):'—';
+
+    const n=(v,cls)=>v>0?`<td class="num"><span class="chip ${cls}">${v}</span></td>`:`<td class="num-z">—</td>`;
+
+    const idx=students.indexOf(st);
+    const row=document.createElement('tr');
+    row.className='student-row';
+    row.id='row-'+idx;
+    row.innerHTML=`
+      <td><strong>${esc(name)}</strong><br><span style="font-size:.7rem;color:var(--t4)">${esc(p.etab||'')}</span></td>
+      <td><span class="chip chip-formation">${esc(formation)}</span></td>
+      <td><span class="chip chip-mode">${esc(mode)}</span></td>
+      ${n(s.counts.todo,'chip-todo')}
+      ${n(s.counts.sent,'chip-sent')}
+      ${n(s.counts.follow,'chip-follow')}
+      ${n(s.counts.int,'chip-int')}
+      ${n(s.counts.rej,'chip-rej')}
+      ${n(s.counts.acc,'chip-acc')}
+      <td style="min-width:180px">${alerts.join(' ')}</td>
+      <td style="font-size:.78rem;color:var(--t3);white-space:nowrap">${lastStr}</td>`;
+    row.onclick=()=>toggleDetail(idx,row);
+    tbody.appendChild(row);
+
+    const detail=document.createElement('tr');
+    detail.className='detail-row';
+    detail.id='detail-'+idx;
+    detail.innerHTML=`<td colspan="11">${renderDetail(st)}</td>`;
+    tbody.appendChild(detail);
+  });
+}
+
+function renderDetail(st){
+  const crm=st.crmData;
+  const radar=st.radarResults||[];
+  const ids=Object.keys(crm);
+  if(!ids.length)return'<div class="detail-inner"><em style="color:var(--t3);font-size:.8rem">Aucune entreprise en suivi pour ce stagiaire</em></div>';
+
+  const rows=ids.map(id=>{
+    const e=crm[id];
+    const company=radar.find(c=>c.id===id);
+    const cname=company?company.n:id;
+    const ctype=company?company.t:'—';
+    const since=e.sentDate?daysSince(e.sentDate)+'j':'—';
+    const relancer=e.status==='sent'&&daysSince(e.sentDate)>=7?' <span class="chip chip-warn">⏰ Relancer</span>':'';
+    return`<tr>
+      <td><strong>${esc(cname)}</strong></td>
+      <td style="color:var(--t3)">${esc(ctype)}</td>
+      <td><span class="chip ${STATUS_CLS[e.status]||'chip-todo'}">${STATUS_LABELS[e.status]||e.status}</span>${relancer}</td>
+      <td style="color:var(--t3)">${since}</td>
+      <td style="color:var(--t3)">${esc(e.contact||'')}</td>
+      <td style="color:var(--t3);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(e.notes||'')}</td>
+    </tr>`;
+  }).join('');
+
+  return`<div class="detail-inner">
+    <h4>Entreprises en suivi — ${ids.length} entrée(s)</h4>
+    <table>
+      <thead><tr><th>Entreprise</th><th>Type</th><th>Statut</th><th>Depuis</th><th>Contact</th><th>Notes</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function toggleDetail(idx,row){
+  const detail=document.getElementById('detail-'+idx);
+  const open=detail.classList.toggle('open');
+  row.classList.toggle('expanded',open);
+}
+
+function sortBy(key){
+  if(sortKey===key)sortDir*=-1;else{sortKey=key;sortDir=1;}
+  renderTable();
+}
+
+function clearAll(){
+  if(!confirm('Vider toutes les données importées ?'))return;
+  students=[];
+  render();
+  document.getElementById('drop-zone').classList.remove('has-files');
+  document.getElementById('empty-state').style.display='flex';
+}
+
+function exportCSV(){
+  const bom='﻿';
+  const header='Prénom,Nom,Établissement,Formation,Objectif,Total suivi,À contacter,Envoyé,Relance,Entretien,Refus,Accepté,Sans réponse >7j,Dernière activité';
+  const rows=students.map(st=>{
+    const p=st.profil;
+    const s=st._stats;
+    const last=s.lastDate?new Date(s.lastDate).toLocaleDateString('fr-FR'):'';
+    return[p.prenom||'',p.nom||'',p.etab||'',p.formationLabel||p.formation||'',p.mode||'',
+      s.total,s.counts.todo||0,s.counts.sent||0,s.counts.follow||0,s.counts.int||0,s.counts.rej||0,s.counts.acc||0,
+      s.waiting7j,last].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  dl(bom+[header,...rows].join('\r\n'),'dashboard-formateur.csv','text/csv;charset=utf-8');
+}
+
+function dl(data,name,type){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([data],{type}));
+  a.download=name;a.click();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Init
+document.getElementById('empty-state').style.display='none';
+</script>
+</body>
+</html>

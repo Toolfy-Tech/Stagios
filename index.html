@@ -1098,6 +1098,23 @@ async function fetchOverpass(lat,lng,rm,amenities,offices){
   }
 }
 
+const NAF2T={
+  '6201Z':'ESN','6202A':'ESN','6202B':'ESN','6203Z':'ESN','6209Z':'ESN','9511Z':'ESN','6190Z':'ESN',
+  '6920Z':'Banque','6619B':'Banque','6622Z':'Banque','6491Z':'Banque',
+  '8411Z':'Public','8412Z':'Public','8413Z':'Public',
+  '8211Z':'PME','8219Z':'PME','8299Z':'PME',
+  '4520A':'Garage','4520B':'Garage','4511Z':'Garage','4519Z':'Garage','4531Z':'Garage',
+  '4719B':'PME','4711A':'PME','4711B':'PME','4711D':'PME','4643Z':'PME',
+  '4321A':'Industrie','4321B':'Industrie','2711Z':'Industrie','3320A':'Industrie',
+  '4120A':'BTP','4120B':'BTP','4211Z':'BTP','4312A':'BTP','4391A':'BTP',
+  '5610A':'Restauration','5610B':'Restauration','5621Z':'Restauration','5590Z':'Restauration',
+  '8810A':'Asso','8810B':'Asso','8899A':'Asso','8899B':'Asso','9499Z':'Asso',
+  '4941A':'Logistique','4941B':'Logistique','5210B':'Logistique','5221Z':'Logistique','5224A':'Logistique',
+  '5010Z':'Logistique',
+  '8610Z':'Santé','8621Z':'Santé','8622A':'Santé','8622B':'Santé','8622C':'Santé',
+  '5813Z':'Médias','6020Z':'Médias','6010Z':'Médias','7311Z':'Médias',
+};
+
 async function fetchEntreprises(lat,lng,rKm,naf){
   const res=[];
   await Promise.all(naf.map(async code=>{
@@ -1107,7 +1124,7 @@ async function fetchEntreprises(lat,lng,rKm,naf){
       (d.results||[]).forEach(e=>{
         if(!e.nom_complet&&!e.nom_raison_sociale)return;
         const sie=e.siege||{};const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
-        res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,t:'ESN',v:sie.libelle_commune||'',d:'NAF '+code,e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,siren:e.siren,src:'Annuaire Entreprises'});
+        res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,t:NAF2T[code]||'PME',v:sie.libelle_commune||'',d:'NAF '+code,e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,siren:e.siren,src:'Annuaire Entreprises'});
       });
     }catch(ex){}
   }));
@@ -1126,9 +1143,12 @@ async function fetchAlternance(lat,lng,rKm){
 
 async function fetchImmersion(lat,lng,rKm){
   try{
-    const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&appellationCodes=475290`);
+    const _fcI=FORMATION_CONFIG[S.formation]||{};
+    const _romeI=(_fcI.romeCodes&&_fcI.romeCodes[0])||'M1801';
+    const _sectorI=(_fcI.sectors&&_fcI.sectors[0])||'ESN';
+    const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&romeCode=${_romeI}`);
     const d=await r.json();
-    return((d||[]).map(e=>({id:'imm_'+Math.random(),n:e.name||e.companyName||'',t:'ESN',v:e.address?.city||'',d:'Ouvert aux PMSMP',e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true}))).filter(e=>e.n);
+    return((d||[]).map(e=>({id:'imm_'+Math.random(),n:e.name||e.companyName||'',t:_sectorI,v:e.address?.city||'',d:'Ouvert aux PMSMP — '+(_fcI.label||''),e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true}))).filter(e=>e.n);
   }catch(ex){return[];}
 }
 
@@ -1243,9 +1263,11 @@ async function launchRadar(){
     msg('🔍 Annuaire Entreprises…');
     tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
   }
-  if(activeCats.has('ESN')){
+  if(S.mode==='alternance'){
     msg('🔍 La Bonne Alternance…');
     tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
+  }
+  if(S.mode==='stage_nr'){
     msg('🔍 Immersion Facilitée (PMSMP)…');
     tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
   }
@@ -1716,7 +1738,8 @@ function exportCSV(){
   dl([header,...rows].join('\n'),'stage-tip-suivi.csv','text/csv');
 }
 function exportJSON(){
-  dl(JSON.stringify({version:VERSION,date:new Date().toISOString(),profil:S,coords,radarResults,crmData},null,2),'stage-tip-sauvegarde.json','application/json');
+  var _fname='stagios-'+(S.prenom||'etudiant').toLowerCase().replace(/\s+/g,'-')+'-'+(S.nom||'').toLowerCase().replace(/\s+/g,'-')+'.json';
+  dl(JSON.stringify({version:VERSION,date:new Date().toISOString(),profil:S,coords,radarResults,crmData},null,2),_fname,'application/json');
 }
 function importJSON(ev){
   const f=ev.target.files[0];if(!f)return;
