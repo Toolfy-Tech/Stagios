@@ -1143,13 +1143,16 @@ async function fetchOverpass(lat,lng,rm,amenities,offices){
     return(d.elements||[])
       .filter(e=>{
         if(!e.tags||!e.tags.name||e.tags.name.length<2)return false;
-        // Filtre qualité OSM : exclure sans contact ET sans adresse
-        const hasContact=e.tags.email||e.tags['contact:email']||e.tags.website||e.tags['contact:website']||e.tags.phone||e.tags['contact:phone'];
-        const hasAddress=e.tags['addr:city']||(e.tags['addr:street']&&e.tags['addr:housenumber']);
-        if(!hasContact&&!hasAddress)return false;
         const n=e.tags.name.trim();
         if(n.length<3||/^\d+$/.test(n))return false;
-        return true;
+        // Les établissements institutionnels (écoles, hôpitaux, mairies…) sont légitimes sans contact
+        const am=e.tags.amenity||'';
+        const isInstitution=/^(school|college|university|hospital|clinic|nursing_home|townhall|bank|social_facility)$/.test(am);
+        if(isInstitution)return true;
+        // Pour les autres : exiger au moins contact OU adresse partielle
+        const hasContact=e.tags.email||e.tags['contact:email']||e.tags.website||e.tags['contact:website']||e.tags.phone||e.tags['contact:phone'];
+        const hasAddress=e.tags['addr:city']||e.tags['addr:street']||e.tags['addr:postcode'];
+        return !!(hasContact||hasAddress);
       })
       .map(e=>{
         const lt = e.type==='node' ? e.lat : (e.center ? e.center.lat : null);
