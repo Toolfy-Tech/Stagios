@@ -352,17 +352,6 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
           <label for="p_custom_formation">Nom exact de ta formation</label>
           <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
         </div>
-        <div class="fi full">
-          <label>Secteurs à scanner <span id="sector_count_lbl" style="font-size:.7rem;color:var(--t4);font-weight:400"></span></label>
-          <div style="font-size:.71rem;color:var(--t4);margin:.2rem 0 .5rem">Coche / décoche selon tes cibles — se synchro avec le radar</div>
-          <div id="sector_cats_grid" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-          <div style="margin-top:10px;font-size:.72rem;color:var(--t4);margin-bottom:4px">Secteur non listé ? Tape son nom :</div>
-          <div style="display:flex;gap:7px">
-            <input id="p_sector_input" placeholder="ex : Agroalimentaire, Aéronautique… + Entrée" aria-label="Ajouter un secteur personnalisé" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSector();}">
-            <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" aria-label="Ajouter ce secteur">+ Ajouter</button>
-          </div>
-          <div id="sector_tags" class="sector-tags" style="margin-top:6px"></div>
-        </div>
         <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
           <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
           <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
@@ -402,11 +391,6 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
           <label for="p_rome_codes" style="display:flex;align-items:center;gap:6px">Codes ROME (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" aria-label="Chercher sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
           <input id="p_rome_codes" placeholder="ex : M1801, M1802, K1302" title="Codes ROME pour cibler les offres France Travail, LBA et Immersion">
           <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sur <strong style="color:var(--t3)">Métierscope</strong> (🔍) : tape ton métier → ouvre la fiche → télécharge-la → le code ROME est en haut (ex : M1801). Colle-le ici.</div>
-        </div>
-        <div class="fi">
-          <label for="p_naf_codes">Codes NAF supplémentaires (optionnel)</label>
-          <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
-          <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
         </div>
         <div class="fi">
           <label for="p_search_engine">Moteur de recherche par défaut</label>
@@ -454,7 +438,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 
   <div class="card" style="margin-bottom:1rem">
     <div class="ct">🎯 Radar géographique</div>
-    <div class="cs">Scanne les structures dans un rayon ajustable. Les résultats sont classés du plus proche au plus éloigné.</div>
+    <div class="cs">Trouve les offres France Travail (stage, alternance, emploi) dans un rayon ajustable, classées de la plus proche à la plus éloignée.</div>
     <div class="radar-controls">
       <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
         <span style="font-size:.8rem;color:var(--t3);white-space:nowrap">Rayon :</span>
@@ -465,7 +449,6 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <button class="btn btn-primary" onclick="launchRadar()" id="radar-btn" aria-label="Lancer le scan radar">🔍 Scanner</button>
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()" aria-label="Exporter les résultats en CSV">📥 CSV</button>
     </div>
-    <div class="cat-grid" id="cat-grid"></div>
   </div>
 
   <div id="radar-banner" class="search-banner" style="display:none">
@@ -489,7 +472,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
     <div>
       <h2 style="font-size:1rem;font-weight:700;color:var(--t1)">📋 Suivi des candidatures</h2>
-      <div style="font-size:.78rem;color:var(--t3)" id="suivi-sub">Glisse les cartes ou clique pour changer de colonne.</div>
+      <div style="font-size:.78rem;color:var(--t3)" id="suivi-sub">Change le statut depuis le menu déroulant sur chaque carte.</div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()" aria-label="Exporter le suivi en CSV">📥 CSV</button>
@@ -724,40 +707,10 @@ function onFormationChange(){
   }else{badge.style.display='none';}
 }
 
-function addCustomSector(){
-  var inp=document.getElementById('p_sector_input');
-  var val=(inp.value||'').trim();
-  if(!val)return;
-  val.split(',').forEach(function(v){
-    var s=v.trim();
-    if(s&&!_customSectors.includes(s))_customSectors.push(s);
-  });
-  inp.value='';
-  renderSectorTags();
-}
-
-function removeSector(i){
-  _customSectors.splice(i,1);
-  renderSectorTags();
-}
-
-function renderSectorTags(){
-  var container=document.getElementById('sector_tags');
-  if(!container)return;
-  container.innerHTML=_customSectors.map(function(s,i){
-    return'<span class="sector-tag">'+escH(s)+'<button onclick="removeSector('+i+')" title="Supprimer">×</button></span>';
-  }).join('');
-}
-
 function getFormationConfig(){
   var fid=S.formation||'Custom';
   var base=FORMATION_CONFIG[fid]||FORMATION_CONFIG.Custom;
-  // Fusionner avec secteurs custom
-  var merged=Object.assign({},base);
-  if(_customSectors.length){
-    merged.customSectorLabels=_customSectors;
-  }
-  return merged;
+  return Object.assign({},base);
 }
 
 function getSearchUrl(query){
@@ -1138,76 +1091,6 @@ function tier(d){
 // ════════════════════════════════════════════════════════════
 // SECTION 5 — MODULE API (Overpass + Entreprises + Alternance)
 // ════════════════════════════════════════════════════════════
-async function fetchOverpass(lat,lng,rm,amenities,offices){
-  const cond=[
-    ...amenities.flatMap(a=>[
-      `node["amenity"="${a}"](around:${rm},${lat},${lng});`,
-      `way["amenity"="${a}"](around:${rm},${lat},${lng});`
-    ]),
-    ...offices.flatMap(o=>[
-      `node["office"="${o}"](around:${rm},${lat},${lng});`,
-      `way["office"="${o}"](around:${rm},${lat},${lng});`
-    ]),
-  ].join('');
-  if(!cond)return[];
-
-  // out body center; → donne les coordonnées des ways (bâtiments/zones)
-  const q=`[out:json][timeout:30];(${cond});out body center;`;
-  try{
-    const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
-    const d=await r.json();
-    const am2t={
-      hospital:'Santé',clinic:'Santé',doctors:'Santé',nursing_home:'Santé',social_facility:'Asso',
-      school:'Lycées',college:'Education',university:'Education',
-      townhall:'Public',government:'Public',
-      coworking_space:'Coworking',bank:'Banque',
-      association:'Asso',it:'ESN',
-      car_repair:'Garage',car_parts:'Garage',fuel:'Garage',
-      restaurant:'Restauration',fast_food:'Restauration',cafe:'Restauration',hotel:'Restauration',
-      supermarket:'PME',mall:'PME',
-      station:'Logistique',
-    };
-    return(d.elements||[])
-      .filter(e=>{
-        if(!e.tags||!e.tags.name||e.tags.name.length<2)return false;
-        const n=e.tags.name.trim();
-        if(n.length<3||/^\d+$/.test(n))return false;
-        // Les établissements institutionnels (écoles, hôpitaux, mairies…) sont légitimes sans contact
-        const am=e.tags.amenity||'';
-        const isInstitution=/^(school|college|university|hospital|clinic|nursing_home|townhall|bank|social_facility)$/.test(am);
-        if(isInstitution)return true;
-        // Pour les autres : exiger au moins contact OU adresse partielle
-        const hasContact=e.tags.email||e.tags['contact:email']||e.tags.website||e.tags['contact:website']||e.tags.phone||e.tags['contact:phone'];
-        const hasAddress=e.tags['addr:city']||e.tags['addr:street']||e.tags['addr:postcode'];
-        return !!(hasContact||hasAddress);
-      })
-      .map(e=>{
-        const lt = e.type==='node' ? e.lat : (e.center ? e.center.lat : null);
-        const ln = e.type==='node' ? e.lon : (e.center ? e.center.lon : null);
-        if(!lt||!ln) return null;
-        const a=e.tags.amenity||e.tags.office||'';
-        const t=am2t[a]||null;
-        if(!t) return null;
-        const addr=[e.tags['addr:housenumber'],e.tags['addr:street'],
-                    e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')
-                   ||e.tags['addr:city']||'';
-        return{
-          id:'osm_'+e.id,
-          n:e.tags.name, t, v:addr, d:a,
-          e:e.tags.email||e.tags['contact:email']||'',
-          web:e.tags.website||e.tags['contact:website']||'',
-          phone:e.tags.phone||e.tags['contact:phone']||'',
-          lat:lt, lng:ln,
-          src:'OpenStreetMap'
-        };
-      })
-      .filter(Boolean);
-  }catch(ex){
-    console.warn('Overpass error:',ex);
-    return[];
-  }
-}
-
 const NAF2T={
   '6201Z':'ESN','6202A':'ESN','6202B':'ESN','6203Z':'ESN','6209Z':'ESN','9511Z':'ESN','6190Z':'ESN',
   '6920Z':'Banque','6619B':'Banque','6622Z':'Banque','6491Z':'Banque','6511Z':'Banque','6512Z':'Banque',
@@ -1225,57 +1108,6 @@ const NAF2T={
   '8610Z':'Santé','8621Z':'Santé','8622A':'Santé','8622B':'Santé','8622C':'Santé',
   '5813Z':'Médias','6020Z':'Médias','6010Z':'Médias','7311Z':'Médias',
 };
-
-async function fetchEntreprises(lat,lng,rKm,naf){
-  const res=[];
-  await Promise.all(naf.map(async code=>{
-    try{
-      const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&long=${lng}&radius=${rKm}&activite_principale=${code}&per_page=20&etat_administratif=A`);
-      const d=await r.json();
-      (d.results||[]).forEach(e=>{
-        const nom=e.nom_complet||e.nom_raison_sociale;
-        if(!nom)return;
-        const sie=e.siege||{};
-        // Filtre qualité SIRENE :
-        // 1. Exclure les non-employeurs (auto-entrepreneurs sans salarié)
-        const te=e.tranche_effectif_salarie;
-        if(te==='NN'||te==='00')return;
-        // 2. Exclure sans commune ni code postal
-        if(!sie.libelle_commune&&!sie.code_postal)return;
-        // 3. Exclure noms de personnes physiques pures (DUPONT JEAN sans forme juridique)
-        const hasJuridique=/\b(SARL|SAS|SASU|SA\b|EURL|EARL|SCI|SCOP|ASSO|UNION|CENTRE|MAIRIE|CHU|CHR|EHPAD|CCAS|CAF|CARSAT|CPAM|CRAM|CROUS|METRO|MAISON|FOYER|SERVICE|DEPARTEMENT|REGION|COMMUNE|CONSEIL|AGENCE|LYCEE|ECOLE|COLLEGE|IUT|UNIV|INSTI|FOND|LIGUE|CROIX|SNCF|ENEDIS|LA POSTE)\b/i;
-        if(/^[A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ\s\-]+$/.test(nom)&&nom.split(' ').length<=4&&!hasJuridique.test(nom))return;
-        const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
-        const adresse=sie.adresse||(sie.libelle_commune||'');
-        res.push({id:'ent_'+e.siren,n:nom,t:NAF2T[code]||'PME',v:adresse,d:'NAF '+code,e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,siren:e.siren,src:'Annuaire Entreprises'});
-      });
-    }catch(ex){}
-  }));
-  return res;
-}
-
-async function fetchAlternance(lat,lng,rKm){
-  try{
-    const _fcA=FORMATION_CONFIG[S.formation]||{};
-    const _extraR=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
-    const _romesA=[...new Set([...(_fcA.romeCodes&&_fcA.romeCodes.length?_fcA.romeCodes:['M1801','M1802']),..._extraR])].join(',');
-    const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=${_romesA}`);
-    const d=await r.json();
-    return((d.results||d.matchas||[]).map(e=>{const _n=e.company?.name||e.enseigne||'';const _v=e.company?.city||'';const _naf=(e.company?.naf||e.company?.nafCode||'').replace(/\./g,'');return{id:'lba_'+_hid(_n+_v+(e.company?.siret||'')),n:_n,t:NAF2T[_naf]||(_fcA.sectors&&_fcA.sectors[0])||'PME',v:_v,d:'Entreprise habituée alternance '+(_fcA.label||''),e:e.contact?.email||'',web:e.contact?.url||'',lat:e.company?.latitude||lat,lng:e.company?.longitude||lng,src:'La Bonne Alternance',alt:true};})).filter(e=>e.n);
-  }catch(ex){return[];}
-}
-
-async function fetchImmersion(lat,lng,rKm){
-  try{
-    const _fcI=FORMATION_CONFIG[S.formation]||{};
-    const _extraRI=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
-    const _romeI=_extraRI[0]||(_fcI.romeCodes&&_fcI.romeCodes[0])||'M1801';
-    const _sectorI=(_fcI.sectors&&_fcI.sectors[0])||'PME';
-    const r=await fetch(`https://immersion-facile.beta.gouv.fr/api/public/v2/establishments?longitude=${lng}&latitude=${lat}&distanceKm=${rKm}&romeCode=${_romeI}`);
-    const d=await r.json();
-    return((d||[]).map(e=>{const _n=e.name||e.companyName||'';const _v=e.address?.city||'';const _naf=(e.naf||e.nafCode||'').replace(/\./g,'');return{id:'imm_'+_hid(_n+_v+(e.siret||'')),n:_n,t:NAF2T[_naf]||_sectorI,v:_v,d:'Ouvert aux PMSMP — '+(_fcI.label||''),e:e.contactEmail||'',web:e.website||'',lat:e.position?.lat||lat,lng:e.position?.lon||lng,src:'Immersion Facilitée',pmsmp:true};})).filter(e=>e.n);
-  }catch(ex){return[];}
-}
 
 async function getFTToken(){
   if(_ftToken&&Date.now()<_ftTokenExpiry)return _ftToken;
@@ -1362,30 +1194,12 @@ async function fetchFranceTravail(lat,lng,rKm){
 // ════════════════════════════════════════════════════════════
 let radarRunning=false;
 
-function buildCatGrid(){
-  document.getElementById('cat-grid').innerHTML=CATS.map(c=>
-    `<button class="cat-btn on" id="cat-${c.id}" onclick="toggleCat('${c.id}')">${c.ico} ${c.lbl}</button>`
-  ).join('');
-}
-
 function rebuildTypeFilter(){
   const sel=document.getElementById('r_type');
   const prev=sel.value;
-  // Types présents dans les résultats courants
   const types=[...new Set(radarResults.map(c=>c.t).filter(Boolean))].sort();
-  const catById=Object.fromEntries(CATS.map(c=>[c.id,c]));
-  sel.innerHTML='<option value="">Tous les types</option>'+types.map(t=>{
-    const cat=catById[t];
-    return`<option value="${t}">${cat?cat.ico+' ':''} ${t}</option>`;
-  }).join('');
+  sel.innerHTML='<option value="">Tous les types</option>'+types.map(t=>'<option value="'+escH(t)+'">'+escH(t)+'</option>').join('');
   if(prev&&types.includes(prev))sel.value=prev;
-}
-
-function toggleCat(id){
-  if(activeCats.has(id))activeCats.delete(id);else activeCats.add(id);
-  const btn=document.getElementById('cat-'+id);
-  btn.classList.toggle('on',activeCats.has(id));
-  renderSectorCatsGrid();
 }
 
 async function launchRadar(){
@@ -1393,103 +1207,36 @@ async function launchRadar(){
   if(radarRunning)return;
   radarRunning=true;
   const rKm=parseInt(document.getElementById('r_km').value);
-  const rm=rKm*1000;
-  const btn=document.getElementById('radar-btn');btn.disabled=true;btn.textContent='⏳ Scan…';
+  const btn=document.getElementById('radar-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle;margin-right:6px"></span>Scan…';
   const banner=document.getElementById('radar-banner');banner.style.display='flex';
   const msg=t=>{const el=document.getElementById('radar-msg');if(el)el.innerHTML=t;};
-  msg('📍 Scan depuis : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
+  msg('📍 Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
+  radarResults=[];
 
-  // Reset — filtrer les pré-chargées selon la formation active
-  var _fc=S.formation?FORMATION_CONFIG[S.formation]:null;
-  var _relevantSectors=_fc&&_fc.sectors&&_fc.sectors.length?new Set(_fc.sectors):null;
-  radarResults=PRELOADED.filter(function(c){
-    if(!_relevantSectors)return true;
-    return _relevantSectors.has(c.t);
-  });
-  // Garder aussi les secteurs custom de l'étudiant
-  if(S.customSectors&&S.customSectors.length){
-    var _customSet=new Set(S.customSectors.map(function(s){return s.toLowerCase();}));
-    var _extra=PRELOADED.filter(function(c){
-      return!radarResults.includes(c)&&_customSet.has((c.t||'').toLowerCase());
-    });
-    radarResults=radarResults.concat(_extra);
+  const hasFT=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))||S.ftClientId;
+  if(hasFT){
+    msg('🔍 France Travail — recherche en cours…');
+    const ftResults=await fetchFranceTravail(coords.lat,coords.lng,rKm);
+    radarResults=ftResults;
+    msg('✅ <span class="scan-count">'+radarResults.length+'</span> offre'+(radarResults.length>1?'s':'')+' France Travail trouvée'+(radarResults.length>1?'s':''));
+  } else {
+    toast('France Travail non configuré — les offres ne peuvent pas être chargées.','warn');
+    msg('⚠️ France Travail non configuré');
   }
 
-  const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
-  const _formationAmenities=(_fc&&_fc.osmAmenities)||[];
-  const allAmenities=[...new Set([...activeCatDefs.flatMap(c=>c.osm),..._formationAmenities])];
-  const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
-  const _formationNaf=(_fc&&_fc.nafCodes)||[];
-  const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf),..._formationNaf,...extraNaf])];
-  const osmOffices=(_fc&&_fc.osmOffices)||['government','association','company'];
-
-  const tasks=[];
-  if(allAmenities.length||osmOffices.length){
-    msg('🔍 Scan OpenStreetMap…');
-    tasks.push(fetchOverpass(coords.lat,coords.lng,rm,allAmenities,osmOffices));
-  }
-  if(allNaf.length){
-    msg('🔍 Annuaire Entreprises…');
-    tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
-  }
-  if(S.mode==='alternance'){
-    msg('🔍 La Bonne Alternance…');
-    tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
-  }
-  if(S.mode==='stage_nr'){
-    msg('🔍 Immersion Facilitée (PMSMP)…');
-    tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
-  }
-  if(FT_CLIENT_ID||S.ftClientId){
-    msg('🔍 France Travail — offres réelles…');
-    tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
-  }
-
-  const all=await Promise.allSettled(tasks);
-  const seen=new Set(radarResults.map(c=>c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8)));
-  all.forEach(r=>{
-    if(r.status!=='fulfilled')return;
-    (r.value||[]).forEach(c=>{
-      const k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
-      if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push({...c,disc:true});}
-    });
-    msg('Scan en cours… <span class="scan-count">'+radarResults.length+' structures</span> trouvées');
-  });
-
-  // Compute distances & filter by radius
-  radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).filter(c=>c._dist===null||c._dist<=rKm).sort((a,b)=>(a._dist??999)-(b._dist??999));
+  radarResults=radarResults
+    .map(c=>({...c,_dist:dist(c)}))
+    .filter(c=>c._dist===null||c._dist<=rKm)
+    .sort((a,b)=>(a._dist??999)-(b._dist??999));
 
   updateBadges();
   rebuildTypeFilter();
-  // Diagnostic clair
-  const _preCount=PRELOADED.filter(c=>{const d=dist(c);return d===null||d<=rKm;}).length;
-  const _newCount=radarResults.length-_preCount;
-  let _msgFinal='✅ '+radarResults.length+' structures dans '+rKm+' km';
-  _msgFinal+=' ('+_preCount+' pré-chargées';
-  if(_newCount>0)_msgFinal+=', +'+_newCount+' trouvées via APIs';
-  _msgFinal+=')';
-  if(_preCount===radarResults.length&&radarResults.length>0){
-    _msgFinal+=' — APIs sans résultats supplémentaires';
-  }
-  msg(_msgFinal);
-  // Si toutes entreprises sont pré-chargées, afficher explication
-  const _diagEl=document.getElementById('api-diag');
-  if(_diagEl){
-    let _diag='<strong>Position scannée :</strong> '+coords.lat.toFixed(5)+', '+coords.lng.toFixed(5)+'<br>';
-    _diag+='<strong>Entreprises pré-chargées dans le rayon :</strong> '+_preCount+'<br>';
-    _diag+='<strong>Découvertes via APIs :</strong> '+_newCount+'<br>';
-    if(_newCount===0){
-      _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
-      _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
-      _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
-      _diag+="Les APIs externes (Overpass, Annuaire Entreprises) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
-    }
-    _diagEl.innerHTML=_diag;_diagEl.style.display='block';
-  }
-  setTimeout(()=>banner.style.display='none',5000);
-  btn.disabled=false;btn.textContent='🔍 Scanner';
-  radarRunning=false;
   renderRadar();
+  banner.style.display='none';
+  btn.disabled=false;btn.innerHTML='🔍 Scanner';
+  radarRunning=false;
+  persist();
 }
 
 function renderRadar(){
@@ -2082,10 +1829,8 @@ async function saveProfile(){
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
     mode:getMode(),
     extraRomeCodes:f('p_rome_codes'),
-    extraNafCodes:f('p_naf_codes'),
     cvText:_oldCvText,
     cvFileName:_oldCvFileName,
-    customSectors:[..._customSectors],
      debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
@@ -2150,18 +1895,10 @@ function fillProfileForm(){
     const romeEl=document.getElementById('p_rome_codes');
     if(romeEl)romeEl.value=S.extraRomeCodes;
   }
-  if(S.extraNafCodes){
-    const nafEl=document.getElementById('p_naf_codes');
-    if(nafEl)nafEl.value=S.extraNafCodes;
-  }
   if(S.cvFileName){
     const st=document.getElementById('cv_status');
     if(st)st.textContent='✅ CV chargé : '+S.cvFileName;
   }
-  if(S.customSectors&&S.customSectors.length){
-    _customSectors=[...S.customSectors];renderSectorTags();
-  }
-  renderSectorCatsGrid();
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
@@ -2179,8 +1916,6 @@ function fillProfileForm(){
   onModeChange();
   loadBlacklist();
   restore();
-  buildCatGrid();
-  renderSectorCatsGrid();
   initFirstBanner();
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
   // Enter key advances stepper (not on textareas or last step)
