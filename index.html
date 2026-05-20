@@ -1661,7 +1661,11 @@ function ini(n){return(n||'?').split(' ').slice(0,2).map(w=>w[0]||'').join('').t
 // ════════════════════════════════════════════════════════════
 function addToSuivi(id){
   if(!id)return;
-  if(!crmData[id])crmData[id]={status:'todo',sentDate:null,notes:'',contact:''};
+  if(!crmData[id]){
+    var _c=radarResults.find(function(r){return r.id===id;});
+    crmData[id]={status:'todo',sentDate:null,notes:'',contact:'',
+      _snap:_c?{n:_c.n,t:_c.t,v:_c.v,e:_c.e,web:_c.web,src:_c.src,lat:_c.lat,lng:_c.lng}:null};
+  }
   persist();updateBadges();renderRadar();
 }
 
@@ -1675,7 +1679,12 @@ function setStatus(id,status){
 function daysSince(d){if(!d)return null;return Math.floor((Date.now()-new Date(d))/(1000*60*60*24));}
 
 function renderKanban(){
-  var allTracked=radarResults.filter(function(c){return !!crmData[c.id];});
+  var allTracked=Object.keys(crmData).map(function(id){
+    var fromRadar=radarResults.find(function(r){return r.id===id;});
+    if(fromRadar)return fromRadar;
+    var snap=crmData[id]&&crmData[id]._snap;
+    return snap?Object.assign({id:id,_dist:null},snap):null;
+  }).filter(Boolean);
   var j7List=allTracked.filter(function(c){
     var days=daysSince(crmData[c.id]&&crmData[c.id].sentDate);
     return crmData[c.id]&&crmData[c.id].status==='sent'&&days!==null&&days>=7;
@@ -1739,7 +1748,7 @@ function updateBadges(){
     const ns=Object.values(crmData).filter(c=>c.status==='sent').length;
     document.getElementById('sg').innerHTML=[
       {n:inRadar,l:'Structures trouvées'},
-      {n:tracked,l:'En suivi CRM'},
+      {n:tracked,l:'Entreprises suivies'},
       {n:ns,l:'Emails envoyés'},
       {n:Object.values(crmData).filter(c=>c.status==='acc').length,l:'✅ Accepté'},
     ].map(s=>`<div class="sc"><div class="sn">${s.n}</div><div class="sl">${s.l}</div></div>`).join('');
