@@ -283,119 +283,166 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 
 <!-- ══ PROFIL ══════════════════════════════════════════ -->
 <div class="page on" id="page-profil">
+  <div id="first-banner" class="first-banner" style="display:none">
+    <span>💡 <strong>Tes données restent dans ce navigateur.</strong> Exporte-les régulièrement via le bouton "Exporter" en haut pour ne rien perdre si tu changes d'appareil.</span>
+    <button class="first-banner-close" onclick="dismissFirstBanner()" aria-label="Fermer ce message">OK</button>
+  </div>
   <div class="card">
     <div class="ct">👤 Mon profil</div>
-    <div class="cs" id="profil-cs">Ces informations personnalisent tes emails de candidature et activent le radar géographique. Commence par importer ton CV ou remplis les champs.</div>
-    <div class="fg">
-      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
-        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-          <label class="btn btn-primary btn-sm" style="cursor:pointer">
-            📎 Choisir mon CV (PDF ou TXT)
-            <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
-          </label>
-          <span id="cv_status" style="font-size:.76rem;color:var(--blue)">Aucun CV chargé</span>
-        </div>
-        <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
-        <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV peut remplir automatiquement le profil, la formation, l'adresse et les compétences.</div>
-      </div>
-      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Identité</div></div>
-      <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
-      <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
-      <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
-      <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
-      <div class="fi full"><label>Organisme de formation</label>
-        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, … (optionnel)" /></div>
-      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
-      <div class="fi full"><label>Formation / Métier *</label>
-        <select id="p_formation" onchange="onFormationChange()">
-          <option value="">— Sélectionner une formation —</option>
-          <option value="TIP">💻 Technicien Informatique de Proximité (TIP)</option>
-          <option value="Compta">📊 Comptabilité / Gestion</option>
-          <option value="Mecanique">🔧 Mécanique automobile</option>
-          <option value="Secretariat">📝 Secrétariat / Assistanat</option>
-          <option value="Commerce">🛍️ Commerce / Vente</option>
-          <option value="Electro">⚡ Électrotechnique / Électricité</option>
-          <option value="BTP">🏗️ Bâtiment / BTP</option>
-          <option value="Restauration">🍽️ Restauration / Hôtellerie</option>
-          <option value="Social">❤️ Aide à la personne / Social</option>
-          <option value="Logistique">📦 Logistique / Transport</option>
-          <option value="Custom">✏️ Autre (personnalisé)</option>
-        </select>
-        <div id="formation_badge" class="formation-badge" style="display:none"></div>
-      </div>
-      <div class="fi full" id="custom_formation_wrap" style="display:none">
-        <label>Nom exact de ta formation</label>
-        <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
-      </div>
-      <div class="fi full">
-        <label>Secteurs à scanner <span id="sector_count_lbl" style="font-size:.7rem;color:var(--t4);font-weight:400"></span></label>
-        <div style="font-size:.71rem;color:var(--t4);margin:.2rem 0 .5rem">Coche / décoche selon tes cibles — se synchro avec le radar</div>
-        <div id="sector_cats_grid" style="display:flex;flex-wrap:wrap;gap:6px"></div>
-        <div style="margin-top:10px;font-size:.72rem;color:var(--t4);margin-bottom:4px">Secteur non listé ? Tape son nom :</div>
-        <div style="display:flex;gap:7px">
-          <input id="p_sector_input" placeholder="ex : Agroalimentaire, Aéronautique… + Entrée" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSector();}">
-          <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" style="flex-shrink:0">+ Ajouter</button>
-        </div>
-        <div id="sector_tags" class="sector-tags" style="margin-top:6px"></div>
-      </div>
-      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
-        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
-        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
-          <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
-          <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
-          <label class="mode-opt" id="mode_opt_alternance"><input type="radio" name="p_mode" value="alternance" onchange="onModeChange()"><span>🔄 Alternance</span></label>
-          <label class="mode-opt" id="mode_opt_emploi"><input type="radio" name="p_mode" value="emploi" onchange="onModeChange()"><span>💼 Emploi CDI/CDD</span></label>
-        </div>
-        <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
-      </div>
-      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
-      <div class="fi">
-        <label style="display:flex;align-items:center;gap:6px">Codes ROME (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
-        <input id="p_rome_codes" placeholder="ex : M1801, M1802, K1302" title="Codes ROME pour cibler les offres France Travail, LBA et Immersion">
-        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sur <strong style="color:var(--t3)">Métierscope</strong> (🔍) : tape ton métier → ouvre la fiche → télécharge-la → le code ROME est en haut (ex : M1801). Colle-le ici.</div>
-      </div>
-      <div class="fi">
-        <label>Codes NAF supplémentaires (optionnel)</label>
-        <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
-        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
-      </div>
-      <div class="fi">
-        <label>🔍 Moteur de recherche par défaut</label>
-        <select id="p_search_engine">
-          <option value="google">Google</option>
-          <option value="bing">Bing</option>
-          <option value="duckduckgo">DuckDuckGo</option>
-          <option value="qwant">Qwant 🇫🇷</option>
-          <option value="ecosia">Ecosia 🌱</option>
-          <option value="brave">Brave</option>
-        </select>
-      </div>
-      <div class="fi"><label>Début de stage</label><input id="p_debut" type="date" value="2026-06-05" /></div>
-      <div class="fi"><label>Fin de stage</label><input id="p_fin" type="date" value="2026-07-31" /></div>
-      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Localisation & candidature</div></div>
-      <div class="fi full"><label>📍 Adresse (pour le radar de distance)</label>
-        <div style="display:flex;gap:8px">
-          <div class="addr-wrap">
-            <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
-              oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" />
-            <div id="addr_dd" class="addr-dd"></div>
-          </div>
-          <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" style="flex-shrink:0">📡 GPS</button>
-        </div>
-        <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:4px"></div>
-      </div>
-      <div class="fi full"><label>Compétences (optionnel)</label>
-        <textarea id="p_comp" placeholder="Certifications, logiciels maîtrisés…"></textarea></div>
-      <div class="fi full"><label>Motivation (optionnel)</label>
-        <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
+    <!-- Stepper progress -->
+    <div class="step-progress" role="progressbar" aria-label="Étapes du profil" id="step-progress">
+      <div class="step-dot active" id="sdot-1"><div class="step-num" aria-current="step">1</div><div class="step-lbl">Identité</div></div>
+      <div class="step-dot" id="sdot-2"><div class="step-num">2</div><div class="step-lbl">Formation</div></div>
+      <div class="step-dot" id="sdot-3"><div class="step-num">3</div><div class="step-lbl">Localisation</div></div>
+      <div class="step-dot" id="sdot-4"><div class="step-num">4</div><div class="step-lbl">Compétences</div></div>
     </div>
-      <div class="fi full" style="border:1.5px solid rgba(29,110,245,.15);border-radius:var(--rl);padding:.75rem;font-size:.74rem;color:var(--t3);line-height:1.5;display:flex;align-items:center;gap:10px">
-        <span style="font-size:1.2rem">🎯</span>
-        <span>Les offres <strong style="color:var(--blue)">France Travail</strong> (stage, alternance, emploi) sont <strong>intégrées automatiquement</strong> dans le radar — aucune configuration requise.</span>
+
+    <!-- ─ STEP 1 : Identité ─ -->
+    <div class="step-page on" id="step-1">
+      <div class="fg">
+        <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+          <label for="cv_input" style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+            <label class="btn btn-primary btn-sm" style="cursor:pointer" aria-label="Choisir mon CV PDF ou TXT">
+              📎 Choisir mon CV (PDF ou TXT)
+              <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
+            </label>
+            <span id="cv_status" style="font-size:.76rem;color:var(--blue)" aria-live="polite">Aucun CV chargé</span>
+          </div>
+          <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
+          <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV peut remplir automatiquement le profil, la formation, l'adresse et les compétences.</div>
+        </div>
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Identité</div></div>
+        <div class="fi"><label for="p_prenom">Prénom *</label><input id="p_prenom" placeholder="Léa" autocomplete="given-name" /><div class="field-err" id="err_prenom">Prénom requis</div></div>
+        <div class="fi"><label for="p_nom">Nom *</label><input id="p_nom" placeholder="Martin" autocomplete="family-name" /><div class="field-err" id="err_nom">Nom requis</div></div>
+        <div class="fi"><label for="p_tel">Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" autocomplete="tel" /><div class="field-err" id="err_tel">Téléphone requis</div></div>
+        <div class="fi"><label for="p_email">Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" autocomplete="email" /><div class="field-err" id="err_email">Email requis</div></div>
+        <div class="fi full"><label for="p_etab">Organisme de formation</label>
+          <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, … (optionnel)" /></div>
       </div>
-    <div style="display:flex;justify-content:flex-end;margin-top:.75rem">
-      <button class="btn btn-primary btn-lg" onclick="saveProfile()">Sauvegarder & Lancer le Radar →</button>
+      <div class="step-nav">
+        <div></div>
+        <button class="btn btn-primary" onclick="goStep(2)">Suivant : Formation →</button>
+      </div>
+    </div>
+
+    <!-- ─ STEP 2 : Formation & Objectif ─ -->
+    <div class="step-page" id="step-2">
+      <div class="fg">
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
+        <div class="fi full"><label for="p_formation">Formation / Métier *</label>
+          <select id="p_formation" onchange="onFormationChange()">
+            <option value="">— Sélectionner une formation —</option>
+            <option value="TIP">💻 Technicien Informatique de Proximité (TIP)</option>
+            <option value="Compta">📊 Comptabilité / Gestion</option>
+            <option value="Mecanique">🔧 Mécanique automobile</option>
+            <option value="Secretariat">📝 Secrétariat / Assistanat</option>
+            <option value="Commerce">🛍️ Commerce / Vente</option>
+            <option value="Electro">⚡ Électrotechnique / Électricité</option>
+            <option value="BTP">🏗️ Bâtiment / BTP</option>
+            <option value="Restauration">🍽️ Restauration / Hôtellerie</option>
+            <option value="Social">❤️ Aide à la personne / Social</option>
+            <option value="Logistique">📦 Logistique / Transport</option>
+            <option value="Custom">✏️ Autre (personnalisé)</option>
+          </select>
+          <div class="field-err" id="err_formation">Formation requise</div>
+          <div id="formation_badge" class="formation-badge" style="display:none"></div>
+        </div>
+        <div class="fi full" id="custom_formation_wrap" style="display:none">
+          <label for="p_custom_formation">Nom exact de ta formation</label>
+          <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
+        </div>
+        <div class="fi full">
+          <label>Secteurs à scanner <span id="sector_count_lbl" style="font-size:.7rem;color:var(--t4);font-weight:400"></span></label>
+          <div style="font-size:.71rem;color:var(--t4);margin:.2rem 0 .5rem">Coche / décoche selon tes cibles — se synchro avec le radar</div>
+          <div id="sector_cats_grid" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+          <div style="margin-top:10px;font-size:.72rem;color:var(--t4);margin-bottom:4px">Secteur non listé ? Tape son nom :</div>
+          <div style="display:flex;gap:7px">
+            <input id="p_sector_input" placeholder="ex : Agroalimentaire, Aéronautique… + Entrée" aria-label="Ajouter un secteur personnalisé" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSector();}">
+            <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" aria-label="Ajouter ce secteur">+ Ajouter</button>
+          </div>
+          <div id="sector_tags" class="sector-tags" style="margin-top:6px"></div>
+        </div>
+        <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+          <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
+            <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
+            <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
+            <label class="mode-opt" id="mode_opt_alternance"><input type="radio" name="p_mode" value="alternance" onchange="onModeChange()"><span>🔄 Alternance</span></label>
+            <label class="mode-opt" id="mode_opt_emploi"><input type="radio" name="p_mode" value="emploi" onchange="onModeChange()"><span>💼 Emploi CDI/CDD</span></label>
+          </div>
+          <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
+        </div>
+        <div class="fi"><label for="p_debut">Début de stage / contrat</label><input id="p_debut" type="date" value="2026-06-05" /></div>
+        <div class="fi"><label for="p_fin">Fin de stage / contrat</label><input id="p_fin" type="date" value="2026-07-31" /></div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Précédent</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Suivant : Localisation →</button>
+      </div>
+    </div>
+
+    <!-- ─ STEP 3 : Localisation & Paramètres ─ -->
+    <div class="step-page" id="step-3">
+      <div class="fg">
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Localisation</div></div>
+        <div class="fi full"><label for="p_addr">📍 Adresse (pour le radar de distance)</label>
+          <div style="display:flex;gap:8px">
+            <div class="addr-wrap">
+              <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
+                oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" aria-label="Adresse pour le radar" aria-autocomplete="list" aria-controls="addr_dd" />
+              <div id="addr_dd" class="addr-dd" role="listbox" aria-label="Suggestions d'adresse"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" aria-label="Utiliser ma position GPS" style="flex-shrink:0">📡 GPS</button>
+          </div>
+          <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:4px" aria-live="polite"></div>
+        </div>
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
+        <div class="fi">
+          <label for="p_rome_codes" style="display:flex;align-items:center;gap:6px">Codes ROME (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" aria-label="Chercher sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
+          <input id="p_rome_codes" placeholder="ex : M1801, M1802, K1302" title="Codes ROME pour cibler les offres France Travail, LBA et Immersion">
+          <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sur <strong style="color:var(--t3)">Métierscope</strong> (🔍) : tape ton métier → ouvre la fiche → télécharge-la → le code ROME est en haut (ex : M1801). Colle-le ici.</div>
+        </div>
+        <div class="fi">
+          <label for="p_naf_codes">Codes NAF supplémentaires (optionnel)</label>
+          <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
+          <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
+        </div>
+        <div class="fi">
+          <label for="p_search_engine">Moteur de recherche par défaut</label>
+          <select id="p_search_engine">
+            <option value="google">Google</option>
+            <option value="bing">Bing</option>
+            <option value="duckduckgo">DuckDuckGo</option>
+            <option value="qwant">Qwant 🇫🇷</option>
+            <option value="ecosia">Ecosia 🌱</option>
+            <option value="brave">Brave</option>
+          </select>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Précédent</button>
+        <button class="btn btn-primary" onclick="goStep(4)">Suivant : Compétences →</button>
+      </div>
+    </div>
+
+    <!-- ─ STEP 4 : Compétences & Motivation ─ -->
+    <div class="step-page" id="step-4">
+      <div class="fg">
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Compétences & motivation</div></div>
+        <div class="fi full"><label for="p_comp">Compétences (optionnel)</label>
+          <textarea id="p_comp" placeholder="Certifications, logiciels maîtrisés…"></textarea></div>
+        <div class="fi full"><label for="p_motiv">Motivation (optionnel)</label>
+          <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
+        <div class="fi full" style="border:1.5px solid rgba(29,110,245,.15);border-radius:var(--rl);padding:.75rem;font-size:.74rem;color:var(--t3);line-height:1.5;display:flex;align-items:center;gap:10px">
+          <span style="font-size:1.2rem">🎯</span>
+          <span>Les offres <strong style="color:var(--blue)">France Travail</strong> (stage, alternance, emploi) sont <strong>intégrées automatiquement</strong> dans le radar — aucune configuration requise.</span>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" onclick="goStep(3)">← Précédent</button>
+        <button class="btn btn-primary btn-lg" onclick="saveProfile()" id="btn-save-profile">💾 Sauvegarder & Lancer le Radar →</button>
+      </div>
     </div>
   </div>
 </div>
@@ -415,8 +462,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
           oninput="document.getElementById('r_km_val').textContent=this.value+' km'" style="flex:1;padding:0" />
         <span id="r_km_val" style="font-size:.875rem;font-weight:700;color:var(--blue);min-width:44px">30 km</span>
       </div>
-      <button class="btn btn-primary" onclick="launchRadar()" id="radar-btn">🔍 Scanner</button>
-      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV</button>
+      <button class="btn btn-primary" onclick="launchRadar()" id="radar-btn" aria-label="Lancer le scan radar">🔍 Scanner</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()" aria-label="Exporter les résultats en CSV">📥 CSV</button>
     </div>
     <div class="cat-grid" id="cat-grid"></div>
   </div>
@@ -433,7 +480,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <option value="">Tous les types</option>
       </select>
     </div>
-    <div class="clist" id="r_list"></div>
+    <div class="clist" id="r_list" aria-live="polite" aria-label="Résultats du radar"></div>
   </div>
 </div>
 
@@ -445,7 +492,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <div style="font-size:.78rem;color:var(--t3)" id="suivi-sub">Glisse les cartes ou clique pour changer de colonne.</div>
     </div>
     <div style="display:flex;gap:6px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📥 CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()" aria-label="Exporter le suivi en CSV">📥 CSV</button>
       <button class="btn btn-ghost btn-sm" onclick="goTab('email')" id="btn-write-email">✉️ Rédiger un email</button>
     </div>
   </div>
@@ -472,9 +519,9 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <div class="fi">
         <label>Variante</label>
         <div style="display:flex;gap:6px">
-          <button class="btn btn-ghost btn-sm" onclick="prevVar()">◀</button>
+          <button class="btn btn-ghost btn-sm" onclick="prevVar()" aria-label="Variante précédente">◀</button>
           <span id="e_var_lbl" style="font-size:.8rem;color:var(--t3);padding:5px 0;flex:1;text-align:center">1/1</span>
-          <button class="btn btn-ghost btn-sm" onclick="nextVar()">▶</button>
+          <button class="btn btn-ghost btn-sm" onclick="nextVar()" aria-label="Variante suivante">▶</button>
         </div>
       </div>
       <div class="fi full" id="e_contact_wrap" style="display:none">
@@ -487,9 +534,9 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   <div class="ep" id="ep" style="min-height:200px"></div>
   <div style="display:flex;gap:8px;margin-top:.875rem;flex-wrap:wrap">
     <button class="btn btn-teal" onclick="copyEmail()" id="copy-btn">📋 Copier</button>
-    <button class="btn btn-ghost btn-sm" id="e_li_btn" style="display:none" onclick="openLinkedIn()">🔍 Trouver le contact LinkedIn</button>
+    <button class="btn btn-ghost btn-sm" id="e_li_btn" style="display:none" onclick="openLinkedIn()" aria-label="Chercher le contact sur LinkedIn">🔍 Trouver le contact LinkedIn</button>
     <button class="btn btn-green btn-sm" onclick="markEmailSent()" id="mark-sent-btn">✅ Marquer envoyé</button>
-    <button class="btn btn-ghost btn-sm" onclick="window.print()">🖨</button>
+    <button class="btn btn-ghost btn-sm" onclick="window.print()" aria-label="Imprimer l'email">🖨</button>
   </div>
   <div class="tipsbox">
     <div class="tipsbox-title">📌 Mode d'emploi</div>
@@ -1442,7 +1489,7 @@ async function launchRadar(){
   const rm=rKm*1000;
   const btn=document.getElementById('radar-btn');btn.disabled=true;btn.textContent='⏳ Scan…';
   const banner=document.getElementById('radar-banner');banner.style.display='flex';
-  const msg=t=>document.getElementById('radar-msg').textContent=t;
+  const msg=t=>{const el=document.getElementById('radar-msg');if(el)el.innerHTML=t;};
   msg('📍 Scan depuis : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
 
   // Reset — filtrer les pré-chargées selon la formation active
@@ -1499,6 +1546,7 @@ async function launchRadar(){
       const k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
       if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push({...c,disc:true});}
     });
+    msg('Scan en cours… <span class="scan-count">'+radarResults.length+' structures</span> trouvées');
   });
 
   // Compute distances & filter by radius
@@ -1682,6 +1730,78 @@ function cpEmail(btn){
 
 
 function ini(n){return(n||'?').split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 6b — STEPPER & UX
+// ════════════════════════════════════════════════════════════
+let currentStep=1;
+
+function goStep(n){
+  if(n>currentStep&&!validateStep(currentStep))return;
+  currentStep=n;
+  [1,2,3,4].forEach(function(i){
+    var p=document.getElementById('step-'+i);
+    if(p)p.classList.toggle('on',i===n);
+    var d=document.getElementById('sdot-'+i);
+    if(d){d.classList.toggle('active',i===n);d.classList.toggle('done',i<n);}
+    var num=d&&d.querySelector('.step-num');
+    if(num)num.setAttribute('aria-current',i===n?'step':'false');
+  });
+  document.querySelector('.card') && document.querySelector('#page-profil .card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function validateStep(n){
+  var ok=true;
+  var rules={
+    1:[{id:'p_prenom',err:'err_prenom'},{id:'p_nom',err:'err_nom'},{id:'p_tel',err:'err_tel'},{id:'p_email',err:'err_email'}],
+    2:[{id:'p_formation',err:'err_formation'}],
+    3:[],4:[]
+  };
+  (rules[n]||[]).forEach(function(r){
+    var el=document.getElementById(r.id);
+    var err=document.getElementById(r.err);
+    var fi=el&&el.closest('.fi');
+    var empty=!el||!el.value.trim();
+    if(err)err.style.display=empty?'block':'none';
+    if(fi)fi.classList.toggle('has-err',empty);
+    if(empty)ok=false;
+  });
+  if(!ok)toast('Remplis les champs obligatoires avant de continuer.','warn');
+  return ok;
+}
+
+// First-time banner
+function initFirstBanner(){
+  if(!localStorage.getItem('stagios_welcomed')){
+    var b=document.getElementById('first-banner');
+    if(b)b.style.display='flex';
+  }
+}
+function dismissFirstBanner(){
+  localStorage.setItem('stagios_welcomed','1');
+  var b=document.getElementById('first-banner');
+  if(b){b.style.opacity='0';b.style.transition='opacity .3s';setTimeout(function(){b.style.display='none';},300);}
+}
+
+// Confirmation modal
+function confirmModal(title,body,labelOk,onConfirm){
+  var ov=document.createElement('div');
+  ov.className='modal-overlay';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-labelledby','modal-title');
+  ov.innerHTML='<div class="modal-box"><div class="modal-title" id="modal-title">'+escH(title)+'</div><div class="modal-body">'+escH(body)+'</div><div class="modal-actions"><button class="btn btn-ghost btn-sm" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Annuler">Annuler</button><button class="btn" style="background:var(--red);color:#fff;border-color:var(--red)" id="modal-ok">'+escH(labelOk)+'</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#modal-ok').onclick=function(){ov.remove();onConfirm();};
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+}
+
+// Button loading state
+function setLoading(btn,loading,label){
+  if(!btn)return;
+  if(loading){btn.disabled=true;btn._orig=btn.innerHTML;btn.innerHTML='<span class="spin" style="display:inline-block;margin-right:6px"></span>'+(label||'Chargement…');}
+  else{btn.disabled=false;if(btn._orig!==undefined)btn.innerHTML=btn._orig;}
+}
 
 // ════════════════════════════════════════════════════════════
 // SECTION 7 — MODULE CRM & KANBAN
@@ -2154,7 +2274,18 @@ function fillProfileForm(){
   restore();
   buildCatGrid();
   renderSectorCatsGrid();
+  initFirstBanner();
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
+  // Enter key advances stepper (not on textareas or last step)
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter')return;
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='textarea'||tag==='select'||tag==='button')return;
+    var inStep=e.target.closest('.step-page');
+    if(!inStep)return;
+    var stepN=parseInt(inStep.id.replace('step-',''));
+    if(stepN<4){e.preventDefault();goStep(stepN+1);}
+  });
 })();
 </script>
 </body>
