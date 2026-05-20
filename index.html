@@ -219,9 +219,36 @@ code{background:var(--bg3);padding:2px 6px;border-radius:6px;font-size:.79rem;co
 .tipsbox-title{font-size:.82rem;font-weight:700;color:var(--t2);margin-bottom:.5rem;font-family:var(--ff-h)}
 .tipsbox ol{padding-left:1.2rem;font-size:.8rem;color:var(--t3);line-height:1.95}
 select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
+/* ── STEPPER ──────────────────────────────────────── */
+.step-progress{display:flex;align-items:center;margin-bottom:1.5rem;padding:0 4px}
+.step-dot{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative}
+.step-dot::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:2px;background:var(--brd2);z-index:0}
+.step-dot:last-child::after{display:none}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;font-family:var(--ff-h);position:relative;z-index:1;border:2px solid var(--brd2);background:var(--bg2);color:var(--t4);transition:all .25s}
+.step-lbl{font-size:.63rem;font-weight:600;color:var(--t4);font-family:var(--ff-h);white-space:nowrap;transition:color .25s}
+.step-dot.done .step-num{background:var(--green);border-color:var(--green);color:#fff}
+.step-dot.done::after{background:var(--green)}
+.step-dot.active .step-num{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:var(--primary-glow)}
+.step-dot.active .step-lbl{color:var(--primary);font-weight:700}
+.step-page{display:none}
+.step-page.on{display:block}
+.step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--brd)}
+.field-err{font-size:.7rem;color:var(--red);margin-top:3px;display:none}
+.fi.has-err input,.fi.has-err select{border-color:var(--red)!important}
+/* ── FIRST-TIME BANNER ─────────────────────────────── */
+.first-banner{background:var(--amber-l);border:1.5px solid rgba(255,159,10,.40);border-radius:var(--rl);padding:.8rem 1.1rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px;font-size:.78rem;color:var(--t2);line-height:1.5}
+.first-banner-close{margin-left:auto;flex-shrink:0;background:transparent;border:1px solid rgba(255,159,10,.5);color:var(--amber);padding:4px 12px;border-radius:20px;cursor:pointer;font-size:.72rem;font-weight:600;font-family:var(--ff-h);white-space:nowrap}
+/* ── MODAL ─────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-box{background:var(--card);border:1.5px solid var(--brd2);border-radius:var(--rl);padding:1.5rem;max-width:420px;width:100%;box-shadow:var(--shadow2)}
+.modal-title{font-size:.95rem;font-weight:700;color:var(--t1);font-family:var(--ff-h);margin-bottom:.6rem}
+.modal-body{font-size:.82rem;color:var(--t3);line-height:1.65;margin-bottom:1.25rem}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+/* ── SCAN PROGRESS ─────────────────────────────────── */
+.scan-count{font-weight:700;color:var(--primary);margin-left:4px}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
-@media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}}
-@media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(140px,1fr))}.tab{padding:7px 10px;font-size:.68rem;gap:4px}}
+@media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}.btn{min-height:44px}.btn-sm{min-height:40px;padding:8px 12px}.step-lbl{display:none}}
+@media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(130px,1fr))}.tab{padding:7px 10px;font-size:.68rem;gap:4px}.step-lbl{display:none}}
 
 /* ── TOASTS ──────────────────────────────────────────── */
 #toast-container{position:fixed;bottom:88px;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;align-items:flex-end}
@@ -238,9 +265,9 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 <header class="hdr">
   <div class="logo"><div class="logo-sq" id="logo-sq">🎯</div><span id="logo-text">Stagios – Radar & CRM</span></div>
   <div class="hdr-r">
-    <button class="tbtn" onclick="exportJSON()" title="Sauvegarder ma progression">💾 Sauvegarder</button>
-    <label class="tbtn" title="Charger une sauvegarde" style="cursor:pointer">📂 Charger<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
-    <button class="tbtn" onclick="toggleTheme()" id="tbtn">🌙</button>
+    <button class="tbtn" onclick="exportJSON()" title="Exporter mes données" aria-label="Exporter mes données en JSON">💾 Exporter</button>
+    <label class="tbtn" title="Importer une sauvegarde" style="cursor:pointer" aria-label="Importer une sauvegarde JSON">📂 Importer<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
+    <button class="tbtn" onclick="toggleTheme()" id="tbtn" aria-label="Basculer le thème clair/sombre">🌙</button>
   </div>
 </header>
 
