@@ -547,11 +547,11 @@ const VERSION='4.0';
 const KM_STEP=5;
 const RADIUS_DEFAULT=30;
 
-// ─── France Travail API ───────────────────────────────────────────────────────
-// Inscris l'app sur francetravail.io/partenaire, récupère Client ID + Secret,
-// colle-les ici. Tous les étudiants bénéficient des offres sans configuration.
-const FT_CLIENT_ID     = '__FT_CLIENT_ID__';
-const FT_CLIENT_SECRET = '__FT_CLIENT_SECRET__';
+// ─── France Travail API — proxy Cloudflare Worker ────────────────────────────
+// URL du Worker déployé sur Cloudflare (cf cf-worker/). Injectée au build via
+// le GitHub Secret FT_PROXY_URL. Les credentials restent côté Worker, jamais
+// dans le navigateur.
+const FT_PROXY_URL = '__FT_PROXY_URL__';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FORMATION_CONFIG={
@@ -1115,19 +1115,16 @@ const NAF2T={
 function updateFTStatus(state){
   const chip=document.getElementById('ft-status-chip');
   if(!chip)return;
-  const hasCreds=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'));
+  const hasProxy=(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__'));
   if(state==='ok'){
-    chip.style.display='';
     chip.style.cssText='display:inline-flex;background:rgba(34,197,94,.13);border-color:var(--green);color:var(--green)';
-    chip.textContent='\u2705 Offres France Travail disponibles';
+    chip.textContent='✅ Offres France Travail disponibles';
   }else if(state==='error'){
-    chip.style.display='';
     chip.style.cssText='display:inline-flex;background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171';
-    chip.textContent='\u26a0\ufe0f Service France Travail temporairement indisponible';
-  }else if(hasCreds){
-    chip.style.display='';
+    chip.textContent='⚠️ Service France Travail indisponible — vérifie la configuration du Worker';
+  }else if(hasProxy){
     chip.style.cssText='display:inline-flex;background:rgba(108,99,255,.12);border-color:var(--blue);color:var(--blue)';
-    chip.textContent='\U0001f535 Connexion France Travail pr\u00eate\u2026';
+    chip.textContent='🔵 France Travail prêt — lance un scan pour activer';
   }else{
     chip.style.display='none';
   }
@@ -1138,30 +1135,20 @@ async function getFTToken(){
   const _exp=parseInt(sessionStorage.getItem('_ft_tok_exp')||'0');
   if(_cached&&Date.now()<_exp)return _cached;
 
-  const _id=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))?FT_CLIENT_ID:'';
-  const _sec=(FT_CLIENT_SECRET&&!FT_CLIENT_SECRET.startsWith('__'))?FT_CLIENT_SECRET:'';
-  if(!_id||!_sec){updateFTStatus('error');return null;}
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){updateFTStatus(null);return null;}
 
-  const _tokenUrl='https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire';
-  const _body='grant_type=client_credentials&client_id='+encodeURIComponent(_id)+'&client_secret='+encodeURIComponent(_sec)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre');
-
-  // Try direct first, CORS proxy as fallback
-  const _urls=[_tokenUrl,'https://corsproxy.io/?'+encodeURIComponent(_tokenUrl)];
-  for(let i=0;i<_urls.length;i++){
-    try{
-      const _r=await fetch(_urls[i],{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:_body});
-      if(!_r.ok){updateFTStatus('error');return null;}
-      const _d=await _r.json();
-      sessionStorage.setItem('_ft_tok',_d.access_token);
-      sessionStorage.setItem('_ft_tok_exp',String(Date.now()+(_d.expires_in-60)*1000));
-      updateFTStatus('ok');
-      return _d.access_token;
-    }catch(e){
-      if(i<_urls.length-1)continue;
-      updateFTStatus('error');return null;
-    }
+  try{
+    const _r=await fetch(FT_PROXY_URL,{method:'POST'});
+    if(!_r.ok){updateFTStatus('error');return null;}
+    const _d=await _r.json();
+    if(!_d.access_token){updateFTStatus('error');return null;}
+    sessionStorage.setItem('_ft_tok',_d.access_token);
+    sessionStorage.setItem('_ft_tok_exp',String(Date.now()+(_d.expires_in-60)*1000));
+    updateFTStatus('ok');
+    return _d.access_token;
+  }catch(e){
+    updateFTStatus('error');return null;
   }
-  return null;
 }
 
 async function fetchFranceTravail(lat,lng,rKm){

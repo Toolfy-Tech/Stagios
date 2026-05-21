@@ -25,13 +25,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Injecter les credentials France Travail
+      - name: Injecter l'URL du Worker France Travail
         env:
-          FT_ID: ${{ secrets.FT_CLIENT_ID }}
-          FT_SEC: ${{ secrets.FT_CLIENT_SECRET }}
+          FT_PROXY: ${{ secrets.FT_PROXY_URL }}
         run: |
-          sed -i "s|__FT_CLIENT_ID__|${FT_ID}|g" index.html
-          sed -i "s|__FT_CLIENT_SECRET__|${FT_SEC}|g" index.html
+          sed -i "s|__FT_PROXY_URL__|${FT_PROXY}|g" index.html
 
       - name: Configurer GitHub Pages
         uses: actions/configure-pages@v4
