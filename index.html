@@ -246,11 +246,6 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
 .ft-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:.75rem;border:1px solid;cursor:pointer;transition:opacity .2s;margin-bottom:.75rem;user-select:none}
 .ft-chip:hover{opacity:.8}
-.ft-modal-wide{max-width:500px}
-.ft-field-row{position:relative}
-.ft-field-row input{padding-right:38px}
-.ft-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--t3);font-size:.9rem;padding:2px}
-.ft-result{font-size:.78rem;min-height:1.2rem;margin-top:.5rem;font-weight:500}
 /* ── SCAN PROGRESS ─────────────────────────────────── */
 .scan-count{font-weight:700;color:var(--primary);margin-left:4px}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
@@ -446,7 +441,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   <div class="card" style="margin-bottom:1rem">
     <div class="ct">🎯 Radar géographique</div>
     <div class="cs">Trouve les offres France Travail (stage, alternance, emploi) dans un rayon ajustable, classées de la plus proche à la plus éloignée.</div>
-    <div id="ft-status-chip" class="ft-chip" onclick="openFTModal()" role="button" aria-label="Configurer France Travail" style="background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171">🔴 France Travail non configuré — <u>⚙️ Configurer</u></div>
+    <div id="ft-status-chip" class="ft-chip" style="display:none"></div>
     <div class="radar-controls">
       <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
         <span style="font-size:.8rem;color:var(--t3);white-space:nowrap">Rayon :</span>
@@ -1118,108 +1113,55 @@ const NAF2T={
 };
 
 function updateFTStatus(state){
-  // state: 'ok' | 'error' | 'unconfigured' | null (= has creds, untested)
   const chip=document.getElementById('ft-status-chip');
   if(!chip)return;
-  const hasCreds=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))||!!(S&&S.ftClientId);
+  const hasCreds=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'));
   if(state==='ok'){
-    chip.style.cssText='background:rgba(34,197,94,.13);border-color:var(--green);color:var(--green)';
-    chip.innerHTML='✅ France Travail connecté <span style="opacity:.6;font-size:.7rem;margin-left:4px">· <u onclick="openFTModal()">modifier</u></span>';
+    chip.style.display='';
+    chip.style.cssText='display:inline-flex;background:rgba(34,197,94,.13);border-color:var(--green);color:var(--green)';
+    chip.textContent='\u2705 Offres France Travail disponibles';
   }else if(state==='error'){
-    chip.style.cssText='background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171';
-    chip.innerHTML='❌ Authentification échouée — <u onclick="openFTModal()">⚙️ Vérifier les identifiants</u>';
+    chip.style.display='';
+    chip.style.cssText='display:inline-flex;background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171';
+    chip.textContent='\u26a0\ufe0f Service France Travail temporairement indisponible';
   }else if(hasCreds){
-    chip.style.cssText='background:rgba(108,99,255,.12);border-color:var(--blue);color:var(--blue)';
-    chip.innerHTML='🔵 France Travail configuré <span style="opacity:.6;font-size:.7rem;margin-left:4px">· <u onclick="openFTModal()">modifier</u></span>';
+    chip.style.display='';
+    chip.style.cssText='display:inline-flex;background:rgba(108,99,255,.12);border-color:var(--blue);color:var(--blue)';
+    chip.textContent='\U0001f535 Connexion France Travail pr\u00eate\u2026';
   }else{
-    chip.style.cssText='background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171';
-    chip.innerHTML='🔴 France Travail non configuré — <u onclick="openFTModal()">⚙️ Configurer</u>';
+    chip.style.display='none';
   }
 }
 
 async function getFTToken(){
-  // sessionStorage cache (survives radar calls, cleared on tab close)
   const _cached=sessionStorage.getItem('_ft_tok');
   const _exp=parseInt(sessionStorage.getItem('_ft_tok_exp')||'0');
   if(_cached&&Date.now()<_exp)return _cached;
 
-  const _id=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))?FT_CLIENT_ID:(S&&S.ftClientId||'');
-  const _sec=(FT_CLIENT_SECRET&&!FT_CLIENT_SECRET.startsWith('__'))?FT_CLIENT_SECRET:(S&&S.ftClientSecret||'');
-  if(!_id||!_sec){updateFTStatus('unconfigured');return null;}
+  const _id=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))?FT_CLIENT_ID:'';
+  const _sec=(FT_CLIENT_SECRET&&!FT_CLIENT_SECRET.startsWith('__'))?FT_CLIENT_SECRET:'';
+  if(!_id||!_sec){updateFTStatus('error');return null;}
 
   const _tokenUrl='https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire';
   const _body='grant_type=client_credentials&client_id='+encodeURIComponent(_id)+'&client_secret='+encodeURIComponent(_sec)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre');
 
-  // Try direct first (works if FT endpoint has CORS), then CORS proxy fallback
+  // Try direct first, CORS proxy as fallback
   const _urls=[_tokenUrl,'https://corsproxy.io/?'+encodeURIComponent(_tokenUrl)];
   for(let i=0;i<_urls.length;i++){
     try{
       const _r=await fetch(_urls[i],{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:_body});
-      if(!_r.ok){
-        toast('France Travail : authentification échouée ('+_r.status+') — vérifie tes identifiants.','warn');
-        updateFTStatus('error');return null;
-      }
+      if(!_r.ok){updateFTStatus('error');return null;}
       const _d=await _r.json();
       sessionStorage.setItem('_ft_tok',_d.access_token);
       sessionStorage.setItem('_ft_tok_exp',String(Date.now()+(_d.expires_in-60)*1000));
       updateFTStatus('ok');
       return _d.access_token;
     }catch(e){
-      if(i<_urls.length-1)continue; // CORS blocked → try proxy
-      toast('France Travail inaccessible (réseau ou CORS) — les offres FT sont désactivées.','warn');
+      if(i<_urls.length-1)continue;
       updateFTStatus('error');return null;
     }
   }
   return null;
-}
-
-function openFTModal(){
-  const m=document.getElementById('ft-modal');if(!m)return;
-  document.getElementById('ft-m-id').value=(S&&S.ftClientId)||'';
-  document.getElementById('ft-m-sec').value=(S&&S.ftClientSecret)||'';
-  document.getElementById('ft-m-result').textContent='';
-  m.style.display='flex';
-  setTimeout(()=>document.getElementById('ft-m-id').focus(),50);
-}
-function closeFTModal(){
-  const m=document.getElementById('ft-modal');if(m)m.style.display='none';
-}
-function toggleFTSecret(){
-  const f=document.getElementById('ft-m-sec');
-  f.type=f.type==='password'?'text':'password';
-}
-async function testFTConn(){
-  const _id=document.getElementById('ft-m-id').value.trim();
-  const _sec=document.getElementById('ft-m-sec').value.trim();
-  const res=document.getElementById('ft-m-result');
-  if(!_id||!_sec){res.style.color='#fbbf24';res.textContent='⚠️ Remplis les deux champs.';return;}
-  const btn=document.getElementById('ft-m-test');
-  btn.disabled=true;btn.textContent='Test en cours…';
-  res.style.color='var(--t3)';res.textContent='Connexion…';
-  const _tokenUrl='https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=%2Fpartenaire';
-  const _body='grant_type=client_credentials&client_id='+encodeURIComponent(_id)+'&client_secret='+encodeURIComponent(_sec)+'&scope='+encodeURIComponent('api_offresdemploiv2 o2dsoffre');
-  const _urls=[_tokenUrl,'https://corsproxy.io/?'+encodeURIComponent(_tokenUrl)];
-  let ok=false,errMsg='';
-  for(let i=0;i<_urls.length;i++){
-    try{
-      const _r=await fetch(_urls[i],{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:_body});
-      if(_r.ok){const _d=await _r.json();if(_d.access_token){ok=true;break;}}
-      else{errMsg='Erreur '+_r.status+' — vérifie ton Client ID / Secret.';break;}
-    }catch(e){if(i<_urls.length-1)continue;errMsg='Réseau inaccessible (CORS bloqué).';}
-  }
-  if(ok){res.style.color='var(--green)';res.textContent='✅ Connexion réussie ! Tu peux enregistrer.';}
-  else{res.style.color='#f87171';res.textContent='❌ '+errMsg;}
-  btn.disabled=false;btn.textContent='🔌 Tester la connexion';
-}
-function saveFTCreds(){
-  const _id=document.getElementById('ft-m-id').value.trim();
-  const _sec=document.getElementById('ft-m-sec').value.trim();
-  S.ftClientId=_id;S.ftClientSecret=_sec;
-  sessionStorage.removeItem('_ft_tok');sessionStorage.removeItem('_ft_tok_exp');
-  persist();
-  updateFTStatus(null);
-  closeFTModal();
-  toast('Identifiants France Travail enregistrés ✓','ok');
 }
 
 async function fetchFranceTravail(lat,lng,rKm){
@@ -1307,12 +1249,7 @@ async function launchRadar(){
   msg('📍 Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
   radarResults=[];
 
-  const hasFT=(FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))||(S&&S.ftClientId);
-  if(!hasFT){
-    banner.style.display='none';btn.disabled=false;btn.innerHTML='🔍 Scanner';radarRunning=false;
-    toast('Configure d\'abord tes identifiants France Travail.','warn');
-    openFTModal();return;
-  }
+  
   msg('🔍 France Travail — recherche en cours…');
   const ftResults=await fetchFranceTravail(coords.lat,coords.lng,rKm);
   radarResults=ftResults;
@@ -2025,38 +1962,5 @@ function fillProfileForm(){
 })();
 </script>
 
-<!-- ══ MODALE CONFIGURATION FRANCE TRAVAIL ══════════════════ -->
-<div id="ft-modal" class="modal-overlay" style="display:none;z-index:9999" role="dialog" aria-modal="true" aria-labelledby="ft-modal-title" onclick="if(event.target===this)closeFTModal()">
-  <div class="modal-box ft-modal-wide">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.9rem">
-      <div class="modal-title" id="ft-modal-title" style="margin:0">⚙️ Configuration France Travail</div>
-      <button onclick="closeFTModal()" style="background:none;border:none;cursor:pointer;font-size:1.2rem;color:var(--t3)" aria-label="Fermer">×</button>
-    </div>
-    <div style="font-size:.78rem;color:var(--t3);line-height:1.7;margin-bottom:1rem;padding:.65rem .75rem;background:var(--bg2);border-radius:var(--r);border:1px solid var(--brd)">
-      <strong style="color:var(--t2)">Comment obtenir tes identifiants ?</strong><br>
-      1. Va sur <a href="https://francetravail.io/produits-et-services/catalogue" target="_blank" rel="noopener" style="color:var(--blue)">francetravail.io → Catalogue</a><br>
-      2. Souscris à l'API <em>Offres d'emploi v2</em><br>
-      3. Dans ton espace → Applications → copie le <strong>Client ID</strong> et le <strong>Client Secret</strong><br>
-      <span style="color:#fbbf24">⚠️ Stockés uniquement sur cet appareil (localStorage). Token gardé en sessionStorage — effacé à la fermeture de l'onglet.</span>
-    </div>
-    <div style="margin-bottom:.85rem">
-      <label style="font-size:.78rem;color:var(--t3);display:block;margin-bottom:.3rem">Client ID <span style="color:var(--red)">*</span></label>
-      <input id="ft-m-id" type="text" placeholder="PAR_xxxxxxxxxxxxx" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box" />
-    </div>
-    <div style="margin-bottom:.85rem">
-      <label style="font-size:.78rem;color:var(--t3);display:block;margin-bottom:.3rem">Client Secret <span style="color:var(--red)">*</span></label>
-      <div class="ft-field-row">
-        <input id="ft-m-sec" type="password" placeholder="••••••••••••••••••••" autocomplete="off" spellcheck="false" style="width:100%;box-sizing:border-box" />
-        <button class="ft-eye" onclick="toggleFTSecret()" id="ft-eye-btn" aria-label="Afficher/masquer le secret" title="Afficher/masquer">👁</button>
-      </div>
-    </div>
-    <div class="ft-result" id="ft-m-result"></div>
-    <div class="modal-actions" style="margin-top:.9rem">
-      <button class="btn btn-ghost btn-sm" id="ft-m-test" onclick="testFTConn()">🔌 Tester la connexion</button>
-      <button class="btn btn-ghost btn-sm" onclick="closeFTModal()">Annuler</button>
-      <button class="btn btn-primary btn-sm" onclick="saveFTCreds()">💾 Enregistrer</button>
-    </div>
-  </div>
-</div>
 </body>
 </html>
