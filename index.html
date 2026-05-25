@@ -443,6 +443,9 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     <div class="ct">🎯 Radar géographique</div>
     <div class="cs">Trouve les offres France Travail (stage, alternance, emploi) dans un rayon ajustable, classées de la plus proche à la plus éloignée.</div>
     <div id="ft-status-chip" class="ft-chip" style="display:none"></div>
+    <div id="no-coords-banner" style="display:none;padding:10px 14px;border-radius:var(--r);background:rgba(251,191,36,.1);border:1px solid #ca8a04;color:#fbbf24;font-size:.8rem;margin-bottom:.75rem">
+      📍 <strong>Adresse manquante</strong> — Va dans <button onclick="goTab('profil')" class="btn btn-ghost btn-sm" style="padding:1px 8px;font-size:.75rem;margin:0 2px">Profil</button> et saisis ton adresse, puis sélectionne une suggestion dans la liste ou clique sur 📡 GPS.
+    </div>
     <div class="radar-controls">
       <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
         <span style="font-size:.8rem;color:var(--t3);white-space:nowrap">Rayon :</span>
@@ -1047,6 +1050,7 @@ function selectAddr(i){
   _lastAddrForCoords=inp.value;
   closeDD();
   document.getElementById('geo_st').textContent='✅ Position confirmée — '+inp.value.split(',').slice(0,2).join(',');
+  updateCoordsWarning();
 }
 function closeDD(){const dd=document.getElementById('addr_dd');if(dd)dd.style.display='none';_addrFocus=-1;}
 function onAddrKey(e){
@@ -1068,6 +1072,7 @@ async function gpsLocate(){
     document.getElementById('p_addr').value=gpsLabel;
     _lastAddrForCoords=gpsLabel;
     st.textContent='✅ Position GPS détectée';
+    updateCoordsWarning();
   },()=>st.textContent='⚠️ GPS refusé — saisis ton adresse');
 }
 
@@ -1112,6 +1117,12 @@ const NAF2T={
   '8610Z':'Santé','8621Z':'Santé','8622A':'Santé','8622B':'Santé','8622C':'Santé',
   '5813Z':'Médias','6020Z':'Médias','6010Z':'Médias','7311Z':'Médias',
 };
+
+function updateCoordsWarning(){
+  const b=document.getElementById('no-coords-banner');
+  if(!b)return;
+  b.style.display=coords?'none':'block';
+}
 
 function updateFTStatus(state){
   const chip=document.getElementById('ft-status-chip');
@@ -1872,7 +1883,7 @@ async function saveProfile(){
         document.getElementById('geo_st').textContent='✅ Adresse géocodée : '+(_gf.properties.label||'').split(',').slice(0,2).join(',');
         const _comm=await getCommuneFromCoords(coords.lat,coords.lng);
         if(_comm){S.communeInsee=_comm.code;S.communeNom=_comm.nom;persist();}
-        showPbar();
+        showPbar();updateCoordsWarning();
       }
     }catch(_ge){
       document.getElementById('geo_st').textContent='⚠️ Géocodage échoué. Sélectionne une suggestion dans la liste ou utilise le GPS.';
@@ -1937,6 +1948,7 @@ function fillProfileForm(){
   initFirstBanner();
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
   updateFTStatus(null);
+  updateCoordsWarning();
   // Enter key advances stepper (not on textareas or last step)
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter')return;
