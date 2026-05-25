@@ -1374,7 +1374,7 @@ function renderRadar(){
       +'<div style="font-size:2rem;margin-bottom:.5rem">🔍</div>'
       +'<div style="font-weight:700;margin-bottom:.35rem">Lance le radar pour découvrir des structures</div>'
       +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Remplis ton profil avec une adresse, puis clique sur <strong>Scanner</strong></div>'
-      +'<button class="btn btn-primary" onclick="goTab('profil')">Compléter mon profil →</button>'
+      +'<button class="btn btn-primary" onclick="goTab(\'profil\')">Compléter mon profil →</button>'
       +'</div>'+blSection;
     return;
   }
@@ -1384,13 +1384,13 @@ function renderRadar(){
         +'<div style="font-size:1.5rem;margin-bottom:.5rem">🔎</div>'
         +'<div style="font-weight:700;margin-bottom:.35rem">Aucun résultat pour ces filtres</div>'
         +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">'+(tf?'Type : <strong>'+tf+'</strong>  ':'')+( q?'Recherche : <strong>'+q+'</strong>':'')+'</div>'
-        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById('r_srch').value='';document.getElementById('r_type').value='';renderRadar()">Effacer les filtres</button>'
+        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'r_srch\').value=\'\';document.getElementById(\'r_type\').value=\'\';renderRadar()">Effacer les filtres</button>'
         +'</div>'
       :'<div class="empty" style="padding:2rem 1rem;text-align:center">'
         +'<div style="font-size:1.5rem;margin-bottom:.5rem">📫</div>'
         +'<div style="font-weight:700;margin-bottom:.35rem">Aucune structure dans cette zone</div>'
         +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Essaie d\'augmenter le rayon de recherche</div>'
-        +'<button class="btn btn-ghost btn-sm" onclick="goTab('profil')">Modifier le profil</button>'
+        +'<button class="btn btn-ghost btn-sm" onclick="goTab(\'profil\')">Modifier le profil</button>'
         +'</div>';
     document.getElementById('r_list').innerHTML=_msg+blSection;
     return;
