@@ -1138,7 +1138,8 @@ function updateFTStatus(state){
     chip.style.cssText='display:inline-flex;background:rgba(108,99,255,.12);border-color:var(--blue);color:var(--blue)';
     chip.textContent='🔵 France Travail prêt — lance un scan pour activer';
   }else{
-    chip.style.display='none';
+    chip.style.cssText='display:inline-flex;background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171';
+    chip.textContent='⚙️ Worker France Travail non configuré — vérifie le secret GitHub FT_PROXY_URL';
   }
 }
 
@@ -1147,7 +1148,9 @@ async function getFTToken(){
   const _exp=parseInt(sessionStorage.getItem('_ft_tok_exp')||'0');
   if(_cached&&Date.now()<_exp)return _cached;
 
-  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){updateFTStatus(null);return null;}
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){
+    updateFTStatus('unconfigured');return null;
+  }
 
   try{
     const _r=await fetch(FT_PROXY_URL,{method:'POST'});
@@ -1237,9 +1240,8 @@ function rebuildTypeFilter(){
 }
 
 async function launchRadar(){
-  console.log('[Stagios] launchRadar called — coords:', coords, '| radarRunning:', radarRunning, '| FT_PROXY_URL:', FT_PROXY_URL);
   if(!coords){toast("Définis d'abord ton adresse dans l'onglet Profil et sélectionne une suggestion.",'warn');return;}
-  if(radarRunning){console.warn('[Stagios] launchRadar blocked: radarRunning=true');return;}
+  if(radarRunning)return;
   radarRunning=true;
   const rKm=parseInt(document.getElementById('r_km').value);
   const btn=document.getElementById('radar-btn');
@@ -1251,8 +1253,12 @@ async function launchRadar(){
   msg('📍 Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
   radarResults=[];
   try{
-    msg('🔍 France Travail — recherche en cours…');
+    msg('🔍 France Travail — connexion au Worker…');
     const ftResults=await fetchFranceTravail(coords.lat,coords.lng,rKm);
+    if(!FT_PROXY_URL||!FT_PROXY_URL.startsWith('http')){
+      msg('⚙️ Worker non configuré — ajoute le secret <strong>FT_PROXY_URL</strong> dans GitHub');
+      return;
+    }
     radarResults=ftResults;
     msg('✅ <span class="scan-count">'+radarResults.length+'</span> offre'+(radarResults.length>1?'s':'')+' France Travail trouvée'+(radarResults.length>1?'s':''));
     radarResults=radarResults
@@ -1943,7 +1949,6 @@ function fillProfileForm(){
 (function(){
   const t=localStorage.getItem('tip_theme')||(window.matchMedia?.('(prefers-color-scheme:dark)').matches?'dark':'light');
   applyTheme(t);
-  console.log('[Stagios] init start — v3b72672');
   onModeChange();
   loadBlacklist();
   restore();
@@ -1951,7 +1956,6 @@ function fillProfileForm(){
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
   updateFTStatus(null);
   updateCoordsWarning();
-  console.log('[Stagios] init done — coords:', coords, '| S.prenom:', S&&S.prenom, '| FT_PROXY_URL:', FT_PROXY_URL);
   // Enter key advances stepper (not on textareas or last step)
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter')return;
