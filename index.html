@@ -1230,30 +1230,30 @@ async function launchRadar(){
   radarRunning=true;
   const rKm=parseInt(document.getElementById('r_km').value);
   const btn=document.getElementById('radar-btn');
-  btn.disabled=true;btn.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle;margin-right:6px"></span>Scan…';
-  const banner=document.getElementById('radar-banner');banner.style.display='flex';
+  const banner=document.getElementById('radar-banner');
   const msg=t=>{const el=document.getElementById('radar-msg');if(el)el.innerHTML=t;};
+  const reset=()=>{radarRunning=false;btn.disabled=false;btn.innerHTML='🔍 Scanner';banner.style.display='none';};
+  btn.disabled=true;btn.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle;margin-right:6px"></span>Scan…';
+  banner.style.display='flex';
   msg('📍 Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
   radarResults=[];
-
-  
-  msg('🔍 France Travail — recherche en cours…');
-  const ftResults=await fetchFranceTravail(coords.lat,coords.lng,rKm);
-  radarResults=ftResults;
-  msg('✅ <span class="scan-count">'+radarResults.length+'</span> offre'+(radarResults.length>1?'s':'')+' France Travail trouvée'+(radarResults.length>1?'s':''));
-
-  radarResults=radarResults
-    .map(c=>({...c,_dist:dist(c)}))
-    .filter(c=>c._dist===null||c._dist<=rKm)
-    .sort((a,b)=>(a._dist??999)-(b._dist??999));
-
-  updateBadges();
-  rebuildTypeFilter();
-  renderRadar();
-  banner.style.display='none';
-  btn.disabled=false;btn.innerHTML='🔍 Scanner';
-  radarRunning=false;
-  persist();
+  try{
+    msg('🔍 France Travail — recherche en cours…');
+    const ftResults=await fetchFranceTravail(coords.lat,coords.lng,rKm);
+    radarResults=ftResults;
+    msg('✅ <span class="scan-count">'+radarResults.length+'</span> offre'+(radarResults.length>1?'s':'')+' France Travail trouvée'+(radarResults.length>1?'s':''));
+    radarResults=radarResults
+      .map(c=>({...c,_dist:dist(c)}))
+      .filter(c=>c._dist===null||c._dist<=rKm)
+      .sort((a,b)=>(a._dist??999)-(b._dist??999));
+    updateBadges();rebuildTypeFilter();renderRadar();
+    persist();
+  }catch(err){
+    console.error('launchRadar error:', err);
+    toast('Erreur inattendue lors du scan — consulte la console (F12).','warn');
+  }finally{
+    reset();
+  }
 }
 
 function renderRadar(){
