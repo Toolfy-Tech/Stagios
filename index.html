@@ -393,8 +393,11 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
         <div class="fi">
           <label for="p_rome_codes" style="display:flex;align-items:center;gap:6px">Codes ROME (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" aria-label="Chercher sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
-          <input id="p_rome_codes" placeholder="ex : M1801, M1802, K1302" title="Codes ROME pour cibler les offres France Travail, LBA et Immersion">
-          <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sur <strong style="color:var(--t3)">Métierscope</strong> (🔍) : tape ton métier → ouvre la fiche → télécharge-la → le code ROME est en haut (ex : M1801). Colle-le ici.</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="p_rome_codes" placeholder="ex : M1801, M1802, K1302" title="Codes ROME pour cibler les offres France Travail, LBA et Immersion" style="flex:1">
+            <button class="btn btn-ghost btn-sm" id="romeo-btn" onclick="lookupRomeo()" title="Trouver automatiquement les codes ROME via l'IA France Travail" style="flex-shrink:0;white-space:nowrap">🤖 Auto</button>
+          </div>
+          <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Clique <strong style="color:var(--t3)">🤖 Auto</strong> pour trouver les codes ROME automatiquement selon ta formation, ou renseigne-les manuellement.</div>
         </div>
         <div class="fi">
           <label for="p_search_engine">Moteur de recherche par défaut</label>
@@ -563,7 +566,7 @@ const FORMATION_CONFIG={
   TIP:{label:'Technicien Informatique de Proximité (TIP)',emoji:'💻',
     diploma:'Titre Professionnel TIP',
     sectors:['ESN','Public','Education','Lycées','Santé','Industrie','Banque','Asso'],
-    romeCodes:['M1801','M1802','M1803'],
+    romeCodes:['M1802','M1801','M1805'],
     skills:'support utilisateur N1/N2, helpdesk, déploiement Windows 10/11, Active Directory, GLPI, réseau TCP/IP/DNS/DHCP'},
   Compta:{label:'Comptabilité / Gestion',emoji:'📊',
     diploma:'Titre Professionnel / BTS Comptabilité-Gestion',
@@ -1230,6 +1233,66 @@ async function fetchFranceTravail(lat,lng,rKm){
   }catch(e){return[];}
 }
 
+async function fetchLaBonneBoite(lat,lng,rKm){
+  const token=await getFTToken();
+  if(!token)return[];
+  const _fc=FORMATION_CONFIG[S.formation]||{};
+  const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+  const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,5).join(',');
+  if(!_romes)return[];
+  try{
+    const r=await fetch('https://api.francetravail.io/partenaire/labonneboite/v1/company/?'+
+      new URLSearchParams({rome_codes:_romes,latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),from:'0',size:'100'}),
+      {headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
+    if(!r.ok)return[];
+    const data=await r.json();
+    return(data.companies||[]).map(c=>({
+      id:'lbb_'+(c.siret||_hid((c.name||'')+(c.city||''))),
+      n:c.name||'',
+      t:NAF2T[(c.naf||'').replace(/\./g,'')]||(_fc.sectors&&_fc.sectors[0])||'PME',
+      v:c.city||'',
+      d:(c.naf_text||'')+(c.headcount_text?' · '+c.headcount_text:''),
+      e:c.email||'',
+      web:c.website||c.url||'',
+      lat:parseFloat(c.lat)||lat,
+      lng:parseFloat(c.lon)||lng,
+      src:'La Bonne Boite',
+      hasOffer:false,
+      lbb:true,
+      lbbStars:parseFloat(c.stars)||0,
+      cat:'entreprise',
+    }));
+  }catch(e){return[];}
+}
+
+async function lookupRomeo(){
+  const btn=document.getElementById('romeo-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  const token=await getFTToken();
+  if(!token){toast('Connexion France Travail requise','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+  const fc=FORMATION_CONFIG[S.formation]||{};
+  const query=(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value:null)||fc.label||'';
+  if(!query){toast('Sélectionne d\'abord ta formation','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+  try{
+    const r=await fetch('https://api.francetravail.io/partenaire/romeo/v2/',{
+      method:'POST',
+      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
+      body:JSON.stringify({intitule:query,contexte:'',nb:5})
+    });
+    if(!r.ok){toast('Service ROMEO indisponible ('+r.status+')','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+    const data=await r.json();
+    const resultats=data.resultats||data.results||[];
+    const codes=resultats.slice(0,5).map(x=>x.codeRome||x.codeROME||x.code||'').filter(Boolean);
+    if(!codes.length){toast('Aucun code ROME trouvé pour "'+query+'"','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+    document.getElementById('p_rome_codes').value=codes.join(', ');
+    toast('Codes ROME : '+codes.join(', '),'ok');
+  }catch(e){
+    toast('Erreur ROMEO','warn');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}
+  }
+}
+
 // ════════════════════════════════════════════════════════════
 // SECTION 6 — MODULE RADAR
 // ════════════════════════════════════════════════════════════
@@ -1256,19 +1319,34 @@ async function launchRadar(){
   banner.style.display='flex';
   msg('📍 Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
   radarResults=[];
+  if(!FT_PROXY_URL||!FT_PROXY_URL.startsWith('http')){
+    msg('⚙️ Worker non configuré — ajoute le secret <strong>FT_PROXY_URL</strong> dans GitHub');
+    reset();return;
+  }
+  const mode=getMode();
   try{
-    msg('🔍 France Travail — connexion au Worker…');
-    const ftResults=await fetchFranceTravail(coords.lat,coords.lng,rKm);
-    if(!FT_PROXY_URL||!FT_PROXY_URL.startsWith('http')){
-      msg('⚙️ Worker non configuré — ajoute le secret <strong>FT_PROXY_URL</strong> dans GitHub');
-      return;
+    let ftResults=[];
+    let lbbResults=[];
+    if(mode==='stage_nr'){
+      msg('🏢 La Bonne Boite — recherche d\'entreprises dans ton secteur…');
+      lbbResults=await fetchLaBonneBoite(coords.lat,coords.lng,rKm);
+    } else {
+      msg('🔍 Recherche des offres et entreprises en cours…');
+      [ftResults,lbbResults]=await Promise.all([
+        fetchFranceTravail(coords.lat,coords.lng,rKm),
+        fetchLaBonneBoite(coords.lat,coords.lng,rKm),
+      ]);
     }
-    radarResults=ftResults;
-    msg('✅ <span class="scan-count">'+radarResults.length+'</span> offre'+(radarResults.length>1?'s':'')+' France Travail trouvée'+(radarResults.length>1?'s':''));
+    ftResults=ftResults.map(c=>({...c,cat:'offre'}));
+    lbbResults=lbbResults.map(c=>({...c,cat:'entreprise'}));
+    radarResults=[...ftResults,...lbbResults];
     radarResults=radarResults
       .map(c=>({...c,_dist:dist(c)}))
       .filter(c=>c._dist===null||c._dist<=rKm)
       .sort((a,b)=>(a._dist??999)-(b._dist??999));
+    const nO=radarResults.filter(c=>c.cat==='offre').length;
+    const nE=radarResults.filter(c=>c.cat==='entreprise').length;
+    msg('✅ '+(nO?'<strong>'+nO+'</strong> offre'+(nO>1?'s':''):'')+(nO&&nE?' · ':'')+(nE?'<strong>'+nE+'</strong> entreprise'+(nE>1?'s':''):''));
     updateBadges();rebuildTypeFilter();renderRadar();
     persist();
   }catch(err){
@@ -1282,65 +1360,66 @@ async function launchRadar(){
 function renderRadar(){
   const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
   const tf=document.getElementById('r_type')?.value||'';
-  let fl=radarResults.filter(c=>
-    !_blacklist.has(c.id)&&
+  const all=radarResults.filter(c=>!_blacklist.has(c.id));
+  let fl=all.filter(c=>
     (!tf||c.t===tf)&&
     (!q||(c.n||'').toLowerCase().includes(q)||(c.t||'').toLowerCase().includes(q)||(c.v||'').toLowerCase().includes(q))
   );
+  const blCount=radarResults.filter(c=>_blacklist.has(c.id)).length;
+  const blSection=blCount>0
+    ?'<div style="margin-top:1rem;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between"><span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount+' structure'+(blCount>1?'s':'')+' masquée'+(blCount>1?'s':'')+'</span><button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button></div>'
+    :'';
+  if(!radarResults.length){
+    document.getElementById('r_list').innerHTML='<div class="empty" style="padding:2.5rem 1rem;text-align:center">'
+      +'<div style="font-size:2rem;margin-bottom:.5rem">🔍</div>'
+      +'<div style="font-weight:700;margin-bottom:.35rem">Lance le radar pour découvrir des structures</div>'
+      +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Remplis ton profil avec une adresse, puis clique sur <strong>Scanner</strong></div>'
+      +'<button class="btn btn-primary" onclick="goTab('profil')">Compléter mon profil →</button>'
+      +'</div>'+blSection;
+    return;
+  }
   if(!fl.length){
-    var blCount0=radarResults.filter(function(c){return _blacklist.has(c.id);}).length;
-    var _emptyMsg='';
-    if(!radarResults.length){
-      _emptyMsg='<div class="empty" style="padding:2.5rem 1rem;text-align:center">'
-        +'<div style="font-size:2rem;margin-bottom:.5rem">🔍</div>'
-        +'<div style="font-weight:700;margin-bottom:.35rem">Lance le radar pour découvrir des structures</div>'
-        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Remplis ton profil avec une adresse, puis clique sur <strong>Scanner</strong></div>'
-        +'<button class="btn btn-primary" onclick="goTab(\'profil\')">Compléter mon profil →</button>'
-        +'</div>';
-    } else if(tf||q){
-      _emptyMsg='<div class="empty" style="padding:2rem 1rem;text-align:center">'
+    var _msg=tf||q
+      ?'<div class="empty" style="padding:2rem 1rem;text-align:center">'
         +'<div style="font-size:1.5rem;margin-bottom:.5rem">🔎</div>'
         +'<div style="font-weight:700;margin-bottom:.35rem">Aucun résultat pour ces filtres</div>'
         +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">'+(tf?'Type : <strong>'+tf+'</strong>  ':'')+( q?'Recherche : <strong>'+q+'</strong>':'')+'</div>'
-        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'r_srch\').value=\'\';document.getElementById(\'r_type\').value=\'\';renderRadar()">Effacer les filtres</button>'
-        +'</div>';
-    } else {
-      _emptyMsg='<div class="empty" style="padding:2rem 1rem;text-align:center">'
-        +'<div style="font-size:1.5rem;margin-bottom:.5rem">📭</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById('r_srch').value='';document.getElementById('r_type').value='';renderRadar()">Effacer les filtres</button>'
+        +'</div>'
+      :'<div class="empty" style="padding:2rem 1rem;text-align:center">'
+        +'<div style="font-size:1.5rem;margin-bottom:.5rem">📫</div>'
         +'<div style="font-weight:700;margin-bottom:.35rem">Aucune structure dans cette zone</div>'
-        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Essaie d\'augmenter le rayon de recherche ou de changer d\'adresse</div>'
-        +'<button class="btn btn-ghost btn-sm" onclick="goTab(\'profil\')">Modifier le profil</button>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Essaie d\'augmenter le rayon de recherche</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="goTab('profil')">Modifier le profil</button>'
         +'</div>';
-    }
-    if(blCount0>0)_emptyMsg+='<div style="margin:.5rem 0 0;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between"><span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount0+' structure'+(blCount0>1?'s':'')+' masquée'+(blCount0>1?'s':'')+'</span><button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button></div>';
-    document.getElementById('r_list').innerHTML=_emptyMsg;return;
+    document.getElementById('r_list').innerHTML=_msg+blSection;
+    return;
   }
-
-  // Group by distance tier
   const tiers=[
-    {max:5,ico:'🏠',lbl:'Très proches',cls:'t1'},
-    {max:15,ico:'🚶',lbl:'Proches (5–15 km)',cls:'t2'},
-    {max:30,ico:'🚌',lbl:'Accessibles (15–30 km)',cls:'t3'},
-    {max:50,ico:'🚗',lbl:'Envisageables (30–50 km)',cls:'t4'},
-    {max:9999,ico:'📍',lbl:'Plus loin',cls:'t4'},
+    {max:5,  ico:'🏠',lbl:'Très proches',   cls:'t1'},
+    {max:15, ico:'🚶',lbl:'Proches (5–15 km)', cls:'t2'},
+    {max:30, ico:'🚌',lbl:'Accessibles (15–30 km)',cls:'t3'},
+    {max:50, ico:'🚗',lbl:'Envisageables (30–50 km)',cls:'t4'},
+    {max:9999,ico:'📍',lbl:'Plus loin',      cls:'t4'},
   ];
-  let h='';
-  tiers.forEach((tier,ti)=>{
-    const prev=tiers[ti-1]?.max??0;
-    const grp=fl.filter(c=>{const d=c._dist??9999;return d<tier.max&&d>=prev;});
-    if(!grp.length)return;
-    h+=`<div class="sdiv-dist ${tier.cls}">${tier.ico} ${tier.lbl} — ${grp.length} structure${grp.length>1?'s':''}</div>`;
-    h+=grp.map(radarCard).join('');
-  });
-  // Ajouter section masqués si besoin
-  var blCount=radarResults.filter(function(c){return _blacklist.has(c.id);}).length;
-  if(blCount>0){
-    h+='<div style="margin-top:1rem;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between">'+
-      '<span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount+' structure'+(blCount>1?'s':'')+' masquée'+(blCount>1?'s':'')+'</span>'+
-      '<button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button>'+
-    '</div>';
+  function renderSection(items,title,color){
+    if(!items.length)return'';
+    let h='<div style="margin:1.1rem 0 .4rem;padding:.45rem .75rem;border-radius:var(--r);background:var(--bg2);border-left:3px solid '+color+';font-weight:700;font-size:.85rem;color:var(--t1)">'+title+' <span style="font-weight:400;color:var(--t3);font-size:.78rem">('+items.length+')</span></div>';
+    tiers.forEach((tier,ti)=>{
+      const prev=tiers[ti-1]?.max??0;
+      const grp=items.filter(c=>{const d=c._dist??9999;return d<tier.max&&d>=prev;});
+      if(!grp.length)return;
+      h+='<div class="sdiv-dist '+tier.cls+'">'+tier.ico+' '+tier.lbl+' — '+grp.length+' structure'+(grp.length>1?'s':'')+'</div>';
+      h+=grp.map(radarCard).join('');
+    });
+    return h;
   }
-  document.getElementById('r_list').innerHTML=h;
+  const offres=fl.filter(c=>c.cat==='offre'||(c.hasOffer&&c.ft));
+  const entreprises=fl.filter(c=>!(c.cat==='offre'||(c.hasOffer&&c.ft)));
+  let h='';
+  if(offres.length)h+=renderSection(offres,'📋 Offres d\'emploi','var(--blue)');
+  if(entreprises.length)h+=renderSection(entreprises,'🏢 Entreprises à contacter','var(--green)');
+  document.getElementById('r_list').innerHTML=h+blSection;
 }
 
 function escA(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;');}
@@ -1356,6 +1435,11 @@ function radarCard(c){
   if(c.ft){
     var _ftLabel='France Travail'+(c.contractType?' · '+c.contractType:'')+(c.altOffer?' · Alternance':'');
     badges+='<span class="ft-badge">🎯 '+escH(_ftLabel)+'</span>';
+  }
+  if(c.lbb){
+    var _stars=c.lbbStars||0;
+    var _starStr=_stars>=2.5?'⭐⭐⭐':_stars>=1.5?'⭐⭐':_stars>=0.5?'⭐':'';
+    badges+='<span style="background:rgba(34,197,94,.12);color:#16a34a;border:1px solid rgba(34,197,94,.3);padding:1px 7px;border-radius:20px;font-size:.7rem;white-space:nowrap">🏢 La Bonne Boite'+(_starStr?' '+_starStr:'')+'</span>';
   }
 
   // Bouton email ou site
