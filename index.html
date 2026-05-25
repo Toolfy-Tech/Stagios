@@ -1237,8 +1237,9 @@ function rebuildTypeFilter(){
 }
 
 async function launchRadar(){
+  console.log('[Stagios] launchRadar called — coords:', coords, '| radarRunning:', radarRunning, '| FT_PROXY_URL:', FT_PROXY_URL);
   if(!coords){toast("Définis d'abord ton adresse dans l'onglet Profil et sélectionne une suggestion.",'warn');return;}
-  if(radarRunning)return;
+  if(radarRunning){console.warn('[Stagios] launchRadar blocked: radarRunning=true');return;}
   radarRunning=true;
   const rKm=parseInt(document.getElementById('r_km').value);
   const btn=document.getElementById('radar-btn');
@@ -1942,6 +1943,7 @@ function fillProfileForm(){
 (function(){
   const t=localStorage.getItem('tip_theme')||(window.matchMedia?.('(prefers-color-scheme:dark)').matches?'dark':'light');
   applyTheme(t);
+  console.log('[Stagios] init start — v3b72672');
   onModeChange();
   loadBlacklist();
   restore();
@@ -1949,6 +1951,7 @@ function fillProfileForm(){
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
   updateFTStatus(null);
   updateCoordsWarning();
+  console.log('[Stagios] init done — coords:', coords, '| S.prenom:', S&&S.prenom, '| FT_PROXY_URL:', FT_PROXY_URL);
   // Enter key advances stepper (not on textareas or last step)
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter')return;
