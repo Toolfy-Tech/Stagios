@@ -2,7 +2,7 @@ const TOKEN_ENDPOINT = 'https://entreprise.francetravail.fr/connexion/oauth2/acc
 const API_BASE       = 'https://api.francetravail.io';
 
 // Try full scope (including LBB v2) first; fall back to minimal if LBB not authorized
-const SCOPE_FULL = 'api_offresdemploiv2 o2dsoffre api_labonneboitev2 labonneboiteio api_romeov2 nomenclatureRome';
+const SCOPE_FULL = 'api_offresdemploiv2 o2dsoffre api_labonneboitev2 labonneboiteio api_romeov2';
 const SCOPE_MIN  = 'api_offresdemploiv2 o2dsoffre';
 
 const CORS = {
