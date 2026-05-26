@@ -1337,18 +1337,12 @@ async function launchRadar(){
   }
   const mode=getMode();
   try{
-    let ftResults=[];
-    let lbbResults=[];
-    if(mode==='stage_nr'){
-      msg('🏢 La Bonne Boite — recherche d\'entreprises dans ton secteur…');
-      lbbResults=await fetchLaBonneBoite(coords.lat,coords.lng,rKm);
-    } else {
-      msg('🔍 Recherche des offres et entreprises en cours…');
-      [ftResults,lbbResults]=await Promise.all([
-        fetchFranceTravail(coords.lat,coords.lng,rKm),
-        fetchLaBonneBoite(coords.lat,coords.lng,rKm),
-      ]);
-    }
+    msg('🔍 Recherche des offres en cours…');
+    // FT offres toujours appelé (La Bonne Boite en bonus optionnel si scope dispo)
+    const [ftResults,lbbResults]=await Promise.all([
+      fetchFranceTravail(coords.lat,coords.lng,rKm),
+      fetchLaBonneBoite(coords.lat,coords.lng,rKm).catch(()=>[]),
+    ]);
     ftResults=ftResults.map(c=>({...c,cat:'offre'}));
     lbbResults=lbbResults.map(c=>({...c,cat:'entreprise'}));
     radarResults=[...ftResults,...lbbResults];
