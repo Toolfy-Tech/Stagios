@@ -1352,38 +1352,25 @@ async function fetchLaBonneBoite(lat,lng,rKm){
   const _fc=FORMATION_CONFIG[S.formation]||{};
   const _romeRe=/^[A-Z]\d{4}$/;
   const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
-  const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,3);
+  const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,5);
   if(!_romes.length)return[];
   try{
-    const _geoR=await fetch(`https://geo.api.gouv.fr/communes?lat=${lat}&lon=${lng}&fields=code&limit=1`);
-    const _geoD=await _geoR.json();
-    const _citycode=_geoD[0]?.code;
-    if(!_citycode)return[];
-    const _results=[];
-    for(const rome of _romes){
-      const _p=new URLSearchParams({citycode:_citycode,rome,page:'1',page_size:'50'});
-      const data=await ftProxy('/partenaire/labonneboite/v2/recherche?'+_p);
-      if(!data||!data.items)continue;
-      data.items.forEach(c=>{
-        _results.push({
-          id:'lbb_'+(c.siret||c.company_name||Math.random()),
-          n:c.company_name||'',
-          t:(_fc.sectors&&_fc.sectors[0])||'PME',
-          v:c.city||'',
-          d:(c.naf_label||'')+(c.headcount_min!=null?' · '+c.headcount_min+'-'+c.headcount_max+' sal.':''),
-          e:'',web:'',
-          lat:parseFloat(c.location?.lat)||lat,
-          lng:parseFloat(c.location?.lon)||lng,
-          src:'La Bonne Boite',lbb:true,
-          lbbStars:parseFloat(c.hiring_potential)||0,
-        });
-      });
-    }
-    const _seen=new Set();
-    return _results.filter(c=>{
-      if(!c.n||_seen.has(c.id))return false;
-      _seen.add(c.id);return true;
-    });
+    const _p=new URLSearchParams({latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),page:'1',page_size:'100'});
+    _romes.forEach(r=>_p.append('rome',r));
+    const data=await ftProxy('/partenaire/labonneboite/v2/recherche?'+_p);
+    if(!data||!data.items)return[];
+    return data.items.map(c=>({
+      id:'lbb_'+(c.siret||c.company_name||Math.random()),
+      n:c.company_name||'',
+      t:(_fc.sectors&&_fc.sectors[0])||'PME',
+      v:c.city||'',
+      d:(c.naf_label||'')+(c.headcount_min!=null?' · '+c.headcount_min+'-'+c.headcount_max+' sal.':''),
+      e:'',web:'',
+      lat:parseFloat(c.location?.lat)||lat,
+      lng:parseFloat(c.location?.lon)||lng,
+      src:'La Bonne Boite',lbb:true,
+      lbbStars:parseFloat(c.hiring_potential)||0,
+    })).filter(c=>c.n);
   }catch(e){return[];}
 }
 
