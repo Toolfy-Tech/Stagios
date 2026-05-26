@@ -1,0 +1,6 @@
+name = "stagios-ft-proxy"
+main = "cf-worker/ft-proxy.js"
+compatibility_date = "2024-09-01"
+
+# Les secrets NE sont PAS dans ce fichier.
+# Configurés via : wrangler secret put FT_CLIENT_ID / FT_CLIENT_SECRET
