@@ -1257,8 +1257,12 @@ async function ftProxy(endpoint,method,body){
   if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))throw new Error('Proxy non configuré');
   const _url=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
   const r=await fetch(_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint,method:method||'GET',body:body||undefined})});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Proxy '+r.status+': '+(e.error||''));}
-  return r.json();
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){
+    console.error('[FT Proxy] '+r.status,endpoint,JSON.stringify(data));
+    throw new Error('Proxy '+r.status+': '+(data.message||data.error||data.error_description||JSON.stringify(data)));
+  }
+  return data;
 }
 
 async function getFTToken(){

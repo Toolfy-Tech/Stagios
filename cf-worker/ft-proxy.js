@@ -1,7 +1,6 @@
 const TOKEN_ENDPOINT = 'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire';
 const API_BASE       = 'https://api.francetravail.io';
 
-// Try full scope (including LBB v2) first; fall back to minimal if LBB not authorized
 const SCOPE_FULL = 'api_offresdemploiv2 o2dsoffre api_labonneboitev2 search office api_romeov2';
 const SCOPE_MIN  = 'api_offresdemploiv2 o2dsoffre';
 
@@ -20,6 +19,7 @@ function json(data, status = 200) {
 
 let _tok = null;
 let _tokExp = 0;
+let _tokScope = null;
 
 async function tryFetchToken(env, scope) {
   const body = new URLSearchParams({
@@ -40,16 +40,16 @@ async function tryFetchToken(env, scope) {
 }
 
 async function getToken(env) {
-  if (_tok && Date.now() < _tokExp) return { ok: true, token: _tok };
+  if (_tok && Date.now() < _tokExp) return { ok: true, token: _tok, scope: _tokScope };
 
-  // Try full scope first (LBB included), fall back to minimal so FT always works
   let lastErr = null;
   for (const scope of [SCOPE_FULL, SCOPE_MIN]) {
     const r = await tryFetchToken(env, scope);
     if (r.ok) {
-      _tok    = r.data.access_token;
-      _tokExp = Date.now() + (r.data.expires_in - 60) * 1000;
-      return { ok: true, token: _tok };
+      _tok      = r.data.access_token;
+      _tokExp   = Date.now() + (r.data.expires_in - 60) * 1000;
+      _tokScope = scope;
+      return { ok: true, token: _tok, scope: _tokScope };
     }
     lastErr = r;
   }
@@ -82,11 +82,14 @@ async function handleRequest(request, env) {
       headers: ftHeaders,
       body:    reqBody.body ? JSON.stringify(reqBody.body) : undefined,
     });
-    const data = await ftRes.json().catch(() => ({}));
+    const text = await ftRes.text();
+    let data = {};
+    try { data = JSON.parse(text); } catch (_) { data = { raw: text.slice(0, 1000) }; }
+    if (!ftRes.ok) data._scope = tok.scope;
     return json(data, ftRes.status);
   }
 
-  return json({ access_token: tok.token, expires_in: Math.round((_tokExp - Date.now()) / 1000) });
+  return json({ access_token: tok.token, expires_in: Math.round((_tokExp - Date.now()) / 1000), scope: tok.scope });
 }
 
 export default {
