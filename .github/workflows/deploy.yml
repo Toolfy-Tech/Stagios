@@ -6,20 +6,11 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
+  contents: write
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
 
     steps:
       - name: Checkout
@@ -35,14 +26,10 @@ jobs:
           sed -i "s|__FT_CLIENT_SECRET__|${FT_SEC}|g" index.html
           sed -i "s|__FT_PROXY_URL__|${FT_PROXY}|g" index.html
 
-      - name: Configurer GitHub Pages
-        uses: actions/configure-pages@v4
-
-      - name: Uploader les fichiers du site
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: '.'
-
       - name: Déployer sur GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./
+          publish_branch: gh-pages
+          exclude_assets: '.github,cf-worker,CONTEXT.md'
