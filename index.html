@@ -1273,7 +1273,6 @@ async function getFTToken(){
     updateFTStatus('unconfigured');return null;
   }
 
-  // Ajoute https:// si l'URL a été saisie sans protocole
   const _proxyUrl=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
 
   try{
@@ -1288,17 +1287,6 @@ async function getFTToken(){
   }catch(e){
     updateFTStatus('error');return null;
   }
-}
-
-async function ftProxy(endpoint,method,body){
-  const _url=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
-  const r=await fetch(_url,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({endpoint,method:method||'GET',body:body||undefined}),
-  });
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Proxy '+r.status+': '+(e.error||''));}
-  return r.json();
 }
 
 async function fetchFranceTravail(lat,lng,rKm){
