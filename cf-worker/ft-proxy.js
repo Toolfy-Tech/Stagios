@@ -72,6 +72,8 @@ async function handleRequest(request, env) {
   } catch (_) {}
 
   if (reqBody.endpoint) {
+    if (!reqBody.endpoint.startsWith('/partenaire/'))
+      return json({ error: 'Endpoint interdit' }, 403);
     const url = API_BASE + reqBody.endpoint;
     const ftHeaders = { Authorization: 'Bearer ' + tok.token, Accept: 'application/json' };
     if (reqBody.body) ftHeaders['Content-Type'] = 'application/json';

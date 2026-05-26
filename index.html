@@ -664,10 +664,7 @@ const KM_STEP=5;
 const RADIUS_DEFAULT=30;
 
 // ─── France Travail API ───────────────────────────────────────────────────────
-// Inscris l'app sur francetravail.io/partenaire, récupère Client ID + Secret,
-// colle-les ici. Tous les étudiants bénéficient des offres sans configuration.
-const FT_CLIENT_ID     = '__FT_CLIENT_ID__';
-const FT_CLIENT_SECRET = '__FT_CLIENT_SECRET__';
+// Proxy Cloudflare Worker — injecté au déploiement via GitHub Actions Secrets.
 const FT_PROXY_URL     = '__FT_PROXY_URL__';
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1463,7 +1460,7 @@ async function launchRadar(){
     msg('🔍 Immersion Facilitée (PMSMP)…');
     tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
   }
-  if((FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))||S.ftClientId){
+  if(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__')){
     msg('🔍 France Travail — offres réelles…');
     tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
   }
@@ -2190,10 +2187,6 @@ function fillProfileForm(){
     const modeEl=document.querySelector('input[name="p_mode"][value="'+S.mode+'"]');
     if(modeEl)modeEl.checked=true;
     onModeChange();
-  }
-  if(S.extraRomeCodes){
-    const romeEl=document.getElementById('p_rome_codes');
-    if(romeEl)romeEl.value=S.extraRomeCodes;
   }
   if(S.extraRomeCodes){
     const romeEl=document.getElementById('p_rome_codes');
