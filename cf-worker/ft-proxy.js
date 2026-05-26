@@ -1,6 +1,6 @@
 const TOKEN_ENDPOINT = 'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire';
 const API_BASE       = 'https://api.francetravail.io';
-const SCOPE          = 'api_offresdemploiv2 o2dsoffre';
+const SCOPE          = 'api_offresdemploiv2 o2dsoffre api_labonneboitev2';
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',

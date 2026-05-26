@@ -1263,7 +1263,7 @@ async function fetchLaBonneBoite(lat,lng,rKm){
   if(!_romes)return[];
   try{
     const _lbbParams=new URLSearchParams({rome_codes:_romes,latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),from:'0',size:'100'});
-    const data=await ftProxy('/partenaire/labonneboite/v1/company/?'+_lbbParams);
+    const data=await ftProxy('/partenaire/labonneboite/v2/company/?'+_lbbParams);
     return(data.companies||[]).map(c=>({
       id:'lbb_'+(c.siret||_hid((c.name||'')+(c.city||''))),
       n:c.name||'',
