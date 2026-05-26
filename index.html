@@ -325,6 +325,14 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
       </div>
       <div class="fi">
+        <label>Codes ROME supplémentaires (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
+        <div style="display:flex;gap:6px">
+          <input id="p_rome_codes" placeholder="ex : M1801, M1802" style="flex:1" title="Codes ROME pour La Bonne Boite et France Travail">
+          <button type="button" id="romeo-btn" onclick="lookupRomeo()" class="btn" style="padding:6px 10px;font-size:.75rem;white-space:nowrap" title="Détecter automatiquement les codes ROME via ROMEO v2">🤖 Auto</button>
+        </div>
+        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Codes ROME pour filtrer les offres France Travail et La Bonne Boite. 🤖 Auto les détecte depuis ta formation.</div>
+      </div>
+      <div class="fi">
         <label>🔍 Moteur de recherche par défaut</label>
         <select id="p_search_engine">
           <option value="google">Google</option>
@@ -483,6 +491,7 @@ const RADIUS_DEFAULT=30;
 // colle-les ici. Tous les étudiants bénéficient des offres sans configuration.
 const FT_CLIENT_ID     = '__FT_CLIENT_ID__';
 const FT_CLIENT_SECRET = '__FT_CLIENT_SECRET__';
+const FT_PROXY_URL     = '__FT_PROXY_URL__';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FORMATION_CONFIG={
@@ -1254,6 +1263,14 @@ async function fetchImmersion(lat,lng,rKm){
   }catch(ex){return[];}
 }
 
+async function ftProxy(endpoint,method,body){
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))throw new Error('Proxy non configuré');
+  const _url=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
+  const r=await fetch(_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint,method:method||'GET',body:body||undefined})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Proxy '+r.status+': '+(e.error||''));}
+  return r.json();
+}
+
 async function getFTToken(){
   if(_ftToken&&Date.now()<_ftTokenExpiry)return _ftToken;
   // Constantes globales (injectées par CI), sinon credentials du profil (legacy)
@@ -1279,7 +1296,9 @@ async function fetchFranceTravail(lat,lng,rKm){
   if(!token)return[];
   try{
     const _fcFT=FORMATION_CONFIG[S.formation]||{};
-    const _romes=(_fcFT.romeCodes||[]).slice(0,3).join(',');
+    const _romeReFT=/^[A-Z]\d{4}$/;
+    const _extraRFT=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeReFT.test(c));
+    const _romes=[...new Set([...(_fcFT.romeCodes||[]),..._extraRFT])].slice(0,5).join(',');
     const _dist=Math.min(rKm,35);
     const isAlt=(S.mode==='alternance');
     const isEmploi=(S.mode==='emploi');
@@ -1331,6 +1350,58 @@ async function fetchFranceTravail(lat,lng,rKm){
       };
     }).filter(Boolean)).filter(o=>o.n&&o.n.length>1);
   }catch(e){return[];}
+}
+
+async function fetchLaBonneBoite(lat,lng,rKm){
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))return[];
+  const _fc=FORMATION_CONFIG[S.formation]||{};
+  const _romeRe=/^[A-Z]\d{4}$/;
+  const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
+  const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,5).join(',');
+  if(!_romes)return[];
+  try{
+    const _p=new URLSearchParams({rome_codes:_romes,latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),from:'0',size:'100'});
+    const data=await ftProxy('/partenaire/labonneboite/v2/company/?'+_p);
+    if(!data||!data.companies)return[];
+    return data.companies.map(c=>({
+      id:'lbb_'+(c.siret||c.name||Math.random()),
+      n:c.name||'',
+      t:(_fc.sectors&&_fc.sectors[0])||'PME',
+      v:c.city||'',
+      d:(c.naf_text||'')+(c.headcount_text?' · '+c.headcount_text:''),
+      e:c.email||'',
+      web:c.website||c.url||'',
+      lat:parseFloat(c.lat)||lat,
+      lng:parseFloat(c.lon)||lng,
+      src:'La Bonne Boite',
+      lbb:true,
+      lbbStars:parseFloat(c.stars)||0,
+    })).filter(c=>c.n);
+  }catch(e){return[];}
+}
+
+async function lookupRomeo(){
+  const btn=document.getElementById('romeo-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){toast('Worker proxy non configuré','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+  const fc=FORMATION_CONFIG[S.formation]||{};
+  const query=fc.label||(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value:null)||'';
+  if(!query){toast('Sélectionne d\'abord ta formation','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+  try{
+    const data=await ftProxy('/partenaire/romeo/v2/','POST',[{intitule:query,identifiant:'1'}]);
+    const _romeo=Array.isArray(data)?data:[data];
+    const resultats=(_romeo[0]?.metiersRome||_romeo[0]?.resultats||data?.resultats||[]);
+    const codes=resultats.slice(0,5).map(x=>x.codeRome||x.codeROME||x.code||'').filter(Boolean);
+    if(!codes.length){toast('Aucun code ROME trouvé pour "'+query+'"','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+    const el=document.getElementById('p_rome_codes');
+    if(el)el.value=codes.join(', ');
+    S.extraRomeCodes=codes.join(', ');
+    toast('Codes ROME détectés : '+codes.join(', '),'ok');
+  }catch(e){
+    toast('Erreur ROMEO : '+e.message,'warn');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}
+  }
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1415,9 +1486,13 @@ async function launchRadar(){
     msg('🔍 Immersion Facilitée (PMSMP)…');
     tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
   }
-  if(FT_CLIENT_ID||S.ftClientId){
+  if((FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))||S.ftClientId){
     msg('🔍 France Travail — offres réelles…');
     tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
+  }
+  if(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__')){
+    msg('🔍 La Bonne Boite — entreprises à fort potentiel…');
+    tasks.push(fetchLaBonneBoite(coords.lat,coords.lng,rKm));
   }
 
   const all=await Promise.allSettled(tasks);
@@ -1975,6 +2050,7 @@ async function saveProfile(){
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
     mode:getMode(),
     extraNafCodes:f('p_naf_codes'),
+    extraRomeCodes:f('p_rome_codes'),
     cvText:_oldCvText,
     cvFileName:_oldCvFileName,
     customSectors:[..._customSectors],
@@ -2041,6 +2117,10 @@ function fillProfileForm(){
   if(S.extraNafCodes){
     const nafEl=document.getElementById('p_naf_codes');
     if(nafEl)nafEl.value=S.extraNafCodes;
+  }
+  if(S.extraRomeCodes){
+    const romeEl=document.getElementById('p_rome_codes');
+    if(romeEl)romeEl.value=S.extraRomeCodes;
   }
   if(S.cvFileName){
     const st=document.getElementById('cv_status');
