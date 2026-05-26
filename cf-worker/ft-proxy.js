@@ -1,6 +1,9 @@
 const TOKEN_ENDPOINT = 'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire';
 const API_BASE       = 'https://api.francetravail.io';
-const SCOPE          = 'api_offresdemploiv2 o2dsoffre api_labonneboitev2';
+
+// Try full scope (including LBB v2) first; fall back to minimal if LBB not authorized
+const SCOPE_FULL = 'api_offresdemploiv2 o2dsoffre api_labonneboitev2 labonneboiteio';
+const SCOPE_MIN  = 'api_offresdemploiv2 o2dsoffre';
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -18,13 +21,12 @@ function json(data, status = 200) {
 let _tok = null;
 let _tokExp = 0;
 
-async function getToken(env) {
-  if (_tok && Date.now() < _tokExp) return { ok: true, token: _tok };
+async function tryFetchToken(env, scope) {
   const body = new URLSearchParams({
     grant_type:    'client_credentials',
     client_id:     env.FT_CLIENT_ID,
     client_secret: env.FT_CLIENT_SECRET,
-    scope:         SCOPE,
+    scope:         scope,
   });
   const res = await fetch(TOKEN_ENDPOINT, {
     method:  'POST',
@@ -34,9 +36,24 @@ async function getToken(env) {
   const text = await res.text();
   if (!res.ok) return { ok: false, status: res.status, detail: text };
   const data = JSON.parse(text);
-  _tok    = data.access_token;
-  _tokExp = Date.now() + (data.expires_in - 60) * 1000;
-  return { ok: true, token: _tok };
+  return { ok: true, data };
+}
+
+async function getToken(env) {
+  if (_tok && Date.now() < _tokExp) return { ok: true, token: _tok };
+
+  // Try full scope first (LBB included), fall back to minimal so FT always works
+  let lastErr = null;
+  for (const scope of [SCOPE_FULL, SCOPE_MIN]) {
+    const r = await tryFetchToken(env, scope);
+    if (r.ok) {
+      _tok    = r.data.access_token;
+      _tokExp = Date.now() + (r.data.expires_in - 60) * 1000;
+      return { ok: true, token: _tok };
+    }
+    lastErr = r;
+  }
+  return { ok: false, status: lastErr?.status, detail: lastErr?.detail };
 }
 
 async function handleRequest(request, env) {

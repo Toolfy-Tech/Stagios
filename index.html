@@ -302,12 +302,111 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   </div>
   <div class="card">
     <div class="ct">👤 Mon profil</div>
-    <!-- Stepper progress -->
-    <div class="step-progress" role="progressbar" aria-label="Étapes du profil" id="step-progress">
-      <div class="step-dot active" id="sdot-1"><div class="step-num" aria-current="step">1</div><div class="step-lbl">Identité</div></div>
-      <div class="step-dot" id="sdot-2"><div class="step-num">2</div><div class="step-lbl">Formation</div></div>
-      <div class="step-dot" id="sdot-3"><div class="step-num">3</div><div class="step-lbl">Localisation</div></div>
-      <div class="step-dot" id="sdot-4"><div class="step-num">4</div><div class="step-lbl">Compétences</div></div>
+    <div class="cs" id="profil-cs">Ces informations personnalisent tes emails de candidature et activent le radar géographique. Commence par importer ton CV ou remplis les champs.</div>
+    <div class="fg">
+      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <label class="btn btn-primary btn-sm" style="cursor:pointer">
+            📎 Choisir mon CV (PDF ou TXT)
+            <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
+          </label>
+          <span id="cv_status" style="font-size:.76rem;color:var(--blue)">Aucun CV chargé</span>
+        </div>
+        <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
+        <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV peut remplir automatiquement le profil, la formation, l'adresse et les compétences.</div>
+      </div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Identité</div></div>
+      <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
+      <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
+      <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
+      <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
+      <div class="fi full"><label>Organisme de formation</label>
+        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, … (optionnel)" /></div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
+      <div class="fi full"><label>Formation / Métier *</label>
+        <select id="p_formation" onchange="onFormationChange()">
+          <option value="">— Sélectionner une formation —</option>
+          <option value="TIP">💻 Technicien Informatique de Proximité (TIP)</option>
+          <option value="Compta">📊 Comptabilité / Gestion</option>
+          <option value="Mecanique">🔧 Mécanique automobile</option>
+          <option value="Secretariat">📝 Secrétariat / Assistanat</option>
+          <option value="Commerce">🛍️ Commerce / Vente</option>
+          <option value="Electro">⚡ Électrotechnique / Électricité</option>
+          <option value="BTP">🏗️ Bâtiment / BTP</option>
+          <option value="Restauration">🍽️ Restauration / Hôtellerie</option>
+          <option value="Social">❤️ Aide à la personne / Social</option>
+          <option value="Logistique">📦 Logistique / Transport</option>
+          <option value="Custom">✏️ Autre (personnalisé)</option>
+        </select>
+        <div id="formation_badge" class="formation-badge" style="display:none"></div>
+      </div>
+      <div class="fi full" id="custom_formation_wrap" style="display:none">
+        <label>Nom exact de ta formation</label>
+        <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
+      </div>
+      <div class="fi full">
+        <label>Secteurs supplémentaires à cibler (optionnel)</label>
+        <div id="sector_tags" class="sector-tags"></div>
+        <div style="display:flex;gap:7px">
+          <input id="p_sector_input" placeholder="ex : Agroalimentaire, Aéronautique… + Entrée" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSector();}">
+          <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" style="flex-shrink:0">+ Ajouter</button>
+        </div>
+        <div style="font-size:.7rem;color:var(--t4);margin-top:3px">Ces secteurs s'ajouteront aux catégories du radar</div>
+      </div>
+      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
+          <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
+          <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
+          <label class="mode-opt" id="mode_opt_alternance"><input type="radio" name="p_mode" value="alternance" onchange="onModeChange()"><span>🔄 Alternance</span></label>
+          <label class="mode-opt" id="mode_opt_emploi"><input type="radio" name="p_mode" value="emploi" onchange="onModeChange()"><span>💼 Emploi CDI/CDD</span></label>
+        </div>
+        <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
+      </div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
+      <div class="fi">
+        <label>Codes NAF supplémentaires (optionnel)</label>
+        <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
+        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
+      </div>
+      <div class="fi">
+        <label>Codes ROME supplémentaires (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
+        <div style="display:flex;gap:6px">
+          <input id="p_rome_codes" placeholder="ex : M1801, M1802" style="flex:1" title="Codes ROME pour La Bonne Boite et France Travail">
+          <button type="button" id="romeo-btn" onclick="lookupRomeo()" class="btn" style="padding:6px 10px;font-size:.75rem;white-space:nowrap" title="Détecter automatiquement les codes ROME via ROMEO v2">🤖 Auto</button>
+        </div>
+        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Codes ROME pour filtrer les offres France Travail et La Bonne Boite. 🤖 Auto les détecte depuis ta formation.</div>
+      </div>
+      <div class="fi">
+        <label>🔍 Moteur de recherche par défaut</label>
+        <select id="p_search_engine">
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+          <option value="qwant">Qwant 🇫🇷</option>
+          <option value="ecosia">Ecosia 🌱</option>
+          <option value="brave">Brave</option>
+        </select>
+      </div>
+      <div class="fi"><label>Début de stage</label><input id="p_debut" type="date" value="2026-06-05" /></div>
+      <div class="fi"><label>Fin de stage</label><input id="p_fin" type="date" value="2026-07-31" /></div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Localisation & candidature</div></div>
+      <div class="fi full"><label>📍 Adresse (pour le radar de distance)</label>
+        <div style="display:flex;gap:8px">
+          <div class="addr-wrap">
+            <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
+              oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" />
+            <div id="addr_dd" class="addr-dd"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" style="flex-shrink:0">📡 GPS</button>
+        </div>
+        <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:4px"></div>
+      </div>
+      <div class="fi full"><label>Compétences (optionnel)</label>
+        <textarea id="p_comp" placeholder="Certifications, logiciels maîtrisés…"></textarea></div>
+      <div class="fi full"><label>Motivation (optionnel)</label>
+        <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
     </div>
 
     <!-- ─ STEP 1 : Identité ─ -->
@@ -564,11 +663,12 @@ const VERSION='4.0';
 const KM_STEP=5;
 const RADIUS_DEFAULT=30;
 
-// ─── France Travail API — proxy Cloudflare Worker ────────────────────────────
-// URL du Worker déployé sur Cloudflare (cf cf-worker/). Injectée au build via
-// le GitHub Secret FT_PROXY_URL. Les credentials restent côté Worker, jamais
-// dans le navigateur.
-const FT_PROXY_URL = '__FT_PROXY_URL__';
+// ─── France Travail API ───────────────────────────────────────────────────────
+// Inscris l'app sur francetravail.io/partenaire, récupère Client ID + Secret,
+// colle-les ici. Tous les étudiants bénéficient des offres sans configuration.
+const FT_CLIENT_ID     = '__FT_CLIENT_ID__';
+const FT_CLIENT_SECRET = '__FT_CLIENT_SECRET__';
+const FT_PROXY_URL     = '__FT_PROXY_URL__';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FORMATION_CONFIG={
@@ -1156,6 +1256,14 @@ function updateFTStatus(state){
   }
 }
 
+async function ftProxy(endpoint,method,body){
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))throw new Error('Proxy non configuré');
+  const _url=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
+  const r=await fetch(_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint,method:method||'GET',body:body||undefined})});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Proxy '+r.status+': '+(e.error||''));}
+  return r.json();
+}
+
 async function getFTToken(){
   const _cached=sessionStorage.getItem('_ft_tok');
   const _exp=parseInt(sessionStorage.getItem('_ft_tok_exp')||'0');
@@ -1198,8 +1306,8 @@ async function fetchFranceTravail(lat,lng,rKm){
   if(!token)return[];
   try{
     const _fcFT=FORMATION_CONFIG[S.formation]||{};
-    const _romeRe=/^[A-Z]\d{4}$/;
-    const _extraRFT=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
+    const _romeReFT=/^[A-Z]\d{4}$/;
+    const _extraRFT=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeReFT.test(c));
     const _romes=[...new Set([...(_fcFT.romeCodes||[]),..._extraRFT])].slice(0,5).join(',');
     const _dist=Math.min(rKm,35);
     const isAlt=(S.mode==='alternance');
@@ -1255,19 +1363,20 @@ async function fetchFranceTravail(lat,lng,rKm){
 }
 
 async function fetchLaBonneBoite(lat,lng,rKm){
-  if(!FT_PROXY_URL||!FT_PROXY_URL.startsWith('http'))return[];
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))return[];
   const _fc=FORMATION_CONFIG[S.formation]||{};
   const _romeRe=/^[A-Z]\d{4}$/;
   const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
   const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,5).join(',');
   if(!_romes)return[];
   try{
-    const _lbbParams=new URLSearchParams({rome_codes:_romes,latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),from:'0',size:'100'});
-    const data=await ftProxy('/partenaire/labonneboite/v2/company/?'+_lbbParams);
-    return(data.companies||[]).map(c=>({
-      id:'lbb_'+(c.siret||_hid((c.name||'')+(c.city||''))),
+    const _p=new URLSearchParams({rome_codes:_romes,latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),from:'0',size:'100'});
+    const data=await ftProxy('/partenaire/labonneboite/v2/company/?'+_p);
+    if(!data||!data.companies)return[];
+    return data.companies.map(c=>({
+      id:'lbb_'+(c.siret||c.name||Math.random()),
       n:c.name||'',
-      t:NAF2T[(c.naf||'').replace(/\./g,'')]||(_fc.sectors&&_fc.sectors[0])||'PME',
+      t:(_fc.sectors&&_fc.sectors[0])||'PME',
       v:c.city||'',
       d:(c.naf_text||'')+(c.headcount_text?' · '+c.headcount_text:''),
       e:c.email||'',
@@ -1275,31 +1384,31 @@ async function fetchLaBonneBoite(lat,lng,rKm){
       lat:parseFloat(c.lat)||lat,
       lng:parseFloat(c.lon)||lng,
       src:'La Bonne Boite',
-      hasOffer:false,
       lbb:true,
       lbbStars:parseFloat(c.stars)||0,
-      cat:'entreprise',
-    }));
+    })).filter(c=>c.n);
   }catch(e){return[];}
 }
 
 async function lookupRomeo(){
   const btn=document.getElementById('romeo-btn');
   if(btn){btn.disabled=true;btn.textContent='⏳';}
-  if(!FT_PROXY_URL||!FT_PROXY_URL.startsWith('http')){toast('Worker non configuré','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){toast('Worker proxy non configuré','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
   const fc=FORMATION_CONFIG[S.formation]||{};
-  const query=(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value:null)||fc.label||'';
+  const query=fc.label||(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value:null)||'';
   if(!query){toast('Sélectionne d\'abord ta formation','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
   try{
     const data=await ftProxy('/partenaire/romeo/v2/','POST',[{intitule:query,identifiant:'1'}]);
     const _romeo=Array.isArray(data)?data:[data];
-    const resultats=(_romeo[0]?.metiersRome||_romeo[0]?.resultats||data.resultats||data.results||[]);
+    const resultats=(_romeo[0]?.metiersRome||_romeo[0]?.resultats||data?.resultats||[]);
     const codes=resultats.slice(0,5).map(x=>x.codeRome||x.codeROME||x.code||'').filter(Boolean);
     if(!codes.length){toast('Aucun code ROME trouvé pour "'+query+'"','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
-    document.getElementById('p_rome_codes').value=codes.join(', ');
-    toast('Codes ROME : '+codes.join(', '),'ok');
+    const el=document.getElementById('p_rome_codes');
+    if(el)el.value=codes.join(', ');
+    S.extraRomeCodes=codes.join(', ');
+    toast('Codes ROME détectés : '+codes.join(', '),'ok');
   }catch(e){
-    toast('Erreur ROMEO','warn');
+    toast('Erreur ROMEO : '+e.message,'warn');
   }finally{
     if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}
   }
@@ -1361,6 +1470,71 @@ async function launchRadar(){
   }finally{
     reset();
   }
+  if(allNaf.length){
+    msg('🔍 Annuaire Entreprises…');
+    tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
+  }
+  if(S.mode==='alternance'){
+    msg('🔍 La Bonne Alternance…');
+    tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
+  }
+  if(S.mode==='stage_nr'){
+    msg('🔍 Immersion Facilitée (PMSMP)…');
+    tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
+  }
+  if((FT_CLIENT_ID&&!FT_CLIENT_ID.startsWith('__'))||S.ftClientId){
+    msg('🔍 France Travail — offres réelles…');
+    tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
+  }
+  if(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__')){
+    msg('🔍 La Bonne Boite — entreprises à fort potentiel…');
+    tasks.push(fetchLaBonneBoite(coords.lat,coords.lng,rKm));
+  }
+
+  const all=await Promise.allSettled(tasks);
+  const seen=new Set(radarResults.map(c=>c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8)));
+  all.forEach(r=>{
+    if(r.status!=='fulfilled')return;
+    (r.value||[]).forEach(c=>{
+      const k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
+      if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push({...c,disc:true});}
+    });
+  });
+
+  // Compute distances & filter by radius
+  radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).filter(c=>c._dist===null||c._dist<=rKm).sort((a,b)=>(a._dist??999)-(b._dist??999));
+
+  updateBadges();
+  rebuildTypeFilter();
+  // Diagnostic clair
+  const _preCount=PRELOADED.filter(c=>{const d=dist(c);return d===null||d<=rKm;}).length;
+  const _newCount=radarResults.length-_preCount;
+  let _msgFinal='✅ '+radarResults.length+' structures dans '+rKm+' km';
+  _msgFinal+=' ('+_preCount+' pré-chargées';
+  if(_newCount>0)_msgFinal+=', +'+_newCount+' trouvées via APIs';
+  _msgFinal+=')';
+  if(_preCount===radarResults.length&&radarResults.length>0){
+    _msgFinal+=' — APIs sans résultats supplémentaires';
+  }
+  msg(_msgFinal);
+  // Si toutes entreprises sont pré-chargées, afficher explication
+  const _diagEl=document.getElementById('api-diag');
+  if(_diagEl){
+    let _diag='<strong>Position scannée :</strong> '+coords.lat.toFixed(5)+', '+coords.lng.toFixed(5)+'<br>';
+    _diag+='<strong>Entreprises pré-chargées dans le rayon :</strong> '+_preCount+'<br>';
+    _diag+='<strong>Découvertes via APIs :</strong> '+_newCount+'<br>';
+    if(_newCount===0){
+      _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
+      _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
+      _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
+      _diag+="Les APIs externes (Overpass, Annuaire Entreprises) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
+    }
+    _diagEl.innerHTML=_diag;_diagEl.style.display='block';
+  }
+  setTimeout(()=>banner.style.display='none',5000);
+  btn.disabled=false;btn.textContent='🔍 Scanner';
+  radarRunning=false;
+  renderRadar();
 }
 
 function renderRadar(){
@@ -1978,6 +2152,7 @@ async function saveProfile(){
     formationEmoji:_fc.emoji||'✏️',
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
     mode:getMode(),
+    extraNafCodes:f('p_naf_codes'),
     extraRomeCodes:f('p_rome_codes'),
     cvText:_oldCvText,
     cvFileName:_oldCvFileName,
@@ -2040,6 +2215,10 @@ function fillProfileForm(){
     const modeEl=document.querySelector('input[name="p_mode"][value="'+S.mode+'"]');
     if(modeEl)modeEl.checked=true;
     onModeChange();
+  }
+  if(S.extraRomeCodes){
+    const romeEl=document.getElementById('p_rome_codes');
+    if(romeEl)romeEl.value=S.extraRomeCodes;
   }
   if(S.extraRomeCodes){
     const romeEl=document.getElementById('p_rome_codes');
