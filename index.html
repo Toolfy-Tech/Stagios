@@ -1382,10 +1382,10 @@ async function lookupRomeo(){
   const query=fc.label||(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value:null)||'';
   if(!query){toast('Sélectionne d\'abord ta formation','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
   try{
-    const data=await ftProxy('/partenaire/romeo/v2/','POST',[{intitule:query,identifiant:'1'}]);
+    const data=await ftProxy('/partenaire/romeo/v2/predictionMetiers','POST',{appellations:[{intitule:query,identifiant:'1'}],options:{nomAppelant:'stagios',nbResultats:5}});
     const _romeo=Array.isArray(data)?data:[data];
-    const resultats=(_romeo[0]?.metiersRome||_romeo[0]?.resultats||data?.resultats||[]);
-    const codes=resultats.slice(0,5).map(x=>x.codeRome||x.codeROME||x.code||'').filter(Boolean);
+    const resultats=(_romeo[0]?.metiersRome||[]);
+    const codes=resultats.slice(0,5).map(x=>x.codeRome||'').filter(Boolean);
     if(!codes.length){toast('Aucun code ROME trouvé pour "'+query+'"','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
     const el=document.getElementById('p_rome_codes');
     if(el)el.value=codes.join(', ');
