@@ -26,10 +26,19 @@ jobs:
           sed -i "s|__FT_CLIENT_SECRET__|${FT_SEC}|g" index.html
           sed -i "s|__FT_PROXY_URL__|${FT_PROXY}|g" index.html
 
-      - name: Déployer sur GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          publish_branch: gh-pages
-          exclude_assets: '.github,cf-worker,CONTEXT.md'
+      - name: Déployer sur branche gh-pages
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdir /tmp/deploy
+          cp index.html /tmp/deploy/
+          cp professeurs.html /tmp/deploy/ 2>/dev/null || true
+          git fetch origin gh-pages 2>/dev/null || true
+          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
+          git rm -rf . --quiet 2>/dev/null || true
+          cp /tmp/deploy/index.html .
+          cp /tmp/deploy/professeurs.html . 2>/dev/null || true
+          git add -f index.html professeurs.html
+          git diff --cached --quiet && echo "Rien à déployer" && exit 0
+          git commit -m "Deploy $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push origin gh-pages
