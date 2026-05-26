@@ -1182,12 +1182,24 @@ async function getFTToken(){
   }
 }
 
+async function ftProxy(endpoint,method,body){
+  const _url=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
+  const r=await fetch(_url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({endpoint,method:method||'GET',body:body||undefined}),
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Proxy '+r.status+': '+(e.error||''));}
+  return r.json();
+}
+
 async function fetchFranceTravail(lat,lng,rKm){
   const token=await getFTToken();
   if(!token)return[];
   try{
     const _fcFT=FORMATION_CONFIG[S.formation]||{};
-    const _extraRFT=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+    const _romeRe=/^[A-Z]\d{4}$/;
+    const _extraRFT=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
     const _romes=[...new Set([...(_fcFT.romeCodes||[]),..._extraRFT])].slice(0,5).join(',');
     const _dist=Math.min(rKm,35);
     const isAlt=(S.mode==='alternance');
@@ -1243,18 +1255,15 @@ async function fetchFranceTravail(lat,lng,rKm){
 }
 
 async function fetchLaBonneBoite(lat,lng,rKm){
-  const token=await getFTToken();
-  if(!token)return[];
+  if(!FT_PROXY_URL||!FT_PROXY_URL.startsWith('http'))return[];
   const _fc=FORMATION_CONFIG[S.formation]||{};
-  const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+  const _romeRe=/^[A-Z]\d{4}$/;
+  const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
   const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,5).join(',');
   if(!_romes)return[];
   try{
-    const r=await fetch('https://api.francetravail.io/partenaire/labonneboite/v1/company/?'+
-      new URLSearchParams({rome_codes:_romes,latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),from:'0',size:'100'}),
-      {headers:{Authorization:'Bearer '+token,Accept:'application/json'}});
-    if(!r.ok)return[];
-    const data=await r.json();
+    const _lbbParams=new URLSearchParams({rome_codes:_romes,latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),from:'0',size:'100'});
+    const data=await ftProxy('/partenaire/labonneboite/v1/company/?'+_lbbParams);
     return(data.companies||[]).map(c=>({
       id:'lbb_'+(c.siret||_hid((c.name||'')+(c.city||''))),
       n:c.name||'',
@@ -1277,20 +1286,14 @@ async function fetchLaBonneBoite(lat,lng,rKm){
 async function lookupRomeo(){
   const btn=document.getElementById('romeo-btn');
   if(btn){btn.disabled=true;btn.textContent='⏳';}
-  const token=await getFTToken();
-  if(!token){toast('Connexion France Travail requise','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+  if(!FT_PROXY_URL||!FT_PROXY_URL.startsWith('http')){toast('Worker non configuré','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
   const fc=FORMATION_CONFIG[S.formation]||{};
   const query=(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value:null)||fc.label||'';
   if(!query){toast('Sélectionne d\'abord ta formation','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
   try{
-    const r=await fetch('https://api.francetravail.io/partenaire/romeo/v2/',{
-      method:'POST',
-      headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},
-      body:JSON.stringify({intitule:query,contexte:'',nb:5})
-    });
-    if(!r.ok){toast('Service ROMEO indisponible ('+r.status+')','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
-    const data=await r.json();
-    const resultats=data.resultats||data.results||[];
+    const data=await ftProxy('/partenaire/romeo/v2/','POST',[{intitule:query,identifiant:'1'}]);
+    const _romeo=Array.isArray(data)?data:[data];
+    const resultats=(_romeo[0]?.metiersRome||_romeo[0]?.resultats||data.resultats||data.results||[]);
     const codes=resultats.slice(0,5).map(x=>x.codeRome||x.codeROME||x.code||'').filter(Boolean);
     if(!codes.length){toast('Aucun code ROME trouvé pour "'+query+'"','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
     document.getElementById('p_rome_codes').value=codes.join(', ');

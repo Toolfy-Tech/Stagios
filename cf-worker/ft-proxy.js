@@ -1,18 +1,19 @@
 /**
- * Stagios — Cloudflare Worker : proxy OAuth2 France Travail
+ * Stagios — Cloudflare Worker : proxy France Travail
+ *
+ * Modes :
+ *   POST /  (body vide ou {})      → retourne un Bearer token
+ *   POST /  body {endpoint, method?, body?} → proxifie un appel API FT
  *
  * Déploiement :
- *   cd cf-worker
- *   wrangler secret put FT_CLIENT_ID     ← colle ton Client ID
- *   wrangler secret put FT_CLIENT_SECRET ← colle ton Client Secret
+ *   wrangler secret put FT_CLIENT_ID
+ *   wrangler secret put FT_CLIENT_SECRET
  *   wrangler deploy
- *
- * L'URL affichée après "wrangler deploy" est à ajouter dans les GitHub Secrets
- * sous le nom  FT_PROXY_URL  (ex: https://stagios-gt-proxy.fhoguin.workers.dev)
  */
 
 const TOKEN_ENDPOINT = 'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire';
-const SCOPE          = 'api_offresdemploiv2 o2dsoffre';
+const API_BASE       = 'https://api.francetravail.io';
+const SCOPE          = 'api_offresdemploiv2 o2dsoffre api_labonneboitev1 api_romeov2 api_rome-metiersv1 api_marche-du-travailv1 api_evenementsemploi api_informations-sur-un-territoirev1';
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -27,39 +28,67 @@ function json(data, status = 200) {
   });
 }
 
-async function handleRequest(request, env) {
-  if (request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: CORS });
-  }
+// Token cache en mémoire Worker (réinitialisé au cold start)
+let _tok = null;
+let _tokExp = 0;
 
-  if (request.method !== 'POST') {
-    return json({ error: 'Method not allowed' }, 405);
-  }
-
-  if (!env.FT_CLIENT_ID || !env.FT_CLIENT_SECRET) {
-    return json({ error: 'Worker non configuré — ajoute FT_CLIENT_ID et FT_CLIENT_SECRET via wrangler secret put' }, 503);
-  }
-
+async function getToken(env) {
+  if (_tok && Date.now() < _tokExp) return _tok;
   const body = new URLSearchParams({
     grant_type:    'client_credentials',
     client_id:     env.FT_CLIENT_ID,
     client_secret: env.FT_CLIENT_SECRET,
     scope:         SCOPE,
   });
-
-  const ftRes = await fetch(TOKEN_ENDPOINT, {
+  const res = await fetch(TOKEN_ENDPOINT, {
     method:  'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body:    body.toString(),
   });
+  if (!res.ok) return null;
+  const { access_token, expires_in } = await res.json();
+  _tok    = access_token;
+  _tokExp = Date.now() + (expires_in - 60) * 1000;
+  return _tok;
+}
 
-  if (!ftRes.ok) {
-    const text = await ftRes.text().catch(() => '');
-    return json({ error: 'FT auth failed', status: ftRes.status, detail: text }, ftRes.status);
+async function handleRequest(request, env) {
+  if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
+  if (request.method !== 'POST')    return json({ error: 'Method not allowed' }, 405);
+  if (!env.FT_CLIENT_ID || !env.FT_CLIENT_SECRET)
+    return json({ error: 'Worker non configuré — ajoute FT_CLIENT_ID et FT_CLIENT_SECRET' }, 503);
+
+  const token = await getToken(env);
+  if (!token) return json({ error: 'Échec authentification France Travail' }, 502);
+
+  // Lire le body (peut être vide pour les appels token-only legacy)
+  let reqBody = {};
+  try {
+    const txt = await request.text();
+    if (txt && txt.trim().startsWith('{')) reqBody = JSON.parse(txt);
+  } catch (_) {}
+
+  if (reqBody.endpoint) {
+    // Mode proxy : transmettre l'appel à l'API FT
+    const url = API_BASE + reqBody.endpoint;
+    const ftHeaders = {
+      Authorization: 'Bearer ' + token,
+      Accept:        'application/json',
+    };
+    if (reqBody.body) ftHeaders['Content-Type'] = 'application/json';
+
+    const ftRes = await fetch(url, {
+      method:  reqBody.method || 'GET',
+      headers: ftHeaders,
+      body:    reqBody.body ? JSON.stringify(reqBody.body) : undefined,
+    });
+
+    const data = await ftRes.json().catch(() => ({}));
+    return json(data, ftRes.status);
   }
 
-  const { access_token, expires_in } = await ftRes.json();
-  return json({ access_token, expires_in });
+  // Mode token-only (legacy + appels directs navigateur)
+  return json({ access_token: token, expires_in: Math.round((_tokExp - Date.now()) / 1000) });
 }
 
 export default {
