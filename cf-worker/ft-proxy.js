@@ -3,7 +3,7 @@ const API_BASE       = 'https://api.francetravail.io';
 
 // Each API gets its own token so a failing LBB scope doesn't break FT offres
 const API_SCOPES = [
-  { prefix: '/partenaire/labonneboite/', scopes: ['api_labonneboitev2 labonneboiteio', 'api_labonneboitev2'] },
+  { prefix: '/partenaire/labonneboite/', scopes: ['api_labonneboitev2 search office', 'api_labonneboitev2'] },
   { prefix: '/partenaire/romeo/',        scopes: ['api_romeov2'] },
   { prefix: '/partenaire/',              scopes: ['api_offresdemploiv2 o2dsoffre'] },
 ];
