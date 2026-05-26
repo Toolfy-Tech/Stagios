@@ -13,7 +13,7 @@
 
 const TOKEN_ENDPOINT = 'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire';
 const API_BASE       = 'https://api.francetravail.io';
-const SCOPE          = 'api_offresdemploiv2 o2dsoffre api_labonneboitev1 api_romeov2 api_rome-metiersv1 api_marche-du-travailv1 api_evenementsemploi api_informations-sur-un-territoirev1';
+const SCOPE          = 'api_offresdemploiv2 o2dsoffre api_labonneboitev1 api_romeov2';
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
