@@ -257,6 +257,10 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .ft-chip:hover{opacity:.8}
 /* ── SCAN PROGRESS ─────────────────────────────────── */
 .scan-count{font-weight:700;color:var(--primary);margin-left:4px}
+.src-toggle{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:.76rem;color:var(--t3);background:var(--bg2);border:1px solid var(--brd);border-radius:20px;padding:3px 10px 3px 7px;transition:border-color .15s,color .15s;user-select:none;white-space:nowrap}
+.src-toggle:has(input:checked){border-color:var(--primary);color:var(--t1);background:var(--primary-t)}
+.src-toggle input{width:13px;height:13px;accent-color:var(--primary);cursor:pointer}
+.src-toggle.src-disabled{opacity:.45;cursor:default}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
 @media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}.btn{min-height:44px}.btn-sm{min-height:40px;padding:8px 12px}.step-lbl{display:none}}
 @media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(130px,1fr))}.tab{padding:7px 10px;font-size:.68rem;gap:4px}.step-lbl{display:none}}
@@ -515,6 +519,24 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       </div>
       <button class="btn btn-primary" onclick="launchRadar()" id="radar-btn" aria-label="Lancer le scan radar">🔍 Scanner</button>
       <button class="btn btn-ghost btn-sm" onclick="exportCSV()" aria-label="Exporter les résultats en CSV">📥 CSV</button>
+    </div>
+    <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:.5rem">
+      <span style="font-size:.72rem;color:var(--t4);white-space:nowrap;font-weight:600">Sources :</span>
+      <label class="src-toggle" title="Données géographiques OpenStreetMap (nombreux faux positifs)">
+        <input type="checkbox" id="src-osm"> 🗺 OpenStreetMap
+      </label>
+      <label class="src-toggle" title="Annuaire officiel SIRENE / recherche-entreprises.api.gouv.fr">
+        <input type="checkbox" id="src-sirene" checked> 🏢 Annuaire SIRENE
+      </label>
+      <label class="src-toggle" id="src-lbb-lbl" title="La Bonne Boite — entreprises à fort potentiel d'embauche (nécessite proxy FT)">
+        <input type="checkbox" id="src-lbb" checked> ⭐ La Bonne Boite
+      </label>
+      <label class="src-toggle" id="src-ft-lbl" title="Offres de stage / alternance / emploi France Travail (nécessite proxy FT)">
+        <input type="checkbox" id="src-ft" checked> 🎯 Offres FT
+      </label>
+      <label class="src-toggle" id="src-alt-lbl" title="Offres La Bonne Alternance (mode alternance uniquement)">
+        <input type="checkbox" id="src-alt" checked> 🔄 Alternance
+      </label>
     </div>
   </div>
 
@@ -1316,6 +1338,29 @@ function updateFTStatus(state){
   }
 }
 
+function initRadarSourceToggles(){
+  const hasProxy=FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__');
+  ['src-lbb','src-ft'].forEach(id=>{
+    const inp=document.getElementById(id);
+    const lbl=document.getElementById(id+'-lbl');
+    if(!inp)return;
+    if(!hasProxy){
+      inp.checked=false;
+      inp.disabled=true;
+      if(lbl){lbl.classList.add('src-disabled');lbl.title='Proxy France Travail non configuré — non disponible';}
+    }
+  });
+  // Alternance toggle only relevant in alternance mode
+  const altLbl=document.getElementById('src-alt-lbl');
+  const altInp=document.getElementById('src-alt');
+  if(altLbl&&altInp&&S.mode!=='alternance'){
+    altInp.checked=false;
+    altInp.disabled=true;
+    altLbl.classList.add('src-disabled');
+    altLbl.title='Disponible uniquement en mode alternance';
+  }
+}
+
 async function ftProxy(endpoint,method,body){
   if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))throw new Error('Proxy non configuré');
   const _url=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
@@ -1882,25 +1927,32 @@ async function launchRadar(){
   const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf||[]),..._formationNaf,...extraNaf])];
   const osmOffices=['government','it','association','company'];
 
+  const useOSM=document.getElementById('src-osm')?.checked;
+  const useSIRENE=document.getElementById('src-sirene')?.checked!==false;
+  const useLBB=document.getElementById('src-lbb')?.checked!==false;
+  const useFT=document.getElementById('src-ft')?.checked!==false;
+  const useAlt=document.getElementById('src-alt')?.checked!==false;
+  const hasProxy=FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__');
+
   const tasks=[];
-  if(allAmenities.length||osmOffices.length){
+  if(useOSM&&(allAmenities.length||osmOffices.length)){
     msg('🔍 Scan OpenStreetMap…');
     tasks.push(fetchOverpass(coords.lat,coords.lng,rm,allAmenities,osmOffices));
   }
-  if(allNaf.length){
+  if(useSIRENE&&allNaf.length){
     msg('🔍 Annuaire Entreprises…');
     tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
   }
-  if(S.mode==='alternance'){
+  if(useAlt&&S.mode==='alternance'){
     msg('🔍 La Bonne Alternance…');
     tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
   }
   // fetchImmersion désactivé — API CORS-bloquée depuis le navigateur
-  if(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__')){
+  if(useFT&&hasProxy){
     msg('🔍 France Travail — offres réelles…');
     tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
   }
-  if(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__')){
+  if(useLBB&&hasProxy){
     msg('🔍 La Bonne Boite — entreprises à fort potentiel…');
     tasks.push(fetchLaBonneBoite(coords.lat,coords.lng,rKm));
   }
@@ -2649,6 +2701,7 @@ function fillProfileForm(){
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
   updateFTStatus(null);
   updateCoordsWarning();
+  initRadarSourceToggles();
   // Enter key advances stepper (not on textareas or last step)
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter')return;
