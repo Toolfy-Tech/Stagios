@@ -6,11 +6,20 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
       - name: Checkout
@@ -22,19 +31,17 @@ jobs:
         run: |
           sed -i "s|__FT_PROXY_URL__|${FT_PROXY}|g" index.html
 
-      - name: Déployer sur branche gh-pages
+      - name: Préparer les fichiers
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          mkdir /tmp/deploy
-          cp index.html /tmp/deploy/
-          cp professeurs.html /tmp/deploy/ 2>/dev/null || true
-          git fetch origin gh-pages 2>/dev/null || true
-          git checkout gh-pages 2>/dev/null || git checkout --orphan gh-pages
-          git rm -rf . --quiet 2>/dev/null || true
-          cp /tmp/deploy/index.html .
-          cp /tmp/deploy/professeurs.html . 2>/dev/null || true
-          git add -f index.html professeurs.html
-          git diff --cached --quiet && echo "Rien à déployer" && exit 0
-          git commit -m "Deploy $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git push --force origin gh-pages
+          mkdir _site
+          cp index.html _site/
+          cp professeurs.html _site/ 2>/dev/null || true
+
+      - name: Upload artifact Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Déployer sur GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
