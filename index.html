@@ -226,8 +226,26 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .modal-box{background:var(--card);border:1.5px solid var(--brd2);border-radius:var(--rl);padding:1.5rem;max-width:420px;width:100%;box-shadow:var(--shadow2)}
 .modal-title{font-size:.95rem;font-weight:700;color:var(--t1);font-family:var(--ff-h);margin-bottom:.6rem}
 /* ── ROME PICKER ──────────────────────────────────────── */
-.rome-picker-row{transition:background .12s}
-.rome-picker-row:hover{background:var(--blue-l)!important}
+.rome-modal{max-width:680px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;background:var(--card);border:1.5px solid var(--brd2);border-radius:var(--rl);box-shadow:0 30px 60px rgba(0,0,0,.55)}
+.rome-modal-hdr{padding:1.2rem 1.5rem 1rem;background:linear-gradient(135deg,rgba(108,99,255,.22),rgba(108,99,255,.05));border-bottom:1px solid var(--brd2);flex-shrink:0}
+.rome-modal-search{padding:.875rem 1.5rem;border-bottom:1px solid var(--brd2);flex-shrink:0}
+.rome-modal-body{overflow-y:auto;flex:1;padding:1rem 1.5rem}
+.rome-modal-footer{padding:.875rem 1.5rem;border-top:1px solid var(--brd2);flex-shrink:0;background:var(--bg3)}
+.rome-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+@media(max-width:520px){.rome-grid{grid-template-columns:1fr}}
+.rome-card{border:1.5px solid var(--brd2);border-radius:var(--r);padding:12px 12px 10px;cursor:pointer;transition:border-color .15s,background .15s,box-shadow .15s;position:relative;display:flex;flex-direction:column;min-height:90px;user-select:none}
+.rome-card:hover{border-color:var(--primary);background:var(--primary-t)}
+.rome-card.rome-selected{border-color:var(--primary);background:var(--primary-l);box-shadow:0 0 0 1px var(--primary)}
+.rome-card.rome-dup{opacity:.38;pointer-events:none}
+.rome-card-check{position:absolute;top:10px;right:10px;width:20px;height:20px;border-radius:50%;border:2px solid var(--brd2);display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;transition:all .15s;color:transparent}
+.rome-selected .rome-card-check{background:var(--primary);border-color:var(--primary);color:#fff}
+.rome-chip-wrap{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-height:26px}
+.rome-selected-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:.72rem;font-weight:700;background:var(--primary);color:#fff;cursor:pointer;border:none;font-family:var(--ff-h);transition:opacity .15s,transform .1s;animation:chipIn .15s ease}
+.rome-selected-chip:hover{opacity:.75;transform:scale(.97)}
+@keyframes chipIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
+.rome-suggest-chip{display:inline-flex;align-items:center;padding:3px 9px;border-radius:14px;font-size:.7rem;font-weight:600;background:var(--bg3);color:var(--t3);cursor:pointer;border:1px solid var(--brd2);transition:all .15s;font-family:var(--ff-b);white-space:nowrap}
+.rome-suggest-chip:hover{background:var(--primary-l);color:var(--primary);border-color:var(--primary)}
+@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 /* ── TOASTS ──────────────────────────────────────────── */
 #toast-container{position:fixed;bottom:88px;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;align-items:flex-end}
 .toast{padding:11px 16px;border-radius:var(--rl);font-size:.82rem;font-weight:600;color:#fff;box-shadow:var(--shadow2);pointer-events:auto;max-width:360px;line-height:1.45;transition:opacity .2s,transform .2s;font-family:var(--ff-h)}
@@ -1388,6 +1406,21 @@ async function fetchLaBonneBoite(lat,lng,rKm){
   }catch(e){return[];}
 }
 
+const ROME_SUGGESTIONS={
+  TIP:['support informatique','helpdesk','technicien réseau','administrateur systèmes','déploiement postes','informatique industrielle'],
+  Compta:['comptable','gestionnaire paie','contrôleur de gestion','aide comptable','analyste financier'],
+  Mecanique:['mécanicien automobile','carrossier','technicien VL','technicien PL','mécanicien moto'],
+  Secretariat:['secrétaire','assistant administratif','réceptionniste','assistant de direction','office manager'],
+  Commerce:['commercial','vendeur','chargé de clientèle','account manager','business developer'],
+  Electro:['électrotechnicien','électricien','automaticien','technicien énergie','maintenance électrique'],
+  BTP:['maçon','plombier','plaquiste','électricien bâtiment','conducteur de travaux'],
+  Restauration:['cuisinier','chef de partie','serveur','pâtissier','boulanger','commis de cuisine'],
+  Social:['aide soignant','auxiliaire de vie','éducateur spécialisé','animateur','assistant maternel'],
+  Logistique:['préparateur commandes','cariste','chauffeur livreur','gestionnaire stocks','coordinateur logistique'],
+};
+
+let _romeSelected=new Set();
+
 function lookupRomeo(){
   if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){toast('Worker proxy non configuré — déploie l\'application d\'abord','warn');return;}
   const fc=FORMATION_CONFIG[S.formation]||{};
@@ -1399,108 +1432,179 @@ function lookupRomeo(){
 
 function openRomePicker(defaultQuery){
   document.getElementById('rome-picker-overlay')?.remove();
+  _romeSelected=new Set();
+  const fc=FORMATION_CONFIG[S.formation]||{};
+  const suggests=ROME_SUGGESTIONS[S.formation]||[];
+  const suggestHtml=suggests.length
+    ?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:.55rem;align-items:center">
+        <span style="font-size:.67rem;color:var(--t4);font-weight:700;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0">Connexes :</span>
+        ${suggests.map(s=>`<button class="rome-suggest-chip" onclick="document.getElementById('rome-modal-query').value='${s.replace(/'/g,"\\'").replace(/"/g,'&quot;')}';doRomeoSearch()">${escH(s)}</button>`).join('')}
+      </div>`
+    :'';
   const ov=document.createElement('div');
   ov.id='rome-picker-overlay';
   ov.className='modal-overlay';
-  ov.innerHTML=`<div class="modal-box" style="max-width:520px;max-height:85vh;display:flex;flex-direction:column;gap:0;overflow:hidden">
-    <div class="modal-title">🎯 Sélectionner des codes ROME</div>
-    <div style="font-size:.75rem;color:var(--t3);margin-bottom:.6rem">Tape un métier et clique Rechercher. Coche les codes à ajouter au radar.</div>
-    <div style="display:flex;gap:6px;margin-bottom:.6rem;flex-shrink:0">
-      <input id="romeo-modal-query" value="${escH(defaultQuery)}" placeholder="ex : technicien informatique, comptable…" style="flex:1" onkeydown="if(event.key==='Enter'){event.preventDefault();doRomeoSearch();}">
-      <button class="btn btn-ghost btn-sm" onclick="doRomeoSearch()" style="flex-shrink:0">🔍 Rechercher</button>
+  ov.innerHTML=`<div class="rome-modal">
+    <div class="rome-modal-hdr">
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:var(--t1);font-family:var(--ff-h)">🎯 Codes ROME</div>
+          <div style="font-size:.74rem;color:var(--t3);margin-top:3px">${fc.label?escH(fc.label):'Sélectionne les codes correspondant à ton métier'}</div>
+        </div>
+        <button onclick="document.getElementById('rome-picker-overlay').remove()" style="background:var(--bg3);border:1px solid var(--brd2);color:var(--t3);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1.1rem;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0">×</button>
+      </div>
     </div>
-    <div id="romeo-modal-results" style="overflow-y:auto;flex:1;min-height:80px">
-      <div style="color:var(--t4);font-size:.8rem;text-align:center;padding:1.5rem">Lance une recherche pour voir les suggestions de codes ROME.</div>
+    <div class="rome-modal-search">
+      <div style="display:flex;gap:8px">
+        <div style="position:relative;flex:1">
+          <span style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t4);pointer-events:none;font-size:.9rem">🔍</span>
+          <input id="rome-modal-query" value="${escH(defaultQuery)}" placeholder="Chercher un métier…" style="padding-left:34px" onkeydown="if(event.key==='Enter'){event.preventDefault();doRomeoSearch();}">
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="doRomeoSearch()" style="flex-shrink:0;font-weight:700;white-space:nowrap">Rechercher</button>
+      </div>
+      ${suggestHtml}
     </div>
-    <div style="border-top:1px solid var(--brd2);padding-top:.75rem;margin-top:.75rem;display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;flex-shrink:0">
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rome-picker-overlay').remove()">Fermer</button>
-      <button class="btn btn-ghost btn-sm" id="rome-toggle-all" onclick="toggleAllRome()" style="display:none">Tout cocher</button>
-      <button class="btn btn-sm" id="rome-picker-ok" onclick="applyRomePicker()" style="background:var(--blue);color:#fff;border-color:var(--blue);display:none" disabled>Ajouter <span id="rome-count">0</span> code(s)</button>
+    <div id="romeo-modal-results" class="rome-modal-body">
+      <div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem">
+        <div style="font-size:2.2rem;margin-bottom:.6rem">🎯</div>
+        <div style="font-weight:600;color:var(--t3)">Lance une recherche</div>
+        <div style="margin-top:.3rem;font-size:.76rem">Tape un métier et clique Rechercher pour voir les codes ROME.</div>
+      </div>
+    </div>
+    <div class="rome-modal-footer">
+      <div id="rome-chips-label" style="font-size:.67rem;font-weight:800;color:var(--t4);text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4rem;display:none">Sélectionnés</div>
+      <div class="rome-chip-wrap" id="rome-chips-wrap">
+        <span style="font-size:.78rem;color:var(--t4)" id="rome-chips-empty">Aucun code sélectionné.</span>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:.875rem;align-items:center">
+        <button class="btn btn-ghost btn-sm" onclick="document.getElementById('rome-picker-overlay').remove()">Fermer</button>
+        <button class="btn btn-sm" id="rome-picker-ok" onclick="applyRomePicker()" style="background:var(--primary);color:#fff;border-color:var(--primary);font-weight:700" disabled>
+          Ajouter <span id="rome-count">0</span> code(s) →
+        </button>
+      </div>
     </div>
   </div>`;
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
-  const qEl=ov.querySelector('#romeo-modal-query');
-  if(qEl)qEl.focus();
+  ov.querySelector('#rome-modal-query')?.focus();
   if(defaultQuery)setTimeout(doRomeoSearch,80);
 }
 
 async function doRomeoSearch(){
-  const queryEl=document.getElementById('romeo-modal-query');
+  const queryEl=document.getElementById('rome-modal-query');
   const resultsEl=document.getElementById('romeo-modal-results');
   if(!queryEl||!resultsEl)return;
   const query=queryEl.value.trim();
   if(!query){toast('Tape un métier pour chercher','warn');return;}
-  resultsEl.innerHTML='<div style="color:var(--t4);font-size:.8rem;text-align:center;padding:1.5rem">⏳ Recherche en cours…</div>';
-  document.getElementById('rome-toggle-all')?.style.setProperty('display','none');
-  document.getElementById('rome-picker-ok')?.style.setProperty('display','none');
+  resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem">
+    <div style="font-size:1.8rem;margin-bottom:.5rem;display:inline-block;animation:spin .9s linear infinite">⏳</div>
+    <div style="font-weight:600;margin-top:.3rem;color:var(--t3)">Recherche en cours…</div>
+  </div>`;
   try{
     const data=await ftProxy('/partenaire/romeo/v2/predictionMetiers','POST',{appellations:[{intitule:query,identifiant:'1'}],options:{nomAppelant:'stagios',nbResultats:20}});
     const arr=Array.isArray(data)?data:[data];
     const resultats=arr[0]?.metiersRome||[];
     if(!resultats.length){
-      resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.8rem;text-align:center;padding:1.5rem">Aucun résultat pour « ${escH(query)} ».</div>`;
+      resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem">
+        <div style="font-size:2rem;margin-bottom:.5rem">😕</div>
+        <div style="font-weight:600;color:var(--t3)">Aucun résultat pour « ${escH(query)} »</div>
+        <div style="font-size:.76rem;margin-top:.3rem">Essaie un autre terme ou les suggestions en haut.</div>
+      </div>`;
       return;
     }
-    _renderRomeoResults(resultats);
+    _renderRomeoResults(resultats,query);
   }catch(e){
-    resultsEl.innerHTML=`<div style="color:var(--red);font-size:.8rem;text-align:center;padding:1.5rem">Erreur : ${escH(e.message)}</div>`;
+    resultsEl.innerHTML=`<div style="color:var(--red);font-size:.82rem;text-align:center;padding:2rem">Erreur : ${escH(e.message)}</div>`;
   }
 }
 
-function _renderRomeoResults(resultats){
+function _renderRomeoResults(resultats,query){
   const resultsEl=document.getElementById('romeo-modal-results');
   if(!resultsEl)return;
   const existing=new Set((document.getElementById('p_rome_codes')?.value||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean));
-  const items=resultats.map((r,i)=>{
+  const cards=resultats.map(r=>{
     const score=Math.round((r.scorePrediction||0)*100);
     const code=r.codeRome||'';
     const isDup=existing.has(code.toUpperCase());
-    const checked=!isDup&&i<5;
+    const isSel=_romeSelected.has(code);
     const sc=score>70?'var(--green)':score>40?'var(--amber)':'var(--red)';
-    return `<label class="rome-picker-row" style="display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:6px;cursor:${isDup?'default':'pointer'};border:1px solid var(--brd2);margin-bottom:5px;${isDup?'opacity:.45;':''}">
-      <input type="checkbox" class="rome-check" value="${escH(code)}" ${checked?'checked':''} ${isDup?'disabled':''} style="margin-top:2px;flex-shrink:0;accent-color:var(--blue)" onchange="updateRomeCount()">
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;color:var(--t1);font-size:.83rem">${escH(code)} — ${escH(r.libelleRome||'')}</div>
-        ${r.libelleAppellation?`<div style="font-size:.74rem;color:var(--t3)">${escH(r.libelleAppellation)}</div>`:''}
-        ${isDup?'<div style="font-size:.7rem;color:var(--t4)">✓ Déjà dans ta liste</div>':''}
-        <div style="margin-top:3px;height:3px;background:var(--brd2);border-radius:2px;overflow:hidden"><div style="width:${score}%;height:100%;background:${sc}"></div></div>
+    return `<div class="rome-card${isSel?' rome-selected':''}${isDup?' rome-dup':''}" onclick="_toggleRomeCard(this,'${escH(code)}')" data-code="${escH(code)}">
+      <div class="rome-card-check">✓</div>
+      <div style="font-size:.68rem;font-weight:800;color:var(--primary);font-family:var(--ff-h);letter-spacing:.05em;margin-bottom:2px">${escH(code)}</div>
+      <div style="font-size:.79rem;font-weight:700;color:var(--t1);line-height:1.3;padding-right:22px;margin-bottom:2px">${escH(r.libelleRome||'')}</div>
+      <div style="font-size:.71rem;color:var(--t3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;margin-bottom:6px">${escH(r.libelleAppellation||'—')}</div>
+      ${isDup?'<div style="font-size:.67rem;color:var(--t4);font-weight:600;margin-bottom:4px">✓ Déjà présent</div>':''}
+      <div style="display:flex;align-items:center;gap:6px;margin-top:auto">
+        <div style="flex:1;height:4px;background:var(--brd2);border-radius:2px;overflow:hidden">
+          <div style="width:${score}%;height:100%;background:${sc};transition:width .5s ease .1s"></div>
+        </div>
+        <div style="font-size:.67rem;font-weight:800;color:${sc};font-family:var(--ff-h);min-width:26px;text-align:right">${score}%</div>
       </div>
-      <div style="font-size:.68rem;color:var(--t4);flex-shrink:0;padding-top:2px">${score}%</div>
-    </label>`;
+    </div>`;
   }).join('');
-  resultsEl.innerHTML=items;
-  const toggleBtn=document.getElementById('rome-toggle-all');
-  const okBtn=document.getElementById('rome-picker-ok');
-  if(toggleBtn){toggleBtn.style.display='';toggleBtn.textContent='Tout cocher';toggleBtn._allChecked=false;}
-  if(okBtn)okBtn.style.display='';
-  updateRomeCount();
+  resultsEl.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:6px">
+    <div style="font-size:.78rem;color:var(--t3)">${resultats.length} résultat${resultats.length>1?'s':''} pour <strong style="color:var(--t1)">« ${escH(query)} »</strong></div>
+    <div style="display:flex;gap:5px">
+      <button class="rome-suggest-chip" onclick="_toggleAllRomeCards(true)">✓ Tout cocher</button>
+      <button class="rome-suggest-chip" onclick="_toggleAllRomeCards(false)">Tout décocher</button>
+    </div>
+  </div>
+  <div class="rome-grid">${cards}</div>`;
+  _updateRomeChips();
 }
 
-function updateRomeCount(){
-  const n=[...document.querySelectorAll('#romeo-modal-results .rome-check:checked')].length;
+function _toggleRomeCard(cardEl,code){
+  if(!code)return;
+  if(_romeSelected.has(code)){_romeSelected.delete(code);cardEl.classList.remove('rome-selected');}
+  else{_romeSelected.add(code);cardEl.classList.add('rome-selected');}
+  _updateRomeChips();
+}
+
+function _toggleAllRomeCards(state){
+  document.querySelectorAll('#rome-picker-overlay .rome-card:not(.rome-dup)').forEach(card=>{
+    const code=card.dataset.code;if(!code)return;
+    if(state){_romeSelected.add(code);card.classList.add('rome-selected');}
+    else{_romeSelected.delete(code);card.classList.remove('rome-selected');}
+  });
+  _updateRomeChips();
+}
+
+function _removeRomeChip(code){
+  _romeSelected.delete(code);
+  const card=document.querySelector(`#rome-picker-overlay .rome-card[data-code="${CSS.escape(code)}"]`);
+  if(card)card.classList.remove('rome-selected');
+  _updateRomeChips();
+}
+
+function _updateRomeChips(){
+  const wrap=document.getElementById('rome-chips-wrap');
+  const label=document.getElementById('rome-chips-label');
+  const empty=document.getElementById('rome-chips-empty');
   const cnt=document.getElementById('rome-count');
-  const btn=document.getElementById('rome-picker-ok');
+  const okBtn=document.getElementById('rome-picker-ok');
+  const n=_romeSelected.size;
   if(cnt)cnt.textContent=n;
-  if(btn)btn.disabled=n===0;
-}
-
-function toggleAllRome(){
-  const tb=document.getElementById('rome-toggle-all');
-  const newState=!(tb?._allChecked);
-  if(tb){tb._allChecked=newState;tb.textContent=newState?'Tout décocher':'Tout cocher';}
-  document.querySelectorAll('#romeo-modal-results .rome-check:not(:disabled)').forEach(cb=>{cb.checked=newState;});
-  updateRomeCount();
+  if(okBtn)okBtn.disabled=n===0;
+  if(!wrap)return;
+  wrap.querySelectorAll('.rome-selected-chip').forEach(el=>el.remove());
+  if(n===0){if(label)label.style.display='none';if(empty)empty.style.display='';return;}
+  if(label)label.style.display='';if(empty)empty.style.display='none';
+  [..._romeSelected].forEach(code=>{
+    const btn=document.createElement('button');
+    btn.className='rome-selected-chip';
+    btn.innerHTML=escH(code)+' <span style="opacity:.7;font-size:.65rem">×</span>';
+    btn.onclick=()=>_removeRomeChip(code);
+    wrap.appendChild(btn);
+  });
 }
 
 function applyRomePicker(){
-  const newCodes=[...document.querySelectorAll('#romeo-modal-results .rome-check:checked')].map(cb=>cb.value);
-  if(!newCodes.length)return;
+  if(!_romeSelected.size)return;
   const existing=(document.getElementById('p_rome_codes')?.value||'').split(',').map(c=>c.trim()).filter(Boolean);
-  const merged=[...new Set([...existing,...newCodes])];
+  const merged=[...new Set([...existing,..._romeSelected])];
   document.querySelectorAll('[id="p_rome_codes"]').forEach(el=>{el.value=merged.join(', ');});
   S.extraRomeCodes=merged.join(', ');
-  toast('Codes ROME mis à jour : '+merged.join(', '),'ok');
+  toast('✅ Codes ROME : '+[..._romeSelected].join(', '),'ok');
   document.getElementById('rome-picker-overlay')?.remove();
 }
 
