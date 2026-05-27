@@ -151,14 +151,11 @@ html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
 .cd{font-size:.73rem;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ce{font-size:.69rem;color:var(--primary);margin-top:2px;font-family:monospace;opacity:.9}
 .ca{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
-.cc{cursor:pointer;flex-wrap:wrap}
+.cc{flex-wrap:wrap}
 .cc-hdr{display:flex;align-items:center;gap:10px;width:100%}
-.cc-body{display:none;width:100%;padding-top:.65rem;margin-top:.65rem;border-top:1px solid var(--brd)}
-.cc.open .cc-body{display:block}
-.cc-chev{margin-left:auto;font-size:.7rem;color:var(--t4);transition:transform .18s;flex-shrink:0;padding:2px 4px}
-.cc.open .cc-chev{transform:rotate(180deg)}
-.cc-links{display:flex;flex-wrap:wrap;gap:5px;margin-top:.55rem}
-.cc-desc{font-size:.73rem;color:var(--t3);line-height:1.5}
+.cc-body{display:block;width:100%;padding-top:.55rem;margin-top:.55rem;border-top:1px solid var(--brd)}
+.cc-links{display:flex;flex-wrap:wrap;gap:5px}
+.cc-desc{font-size:.73rem;color:var(--t3);line-height:1.5;margin-bottom:.4rem}
 .cc-meta{font-size:.69rem;color:var(--t4);margin-top:2px}
 .toolbar{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap}.toolbar input{flex:1;min-width:160px}
 .empty{text-align:center;padding:2.5rem;color:var(--t4);font-size:.875rem}
@@ -2036,12 +2033,8 @@ function radarCard(c){
   // Distance
   var distBadge=d!=null?'<span style="font-size:.68rem;color:var(--t4);white-space:nowrap">📍 '+(d<1?(d*1000).toFixed(0)+' m':d.toFixed(1)+' km')+'</span>':'';
 
-  // Logo
-  var _dom=c.web?(c.web.replace(/https?:\/\//,'').split('/')[0].split('?')[0].replace('www.','')):'';;
-  var _logoInner=_dom
-    ?'<img src="https://logo.clearbit.com/'+escA(_dom)+'" width="36" height="36" style="border-radius:8px;object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
-     +'<span style="display:none;width:36px;height:36px;border-radius:8px;background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>'
-    :'<span style="display:flex;width:36px;height:36px;border-radius:8px;background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>';
+  // Logo — initials only (Clearbit shut down)
+  var _logoInner='<span style="display:flex;width:36px;height:36px;border-radius:8px;background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>';
 
   // ── Liens dans le body ──
   var engine=(S&&S.searchEngine)||'google';
@@ -2080,7 +2073,7 @@ function radarCard(c){
 
   var safeId=cid.replace(/[^a-z0-9_-]/gi,'_');
 
-  return '<div class="cc" id="cc-'+safeId+'" onclick="toggleCard(\''+safeId+'\',event)">'+
+  return '<div class="cc" id="cc-'+safeId+'">'+
     '<div class="cc-hdr">'+
       '<div class="clog" style="overflow:hidden;flex-shrink:0">'+_logoInner+'</div>'+
       '<div style="flex:1;min-width:0">'+
@@ -2090,7 +2083,6 @@ function radarCard(c){
         '</div>'+
         '<div style="font-size:.69rem;color:var(--t4);margin-top:1px">'+distBadge+(c.v?' · '+escH(c.v.split(',')[0]):'')+'</div>'+
       '</div>'+
-      '<span class="cc-chev">▾</span>'+
     '</div>'+
     '<div class="cc-body">'+
       (metaLine?'<div class="cc-desc">'+metaLine+'</div>':'')+
