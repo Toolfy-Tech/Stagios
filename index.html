@@ -156,6 +156,10 @@ html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
 .cc-body{display:block;width:100%;padding-top:.55rem;margin-top:.55rem;border-top:1px solid var(--brd)}
 .cc-links{display:flex;flex-wrap:wrap;gap:5px}
 .cc-desc{font-size:.73rem;color:var(--t3);line-height:1.5;margin-bottom:.4rem}
+.cc-chk{width:17px;height:17px;accent-color:var(--primary);cursor:pointer;flex-shrink:0;margin-right:2px}
+.cc.selected{border-color:rgba(108,99,255,.6);background:var(--primary-t)}
+.route-bar{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);background:var(--card);border:1.5px solid var(--primary);border-radius:var(--rl);padding:.6rem 1rem;display:none;align-items:center;gap:10px;box-shadow:0 4px 24px rgba(108,99,255,.3);z-index:200;white-space:nowrap;max-width:calc(100vw - 2rem)}
+.route-bar.visible{display:flex}
 .cc-meta{font-size:.69rem;color:var(--t4);margin-top:2px}
 .toolbar{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap}.toolbar input{flex:1;min-width:160px}
 .empty{text-align:center;padding:2.5rem;color:var(--t4);font-size:.875rem}
@@ -553,6 +557,13 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   </div>
   <div id="api-diag" style="display:none;padding:9px 14px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);font-size:.75rem;color:var(--t3);line-height:1.7;margin-bottom:.75rem"></div>
 
+  <!-- Barre parcours flottante -->
+  <div class="route-bar" id="route-bar">
+    <span style="font-size:.85rem;font-weight:700;color:var(--primary)">🗺 <span id="route-count">0</span> étape(s)</span>
+    <button class="btn btn-primary btn-sm" onclick="openRouteGMaps()">Ouvrir dans Google Maps →</button>
+    <button class="btn btn-ghost btn-sm" onclick="clearRouteSelection()" style="color:var(--t4)">✕ Vider</button>
+  </div>
+
   <div class="card">
     <div class="toolbar">
       <input type="text" id="r_srch" placeholder="🔍  Filtrer les résultats…" oninput="renderRadar()" />
@@ -755,6 +766,7 @@ const PRELOADED=[];
 let S={};              // profil étudiant
 let coords=null;       // {lat,lng} position
 let radarResults=[];   // résultats radar (PRELOADED + découverts)
+let routeSelection=new Set(); // IDs des entreprises dans le parcours
 let crmData={};        // {id: {status, sentDate, notes, contact}}
 let activeCats=new Set(CATS.map(c=>c.id));
 let emailVariant=0;
@@ -2173,9 +2185,11 @@ function radarCard(c){
   if(c.d)metaLine+=(metaLine?' · ':'')+escH(c.d);
 
   var safeId=cid.replace(/[^a-z0-9_-]/gi,'_');
+  var isInRoute=routeSelection.has(cid);
 
-  return '<div class="cc" id="cc-'+safeId+'">'+
+  return '<div class="cc'+(isInRoute?' selected':'')+'" id="cc-'+safeId+'">'+
     '<div class="cc-hdr">'+
+      '<input type="checkbox" class="cc-chk" '+(isInRoute?'checked':'')+' data-cid="'+cid+'" onclick="event.stopPropagation();toggleRoute(this.dataset.cid,this)" title="Ajouter au parcours Google Maps">'+
       '<div class="clog" style="overflow:hidden;flex-shrink:0">'+_logoInner+'</div>'+
       '<div style="flex:1;min-width:0">'+
         '<div class="cn">'+escH(c.n)+
@@ -2215,6 +2229,73 @@ function ini(n){return(n||'?').split(' ').slice(0,2).map(w=>w[0]||'').join('').t
 
 // ════════════════════════════════════════════════════════════
 // SECTION 6b — STEPPER & UX
+// ════════════════════════════════════════════════════════════
+// PARCOURS GOOGLE MAPS
+// ════════════════════════════════════════════════════════════
+function toggleRoute(cid,chk){
+  if(chk.checked){
+    routeSelection.add(cid);
+  } else {
+    routeSelection.delete(cid);
+  }
+  // Mettre à jour la classe selected sur la carte
+  var safeId=cid.replace(/[^a-z0-9_-]/gi,'_');
+  var card=document.getElementById('cc-'+safeId);
+  if(card)card.classList.toggle('selected',chk.checked);
+  updateRouteBar();
+}
+
+function updateRouteBar(){
+  var bar=document.getElementById('route-bar');
+  var cnt=document.getElementById('route-count');
+  if(!bar)return;
+  if(routeSelection.size>0){
+    bar.classList.add('visible');
+    if(cnt)cnt.textContent=routeSelection.size;
+  } else {
+    bar.classList.remove('visible');
+  }
+}
+
+function openRouteGMaps(){
+  if(!routeSelection.size)return;
+  var stops=[];
+  routeSelection.forEach(function(cid){
+    var c=radarResults.find(function(r){return r.id===cid;});
+    if(!c)return;
+    // Préférer les coordonnées, sinon l'adresse
+    if(c.lat&&c.lng){
+      stops.push(c.lat+','+c.lng);
+    } else if(c.d){
+      stops.push(encodeURIComponent(c.d));
+    } else {
+      stops.push(encodeURIComponent(c.n+(c.v?', '+c.v:'')));
+    }
+  });
+  if(!stops.length)return;
+  if(stops.length>9){
+    toast('Google Maps accepte max 9 étapes — seules les 9 premières seront utilisées.','warn');
+    stops=stops.slice(0,9);
+  }
+  var origin=coords?coords.lat+','+coords.lng:'';
+  var destination=stops[stops.length-1];
+  var waypoints=stops.slice(0,-1).join('|');
+  var url='https://www.google.com/maps/dir/?api=1'
+    +(origin?'&origin='+origin:'')
+    +'&destination='+destination
+    +(waypoints?'&waypoints='+waypoints:'')
+    +'&travelmode=driving';
+  window.open(url,'_blank','noopener');
+}
+
+function clearRouteSelection(){
+  routeSelection.clear();
+  // Décocher toutes les checkboxes et retirer la classe selected
+  document.querySelectorAll('.cc-chk').forEach(function(chk){chk.checked=false;});
+  document.querySelectorAll('.cc.selected').forEach(function(c){c.classList.remove('selected');});
+  updateRouteBar();
+}
+
 // ════════════════════════════════════════════════════════════
 let currentStep=1;
 
