@@ -1415,11 +1415,8 @@ const ROME_SUGGESTIONS={
 let _romeSelected=new Set();
 
 function lookupRomeo(){
-  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){toast('Worker proxy non configuré — déploie l\'application d\'abord','warn');return;}
   const fc=FORMATION_CONFIG[S.formation]||{};
-  const searchEl=document.getElementById('romeo-search')||document.querySelector('.romeo-search');
-  const typedQuery=(searchEl?.value||'').trim();
-  const defaultQuery=typedQuery||fc.label||(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value?.trim():null)||'';
+  const defaultQuery=fc.label||(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value?.trim():null)||'';
   openRomePicker(defaultQuery);
 }
 
@@ -1494,6 +1491,11 @@ async function doRomeoSearch(){
   if(!queryEl||!resultsEl)return;
   const query=queryEl.value.trim();
   if(!query){toast('Tape un métier pour chercher','warn');return;}
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){
+    resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem"><div style="font-size:1.8rem;margin-bottom:.5rem">⚠️</div><div style="font-weight:600;color:var(--t3)">Proxy non configuré</div><div style="font-size:.76rem;margin-top:.3rem">La recherche IA nécessite l'application déployée.<br>Utilise les codes du catalogue ci-dessous.</div></div>`;
+    _renderRomeCatalog();
+    return;
+  }
   resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem">
     <div style="font-size:1.8rem;margin-bottom:.5rem;display:inline-block;animation:spin .9s linear infinite">⏳</div>
     <div style="font-weight:600;margin-top:.3rem;color:var(--t3)">Recherche en cours…</div>
