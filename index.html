@@ -1,0 +1,2238 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<!-- v2026-05-27 -->
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
+<meta name="theme-color" content="#6C63FF">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Stagios">
+<meta name="description" content="Trouve ton stage, alternance ou emploi avec le radar géographique">
+<link rel="manifest" href="manifest.json">
+<title>Stagios – Radar & CRM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#6C63FF;--primary-h:#8B7CFF;--primary-l:rgba(108,99,255,.15);--primary-t:rgba(108,99,255,.10);
+  --primary-glow:0 0 20px rgba(108,99,255,.35);
+  --cyan:#5EEAD4;--cyan-l:rgba(94,234,212,.12);
+  --green:#43E97B;--green-l:rgba(67,233,123,.12);
+  --amber:#FF9F0A;--amber-l:rgba(255,159,10,.15);
+  --red:#FF5252;--red-l:rgba(255,82,82,.10);
+  --purple:#A78BFA;--purple-l:rgba(167,139,250,.12);
+  --pink:#FF6584;
+  /* aliases compat */
+  --blue:var(--primary);--blue-d:var(--primary-h);--blue-l:var(--primary-l);--blue-t:var(--primary-t);
+  --teal:var(--cyan);--teal-l:var(--cyan-l);--teal-d:var(--cyan);
+  /* dark (défaut) */
+  --bg:#0F0F1A;--bg2:#151528;--bg3:rgba(255,255,255,.06);
+  --card:#1A1A2E;--inp:rgba(255,255,255,.08);
+  --t1:#FFFFFF;--t2:#E2E8F0;--t3:#B0B0C3;--t4:#64748B;
+  --brd:rgba(255,255,255,.08);--brd2:rgba(255,255,255,.18);
+  --shadow:0 4px 24px rgba(0,0,0,.55);--shadow2:0 8px 32px rgba(0,0,0,.60);
+  --r:12px;--rl:20px;
+  --ff-h:'Poppins',sans-serif;--ff-b:'Inter',sans-serif;
+}
+html[data-theme=light]{
+  --bg:#F0EFFF;--bg2:#E8E6FF;--bg3:rgba(108,99,255,.07);
+  --card:#FFFFFF;--inp:#FFFFFF;
+  --t1:#1A1A2E;--t2:#334155;--t3:#64748B;--t4:#94A3B8;
+  --brd:rgba(108,99,255,.15);--brd2:rgba(108,99,255,.28);
+  --shadow:0 2px 12px rgba(108,99,255,.10);--shadow2:0 4px 24px rgba(108,99,255,.16);
+  --green:#16a34a;--green-l:rgba(22,163,74,.12);
+  --amber:#d97706;--amber-l:rgba(217,119,6,.13);
+  --red:#dc2626;--red-l:rgba(220,38,38,.10);
+}
+body{font-family:var(--ff-b);background:var(--bg);color:var(--t1);line-height:1.55;font-size:15px;-webkit-font-smoothing:antialiased}
+
+/* ── HEADER ─────────────────────────────────────────── */
+.hdr{background:rgba(15,15,26,.90);height:56px;display:flex;align-items:center;justify-content:space-between;padding:0 1.25rem;position:sticky;top:0;z-index:300;border-bottom:1px solid var(--brd);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
+html[data-theme=light] .hdr{background:rgba(240,239,255,.92)}
+.logo{display:flex;align-items:center;gap:10px;color:var(--t1);font-weight:700;font-size:.95rem;font-family:var(--ff-h);flex-shrink:0}
+.logo-sq{width:30px;height:30px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:.95rem;box-shadow:var(--primary-glow)}
+.hdr-r{display:flex;align-items:center;gap:6px}
+.tbtn{background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.35);color:var(--t2);padding:5px 11px;border-radius:20px;cursor:pointer;font-size:.75rem;font-family:var(--ff-h);font-weight:600;transition:all .15s}
+.tbtn:hover{background:rgba(108,99,255,.25);color:var(--t1)}
+
+/* ── BOTTOM PILL NAV ────────────────────────────────── */
+.tabnav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:8px;background:linear-gradient(135deg,rgba(30,41,59,.90) 0%,rgba(15,23,42,.95) 45%,rgba(11,16,32,.97) 100%);border:1.5px solid rgba(108,99,255,.40);border-radius:40px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 10px 28px rgba(108,99,255,.28),0 14px 24px rgba(0,0,0,.55);z-index:200;white-space:nowrap}
+html[data-theme=light] .tabnav{background:linear-gradient(135deg,rgba(255,255,255,.95) 0%,rgba(240,239,255,.98) 100%);border-color:rgba(108,99,255,.30);box-shadow:0 8px 24px rgba(108,99,255,.18),0 12px 20px rgba(0,0,0,.08)}
+.tab{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:28px;cursor:pointer;color:#64748B;font-family:var(--ff-h);font-size:.78rem;font-weight:600;transition:background .2s,color .2s,box-shadow .2s;border:1.5px solid transparent;background:transparent}
+html[data-theme=light] .tab{color:#94A3B8}
+.tab:hover{color:var(--t2);background:rgba(108,99,255,.08)}
+.tab.on{background:linear-gradient(135deg,rgba(108,99,255,.45) 0%,rgba(108,99,255,.20) 50%,rgba(49,46,129,.55) 100%);border-color:rgba(108,99,255,.65);color:#FFFFFF;box-shadow:0 0 18px rgba(108,99,255,.40),0 0 12px rgba(34,211,238,.15)}
+html[data-theme=light] .tab.on{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:0 4px 16px rgba(108,99,255,.35)}
+.tab-badge{min-width:16px;height:16px;padding:0 4px;border-radius:20px;background:rgba(108,99,255,.30);color:var(--purple);font-size:.6rem;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.tab.on .tab-badge{background:rgba(255,255,255,.20);color:#fff}
+
+/* ── LAYOUT ─────────────────────────────────────────── */
+.main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 7rem}
+.page{display:none}.page.on{display:block}
+
+/* ── CARDS ──────────────────────────────────────────── */
+.card{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);box-shadow:var(--shadow);padding:1.25rem}
+.card+.card{margin-top:1rem}
+.ct{font-size:1rem;font-weight:700;color:var(--t1);font-family:var(--ff-h);margin-bottom:.2rem}
+.cs{font-size:.8rem;color:var(--t3);margin-bottom:1.1rem}
+.row{display:flex;gap:1rem;flex-wrap:wrap}
+.col{flex:1;min-width:200px}
+
+/* ── FORM ───────────────────────────────────────────── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
+.fi{display:flex;flex-direction:column;gap:4px}.fi.full{grid-column:1/-1}
+.fi label{font-size:.71rem;font-weight:600;color:var(--t4);letter-spacing:.05em;text-transform:uppercase;font-family:var(--ff-h)}
+input,select,textarea{width:100%;padding:10px 14px;border:1px solid var(--brd2);border-radius:var(--r);font-size:.875rem;color:var(--t1);background:var(--inp);font-family:var(--ff-b);transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:rgba(108,99,255,.80);border-width:1.5px;box-shadow:0 0 0 3px rgba(108,99,255,.12)}
+textarea{resize:vertical;min-height:68px;line-height:1.5}
+input::placeholder,textarea::placeholder{color:var(--t4)}
+html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
+
+/* ── BUTTONS ────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--r);font-size:.82rem;font-weight:600;cursor:pointer;border:1.5px solid transparent;font-family:var(--ff-h);transition:all .18s;white-space:nowrap;text-decoration:none}
+.btn-primary{background:var(--primary);color:#fff;border-color:var(--primary);box-shadow:0 4px 16px rgba(108,99,255,.35)}.btn-primary:hover{background:var(--primary-h);box-shadow:0 6px 22px rgba(108,99,255,.50)}.btn-primary:active{transform:scale(.97)}
+.btn-teal{background:var(--cyan);color:#0F0F1A}.btn-teal:hover{filter:brightness(1.1)}
+.btn-ghost{background:transparent;color:var(--t2);border-color:var(--brd2)}.btn-ghost:hover{background:var(--bg3);border-color:rgba(108,99,255,.35)}
+.btn-green{background:var(--green);color:#0F0F1A}
+.btn-red{background:var(--red);color:#fff}
+.btn-sm{padding:5px 11px;font-size:.75rem}
+.btn-lg{padding:12px 24px;font-size:.9rem}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+
+/* ── BADGES ─────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:.66rem;font-weight:700;font-family:var(--ff-h);border:1px solid transparent}
+.b-ESN{background:var(--primary-l);color:var(--purple);border-color:rgba(108,99,255,.30)}
+.b-Public{background:var(--green-l);color:var(--green);border-color:rgba(67,233,123,.30)}
+.b-Santé{background:rgba(255,101,132,.10);color:#FF6584;border-color:rgba(255,101,132,.25)}
+.b-Education,.b-Lycées{background:var(--amber-l);color:var(--amber);border-color:rgba(255,159,10,.28)}
+.b-Industrie,.b-Logistique{background:var(--bg3);color:var(--t3);border-color:var(--brd)}
+.b-BTP{background:rgba(255,107,53,.10);color:#FF6B35;border-color:rgba(255,107,53,.25)}
+.b-Garage{background:rgba(148,163,184,.10);color:#94A3B8;border-color:rgba(148,163,184,.20)}
+.b-Restauration,.b-Hôtellerie{background:rgba(255,215,0,.10);color:#FFD700;border-color:rgba(255,215,0,.25)}
+.b-Banque{background:var(--purple-l);color:var(--purple);border-color:rgba(167,139,250,.30)}
+.b-PME{background:rgba(255,107,53,.10);color:#FF6B35;border-color:rgba(255,107,53,.25)}
+.b-Télécom,.b-Médias{background:var(--cyan-l);color:var(--cyan);border-color:rgba(94,234,212,.28)}
+.b-Asso{background:rgba(255,215,0,.10);color:#FFD700;border-color:rgba(255,215,0,.25)}
+.b-Coworking{background:var(--primary-l);color:var(--purple);border-color:rgba(108,99,255,.25)}
+.disc-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--purple-l);color:var(--purple);font-weight:700;border:1px solid rgba(167,139,250,.30)}
+.pmsmp-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--cyan-l);color:var(--cyan);font-weight:700;border:1px solid rgba(94,234,212,.30)}
+.alt-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--amber-l);color:var(--amber);font-weight:700;border:1px solid rgba(255,159,10,.28)}
+.ft-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--primary-l);color:var(--purple);font-weight:700;border:1px solid rgba(108,99,255,.35)}
+
+/* ── TIER DISTANCE ──────────────────────────────────── */
+.tier{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:700;border:1px solid transparent}
+.t1{background:var(--green-l);color:var(--green);border-color:rgba(67,233,123,.25)}.t2{background:var(--primary-l);color:var(--purple);border-color:rgba(108,99,255,.25)}
+.t3{background:var(--amber-l);color:var(--amber);border-color:rgba(255,159,10,.25)}.t4{background:var(--red-l);color:var(--red);border-color:rgba(255,82,82,.25)}
+.sdiv-dist{font-size:.73rem;font-weight:700;margin:1rem 0 .4rem;display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:10px;font-family:var(--ff-h)}
+.sdiv-dist::after{content:'';flex:1;height:1px;background:currentColor;opacity:.12}
+.sdiv-dist.t1{background:rgba(67,233,123,.07);color:var(--green)}
+.sdiv-dist.t2{background:rgba(108,99,255,.08);color:var(--purple)}
+.sdiv-dist.t3{background:rgba(255,159,10,.07);color:var(--amber)}
+.sdiv-dist.t4{background:rgba(255,82,82,.06);color:var(--red)}
+
+/* ── RADAR ──────────────────────────────────────────── */
+.radar-controls{display:flex;gap:1rem;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.cat-grid{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem}
+.cat-btn{padding:6px 14px;border-radius:20px;font-size:.74rem;font-weight:600;cursor:pointer;border:1.5px solid var(--brd2);background:transparent;color:var(--t3);transition:all .15s;font-family:var(--ff-h)}
+.cat-btn.on{background:var(--primary-l);border-color:rgba(108,99,255,.55);color:var(--purple)}
+.pcat-btn{padding:5px 11px;border-radius:20px;font-size:.73rem;font-weight:600;cursor:pointer;border:1.5px solid var(--brd);background:transparent;color:var(--t4);transition:all .15s;font-family:var(--ff-h)}
+.pcat-btn.on{background:var(--primary-l);border-color:rgba(108,99,255,.50);color:var(--primary)}
+.search-banner{background:var(--primary-l);border:1px solid rgba(108,99,255,.25);border-radius:var(--rl);padding:.75rem 1.1rem;margin-bottom:.875rem;display:flex;align-items:center;gap:10px;font-size:.82rem;color:var(--purple)}
+.spin{width:16px;height:16px;border:2px solid rgba(108,99,255,.25);border-top-color:var(--primary);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.clist{display:flex;flex-direction:column;gap:8px}
+.cc{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);padding:.875rem 1rem;display:flex;align-items:center;gap:12px;transition:border-color .2s,box-shadow .2s}
+.cc:hover{border-color:rgba(108,99,255,.45);box-shadow:0 4px 20px rgba(108,99,255,.15),var(--shadow)}
+.clog{width:38px;height:38px;border-radius:10px;background:var(--primary-l);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--purple);flex-shrink:0;border:1px solid rgba(108,99,255,.20)}
+.ci{flex:1;min-width:0}.cn{font-weight:700;font-size:.84rem;color:var(--t1);font-family:var(--ff-h)}
+.cd{font-size:.73rem;color:var(--t3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ce{font-size:.69rem;color:var(--primary);margin-top:2px;font-family:monospace;opacity:.9}
+.ca{display:flex;gap:5px;flex-shrink:0;flex-wrap:wrap;justify-content:flex-end}
+.cc{cursor:pointer;flex-wrap:wrap}
+.cc-hdr{display:flex;align-items:center;gap:10px;width:100%}
+.cc-body{display:none;width:100%;padding-top:.65rem;margin-top:.65rem;border-top:1px solid var(--brd)}
+.cc.open .cc-body{display:block}
+.cc-chev{margin-left:auto;font-size:.7rem;color:var(--t4);transition:transform .18s;flex-shrink:0;padding:2px 4px}
+.cc.open .cc-chev{transform:rotate(180deg)}
+.cc-links{display:flex;flex-wrap:wrap;gap:5px;margin-top:.55rem}
+.cc-desc{font-size:.73rem;color:var(--t3);line-height:1.5}
+.cc-meta{font-size:.69rem;color:var(--t4);margin-top:2px}
+.toolbar{display:flex;gap:8px;margin-bottom:.75rem;flex-wrap:wrap}.toolbar input{flex:1;min-width:160px}
+.empty{text-align:center;padding:2.5rem;color:var(--t4);font-size:.875rem}
+
+/* ── KANBAN ─────────────────────────────────────────── */
+.kanban{display:grid;grid-template-columns:repeat(6,minmax(180px,1fr));gap:10px;overflow-x:auto;padding-bottom:.5rem}
+.kb-col{background:rgba(255,255,255,.03);border:1px solid var(--brd);border-radius:var(--rl);padding:.875rem;min-height:80px;display:flex;flex-direction:column;gap:8px}
+.kb-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
+.kb-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;font-family:var(--ff-h)}
+.kb-count{min-width:20px;height:20px;padding:0 5px;border-radius:20px;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.kb-card{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:.7rem .875rem;cursor:pointer;transition:all .18s}
+.kb-card:hover{border-color:rgba(108,99,255,.45);box-shadow:0 4px 16px rgba(108,99,255,.15)}
+.kb-card.j7{border-left:3px solid var(--amber)}
+.kb-cname{font-size:.82rem;font-weight:700;color:var(--t1);margin-bottom:3px;font-family:var(--ff-h)}
+.kb-meta{font-size:.71rem;color:var(--t3);display:flex;gap:5px;flex-wrap:wrap;align-items:center}
+.kb-j7{font-size:.68rem;font-weight:700;color:var(--amber);background:var(--amber-l);padding:2px 7px;border-radius:20px}
+.kb-actions{margin-top:8px;display:flex;gap:4px;flex-wrap:wrap}
+.col-todo .kb-title{color:var(--t4)} .col-todo .kb-count{background:var(--bg3);color:var(--t4)}
+.col-sent .kb-title{color:var(--purple)} .col-sent .kb-count{background:var(--primary-l);color:var(--purple)}
+.col-follow .kb-title{color:var(--amber)} .col-follow .kb-count{background:var(--amber-l);color:var(--amber)}
+.col-int .kb-title{color:var(--purple)} .col-int .kb-count{background:var(--purple-l);color:var(--purple)}
+.col-rej .kb-title{color:var(--red)} .col-rej .kb-count{background:var(--red-l);color:var(--red)}
+.col-acc .kb-title{color:var(--green)} .col-acc .kb-count{background:var(--green-l);color:var(--green)}
+
+/* ── ADDR / SECTEUR ─────────────────────────────────── */
+.sector-tags{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:5px;min-height:24px}
+.sector-tag{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;background:var(--primary-l);color:var(--purple);font-size:.74rem;font-weight:600;border:1px solid rgba(108,99,255,.25)}
+.sector-tag button{background:none;border:none;color:var(--purple);cursor:pointer;font-size:.85rem;padding:0;line-height:1;opacity:.7}.sector-tag button:hover{opacity:1}
+.formation-badge{display:none;padding:10px 14px;border-radius:var(--rl);background:var(--bg2);border:1px solid var(--brd);margin-top:6px}
+.mode-opt{display:flex;align-items:center;gap:7px;padding:8px 12px;border-radius:var(--r);border:1.5px solid var(--brd2);background:transparent;color:var(--t3);font-size:.78rem;cursor:pointer;transition:all .18s;font-family:var(--ff-h);font-weight:600}
+.mode-opt:hover{border-color:rgba(108,99,255,.45);background:var(--primary-l);color:var(--t2)}
+.mode-opt:has(input:checked){border-color:var(--primary);background:var(--primary);color:#fff}
+.mode-opt input{display:none}
+.addr-wrap{position:relative;flex:1}
+.addr-dd{position:absolute;top:calc(100% - 1px);left:0;right:0;background:var(--card);border:1.5px solid var(--primary);border-top:none;border-radius:0 0 var(--r) var(--r);z-index:99;max-height:220px;overflow-y:auto;display:none;box-shadow:var(--shadow2)}
+.addr-item{padding:9px 13px;font-size:.8rem;cursor:pointer;color:var(--t2);border-bottom:.5px solid var(--brd);line-height:1.45}
+.addr-item:hover,.addr-item.focused{background:var(--primary-l);color:var(--purple)}
+.addr-item:last-child{border-bottom:none}
+.addr-tag{font-size:.69rem;color:var(--t4);display:block;margin-top:1px}
+
+/* ── EMAIL PAGE ─────────────────────────────────────── */
+.ep{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);overflow:hidden}
+.eh{background:var(--bg2);border-bottom:1px solid var(--brd);padding:1rem 1.25rem}
+.ef{display:flex;gap:8px;font-size:.8rem;color:var(--t2);margin-bottom:3px}
+.efl{font-weight:700;color:var(--t4);min-width:52px;font-size:.71rem;text-transform:uppercase;font-family:var(--ff-h)}
+.efl2{font-weight:700;color:var(--t1)}
+.ebody{padding:1.25rem;font-size:.86rem;line-height:1.8;color:var(--t1);white-space:pre-wrap;min-height:200px}
+
+/* ── PROFILE BAR ────────────────────────────────────── */
+.pbar{background:var(--primary-l);border:1.5px solid rgba(108,99,255,.25);border-radius:var(--rl);padding:.875rem 1.25rem;display:flex;align-items:center;gap:12px;margin-bottom:1.25rem;box-shadow:var(--primary-glow)}
+.avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-h));color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.88rem;flex-shrink:0;font-family:var(--ff-h);box-shadow:0 0 12px rgba(108,99,255,.40)}
+.pbar-name{font-weight:700;color:var(--t1);font-size:.88rem;font-family:var(--ff-h)}.pbar-sub{font-size:.74rem;color:var(--t3)}
+
+/* ── STATS ──────────────────────────────────────────── */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:1.25rem}
+.sc{background:var(--card);border:1px solid var(--brd);border-radius:var(--r);padding:.875rem;text-align:center}
+.sn{font-size:1.35rem;font-weight:700;color:var(--primary);font-family:var(--ff-h)}.sl{font-size:.67rem;color:var(--t4);font-weight:500;margin-top:2px}
+
+/* ── NOTICES ────────────────────────────────────────── */
+.notice{border-radius:var(--r);padding:10px 14px;font-size:.79rem;margin-bottom:1rem;border:1px solid;display:flex;gap:8px;align-items:flex-start}
+.n-warn{background:var(--amber-l);border-color:rgba(255,159,10,.35);color:var(--amber)}
+.n-info{background:var(--primary-l);border-color:rgba(108,99,255,.30);color:var(--purple)}
+.n-ok{background:var(--green-l);border-color:rgba(67,233,123,.30);color:var(--green)}
+
+/* ── MISC ───────────────────────────────────────────── */
+.sdiv{font-size:.7rem;font-weight:600;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;margin:.9rem 0 .4rem;display:flex;align-items:center;gap:8px;font-family:var(--ff-h)}
+.sdiv::after{content:'';flex:1;height:1px;background:var(--brd)}
+code{background:var(--bg3);padding:2px 6px;border-radius:6px;font-size:.79rem;color:var(--purple);border:1px solid rgba(108,99,255,.15)}
+.tipsbox{background:var(--bg2);border:1px solid var(--brd);border-radius:var(--rl);padding:1rem 1.25rem;margin-top:1.25rem}
+.tipsbox-title{font-size:.82rem;font-weight:700;color:var(--t2);margin-bottom:.5rem;font-family:var(--ff-h)}
+.tipsbox ol{padding-left:1.2rem;font-size:.8rem;color:var(--t3);line-height:1.95}
+select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
+/* ── STEPPER ──────────────────────────────────────── */
+.step-progress{display:flex;align-items:center;margin-bottom:1.5rem;padding:0 4px}
+.step-dot{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;position:relative}
+.step-dot::after{content:'';position:absolute;top:14px;left:50%;width:100%;height:2px;background:var(--brd2);z-index:0}
+.step-dot:last-child::after{display:none}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.74rem;font-weight:700;font-family:var(--ff-h);position:relative;z-index:1;border:2px solid var(--brd2);background:var(--bg2);color:var(--t4);transition:all .25s}
+.step-lbl{font-size:.63rem;font-weight:600;color:var(--t4);font-family:var(--ff-h);white-space:nowrap;transition:color .25s}
+.step-dot.done .step-num{background:var(--green);border-color:var(--green);color:#fff}
+.step-dot.done::after{background:var(--green)}
+.step-dot.active .step-num{background:var(--primary);border-color:var(--primary);color:#fff;box-shadow:var(--primary-glow)}
+.step-dot.active .step-lbl{color:var(--primary);font-weight:700}
+.step-page{display:none}
+.step-page.on{display:block}
+.step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;padding-top:1rem;border-top:1px solid var(--brd)}
+.field-err{font-size:.7rem;color:var(--red);margin-top:3px;display:none}
+.fi.has-err input,.fi.has-err select{border-color:var(--red)!important}
+/* ── FIRST-TIME BANNER ─────────────────────────────── */
+.first-banner{background:var(--amber-l);border:1.5px solid rgba(255,159,10,.40);border-radius:var(--rl);padding:.8rem 1.1rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:10px;font-size:.78rem;color:var(--t2);line-height:1.5}
+.first-banner-close{margin-left:auto;flex-shrink:0;background:transparent;border:1px solid rgba(255,159,10,.5);color:var(--amber);padding:4px 12px;border-radius:20px;cursor:pointer;font-size:.72rem;font-weight:600;font-family:var(--ff-h);white-space:nowrap}
+/* ── MODAL ─────────────────────────────────────────── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-box{background:var(--card);border:1.5px solid var(--brd2);border-radius:var(--rl);padding:1.5rem;max-width:420px;width:100%;box-shadow:var(--shadow2)}
+.modal-title{font-size:.95rem;font-weight:700;color:var(--t1);font-family:var(--ff-h);margin-bottom:.6rem}
+.modal-body{font-size:.82rem;color:var(--t3);line-height:1.65;margin-bottom:1.25rem}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.ft-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;font-size:.75rem;border:1px solid;cursor:pointer;transition:opacity .2s;margin-bottom:.75rem;user-select:none}
+.ft-chip:hover{opacity:.8}
+/* ── SCAN PROGRESS ─────────────────────────────────── */
+.scan-count{font-weight:700;color:var(--primary);margin-left:4px}
+@media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
+@media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}.btn{min-height:44px}.btn-sm{min-height:40px;padding:8px 12px}.step-lbl{display:none}}
+@media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(130px,1fr))}.tab{padding:7px 10px;font-size:.68rem;gap:4px}.step-lbl{display:none}}
+
+/* ── TOASTS ──────────────────────────────────────────── */
+#toast-container{position:fixed;bottom:88px;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;align-items:flex-end}
+.toast{padding:11px 16px;border-radius:var(--rl);font-size:.82rem;font-weight:600;color:#fff;box-shadow:var(--shadow2);pointer-events:auto;max-width:360px;line-height:1.45;transition:opacity .2s,transform .2s;font-family:var(--ff-h)}
+.toast-ok{background:var(--green)}.toast-warn{background:var(--amber)}.toast-err{background:var(--red)}.toast-info{background:var(--primary)}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.toast{animation:toastIn .22s ease}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo"><div class="logo-sq" id="logo-sq">🎯</div><span id="logo-text">Stagios – Radar & CRM</span></div>
+  <div class="hdr-r">
+    <button class="tbtn" onclick="exportJSON()" title="Exporter mes données" aria-label="Exporter mes données en JSON">💾 Exporter</button>
+    <label class="tbtn" title="Importer une sauvegarde" style="cursor:pointer" aria-label="Importer une sauvegarde JSON">📂 Importer<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
+    <button class="tbtn" onclick="toggleTheme()" id="tbtn" aria-label="Basculer le thème clair/sombre">🌙</button>
+  </div>
+</header>
+
+<!-- TABS -->
+<nav class="tabnav" id="tabnav">
+  <div class="tab on" onclick="goTab('profil')" id="tab-profil">👤 Profil</div>
+  <div class="tab" onclick="goTab('radar')" id="tab-radar">🎯 Radar <span class="tab-badge" id="badge-radar">0</span></div>
+  <div class="tab" onclick="goTab('suivi')" id="tab-suivi">📋 Suivi <span class="tab-badge" id="badge-suivi" style="background:var(--amber-l);color:var(--amber)">0</span></div>
+  <div class="tab" onclick="goTab('email')" id="tab-email">✉️ Email</div>
+</nav>
+
+<div class="main">
+
+<!-- ══ PROFIL ══════════════════════════════════════════ -->
+<div class="page on" id="page-profil">
+  <div id="first-banner" class="first-banner" style="display:none">
+    <span>💡 <strong>Tes données restent dans ce navigateur.</strong> Exporte-les régulièrement via le bouton "Exporter" en haut pour ne rien perdre si tu changes d'appareil.</span>
+    <button class="first-banner-close" onclick="dismissFirstBanner()" aria-label="Fermer ce message">OK</button>
+  </div>
+  <div class="card">
+    <div class="ct">👤 Mon profil</div>
+    <div class="cs" id="profil-cs">Ces informations personnalisent tes emails de candidature et activent le radar géographique. Commence par importer ton CV ou remplis les champs.</div>
+    <div class="fg">
+      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+          <label class="btn btn-primary btn-sm" style="cursor:pointer">
+            📎 Choisir mon CV (PDF ou TXT)
+            <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
+          </label>
+          <span id="cv_status" style="font-size:.76rem;color:var(--blue)">Aucun CV chargé</span>
+        </div>
+        <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
+        <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV peut remplir automatiquement le profil, la formation, l'adresse et les compétences.</div>
+      </div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Identité</div></div>
+      <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
+      <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
+      <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
+      <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
+      <div class="fi full"><label>Organisme de formation</label>
+        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, … (optionnel)" /></div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
+      <div class="fi full"><label>Formation / Métier *</label>
+        <select id="p_formation" onchange="onFormationChange()">
+          <option value="">— Sélectionner une formation —</option>
+          <option value="TIP">💻 Technicien Informatique de Proximité (TIP)</option>
+          <option value="Compta">📊 Comptabilité / Gestion</option>
+          <option value="Mecanique">🔧 Mécanique automobile</option>
+          <option value="Secretariat">📝 Secrétariat / Assistanat</option>
+          <option value="Commerce">🛍️ Commerce / Vente</option>
+          <option value="Electro">⚡ Électrotechnique / Électricité</option>
+          <option value="BTP">🏗️ Bâtiment / BTP</option>
+          <option value="Restauration">🍽️ Restauration / Hôtellerie</option>
+          <option value="Social">❤️ Aide à la personne / Social</option>
+          <option value="Logistique">📦 Logistique / Transport</option>
+          <option value="Custom">✏️ Autre (personnalisé)</option>
+        </select>
+        <div id="formation_badge" class="formation-badge" style="display:none"></div>
+      </div>
+      <div class="fi full" id="custom_formation_wrap" style="display:none">
+        <label>Nom exact de ta formation</label>
+        <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
+      </div>
+      <div class="fi full">
+        <label>Secteurs supplémentaires à cibler (optionnel)</label>
+        <div id="sector_tags" class="sector-tags"></div>
+        <div style="display:flex;gap:7px">
+          <input id="p_sector_input" placeholder="ex : Agroalimentaire, Aéronautique… + Entrée" onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomSector();}">
+          <button class="btn btn-ghost btn-sm" onclick="addCustomSector()" style="flex-shrink:0">+ Ajouter</button>
+        </div>
+        <div style="font-size:.7rem;color:var(--t4);margin-top:3px">Ces secteurs s'ajouteront aux catégories du radar</div>
+      </div>
+      <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+        <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
+          <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
+          <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
+          <label class="mode-opt" id="mode_opt_alternance"><input type="radio" name="p_mode" value="alternance" onchange="onModeChange()"><span>🔄 Alternance</span></label>
+          <label class="mode-opt" id="mode_opt_emploi"><input type="radio" name="p_mode" value="emploi" onchange="onModeChange()"><span>💼 Emploi CDI/CDD</span></label>
+        </div>
+        <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
+      </div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
+      <div class="fi">
+        <label>Codes NAF supplémentaires (optionnel)</label>
+        <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
+        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
+      </div>
+      <div class="fi">
+        <label>Codes ROME supplémentaires (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
+        <div style="display:flex;gap:6px">
+          <input id="p_rome_codes" placeholder="ex : M1801, M1802" style="flex:1" title="Codes ROME pour La Bonne Boite et France Travail">
+          <button type="button" id="romeo-btn" onclick="lookupRomeo()" class="btn" style="padding:6px 10px;font-size:.75rem;white-space:nowrap" title="Détecter automatiquement les codes ROME via ROMEO v2">🤖 Auto</button>
+        </div>
+        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Codes ROME pour filtrer les offres France Travail et La Bonne Boite. 🤖 Auto les détecte depuis ta formation.</div>
+      </div>
+      <div class="fi">
+        <label>🔍 Moteur de recherche par défaut</label>
+        <select id="p_search_engine">
+          <option value="google">Google</option>
+          <option value="bing">Bing</option>
+          <option value="duckduckgo">DuckDuckGo</option>
+          <option value="qwant">Qwant 🇫🇷</option>
+          <option value="ecosia">Ecosia 🌱</option>
+          <option value="brave">Brave</option>
+        </select>
+      </div>
+      <div class="fi"><label>Début de stage</label><input id="p_debut" type="date" value="2026-06-05" /></div>
+      <div class="fi"><label>Fin de stage</label><input id="p_fin" type="date" value="2026-07-31" /></div>
+      <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Localisation & candidature</div></div>
+      <div class="fi full"><label>📍 Adresse (pour le radar de distance)</label>
+        <div style="display:flex;gap:8px">
+          <div class="addr-wrap">
+            <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
+              oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" />
+            <div id="addr_dd" class="addr-dd"></div>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" style="flex-shrink:0">📡 GPS</button>
+        </div>
+        <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:4px"></div>
+      </div>
+      <div class="fi full"><label>Compétences (optionnel)</label>
+        <textarea id="p_comp" placeholder="Certifications, logiciels maîtrisés…"></textarea></div>
+      <div class="fi full"><label>Motivation (optionnel)</label>
+        <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
+    </div>
+
+    <!-- ─ STEP 1 : Identité ─ -->
+    <div class="step-page on" id="step-1">
+      <div class="fg">
+        <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+          <label for="cv_input" style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
+            <label class="btn btn-primary btn-sm" style="cursor:pointer" aria-label="Choisir mon CV PDF ou TXT">
+              📎 Choisir mon CV (PDF ou TXT)
+              <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
+            </label>
+            <span id="cv_status" style="font-size:.76rem;color:var(--blue)" aria-live="polite">Aucun CV chargé</span>
+          </div>
+          <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
+          <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV peut remplir automatiquement le profil, la formation, l'adresse et les compétences.</div>
+        </div>
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Identité</div></div>
+        <div class="fi"><label for="p_prenom">Prénom *</label><input id="p_prenom" placeholder="Léa" autocomplete="given-name" /><div class="field-err" id="err_prenom">Prénom requis</div></div>
+        <div class="fi"><label for="p_nom">Nom *</label><input id="p_nom" placeholder="Martin" autocomplete="family-name" /><div class="field-err" id="err_nom">Nom requis</div></div>
+        <div class="fi"><label for="p_tel">Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" autocomplete="tel" /><div class="field-err" id="err_tel">Téléphone requis</div></div>
+        <div class="fi"><label for="p_email">Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" autocomplete="email" /><div class="field-err" id="err_email">Email requis</div></div>
+        <div class="fi full"><label for="p_etab">Organisme de formation</label>
+          <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, … (optionnel)" /></div>
+      </div>
+      <div class="step-nav">
+        <div></div>
+        <button class="btn btn-primary" onclick="goStep(2)">Suivant : Formation →</button>
+      </div>
+    </div>
+
+    <!-- ─ STEP 2 : Formation & Objectif ─ -->
+    <div class="step-page" id="step-2">
+      <div class="fg">
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
+        <div class="fi full"><label for="p_formation">Formation / Métier *</label>
+          <select id="p_formation" onchange="onFormationChange()">
+            <option value="">— Sélectionner une formation —</option>
+            <option value="TIP">💻 Technicien Informatique de Proximité (TIP)</option>
+            <option value="Compta">📊 Comptabilité / Gestion</option>
+            <option value="Mecanique">🔧 Mécanique automobile</option>
+            <option value="Secretariat">📝 Secrétariat / Assistanat</option>
+            <option value="Commerce">🛍️ Commerce / Vente</option>
+            <option value="Electro">⚡ Électrotechnique / Électricité</option>
+            <option value="BTP">🏗️ Bâtiment / BTP</option>
+            <option value="Restauration">🍽️ Restauration / Hôtellerie</option>
+            <option value="Social">❤️ Aide à la personne / Social</option>
+            <option value="Logistique">📦 Logistique / Transport</option>
+            <option value="Custom">✏️ Autre (personnalisé)</option>
+          </select>
+          <div class="field-err" id="err_formation">Formation requise</div>
+          <div id="formation_badge" class="formation-badge" style="display:none"></div>
+        </div>
+        <div class="fi full" id="custom_formation_wrap" style="display:none">
+          <label for="p_custom_formation">Nom exact de ta formation</label>
+          <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
+        </div>
+        <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
+          <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
+            <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
+            <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
+            <label class="mode-opt" id="mode_opt_alternance"><input type="radio" name="p_mode" value="alternance" onchange="onModeChange()"><span>🔄 Alternance</span></label>
+            <label class="mode-opt" id="mode_opt_emploi"><input type="radio" name="p_mode" value="emploi" onchange="onModeChange()"><span>💼 Emploi CDI/CDD</span></label>
+          </div>
+          <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
+        </div>
+        <div class="fi"><label for="p_debut">Début de stage / contrat</label><input id="p_debut" type="date" value="2026-06-05" /></div>
+        <div class="fi"><label for="p_fin">Fin de stage / contrat</label><input id="p_fin" type="date" value="2026-07-31" /></div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" onclick="goStep(1)">← Précédent</button>
+        <button class="btn btn-primary" onclick="goStep(3)">Suivant : Localisation →</button>
+      </div>
+    </div>
+
+    <!-- ─ STEP 3 : Localisation & Paramètres ─ -->
+    <div class="step-page" id="step-3">
+      <div class="fg">
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Localisation</div></div>
+        <div class="fi full"><label for="p_addr">📍 Adresse (pour le radar de distance)</label>
+          <div style="display:flex;gap:8px">
+            <div class="addr-wrap">
+              <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
+                oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" aria-label="Adresse pour le radar" aria-autocomplete="list" aria-controls="addr_dd" />
+              <div id="addr_dd" class="addr-dd" role="listbox" aria-label="Suggestions d'adresse"></div>
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" aria-label="Utiliser ma position GPS" style="flex-shrink:0">📡 GPS</button>
+          </div>
+          <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:4px" aria-live="polite"></div>
+        </div>
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
+        <div class="fi">
+          <label for="p_rome_codes" style="display:flex;align-items:center;gap:6px">Codes ROME (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" aria-label="Chercher sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="p_rome_codes" placeholder="ex : M1801, M1802, K1302" title="Codes ROME pour cibler les offres France Travail, LBA et Immersion" style="flex:1">
+            <button class="btn btn-ghost btn-sm" id="romeo-btn" onclick="lookupRomeo()" title="Trouver automatiquement les codes ROME via l'IA France Travail" style="flex-shrink:0;white-space:nowrap">🤖 Auto</button>
+          </div>
+          <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Clique <strong style="color:var(--t3)">🤖 Auto</strong> pour trouver les codes ROME automatiquement selon ta formation, ou renseigne-les manuellement.</div>
+        </div>
+        <div class="fi">
+          <label for="p_search_engine">Moteur de recherche par défaut</label>
+          <select id="p_search_engine">
+            <option value="google">Google</option>
+            <option value="bing">Bing</option>
+            <option value="duckduckgo">DuckDuckGo</option>
+            <option value="qwant">Qwant 🇫🇷</option>
+            <option value="ecosia">Ecosia 🌱</option>
+            <option value="brave">Brave</option>
+          </select>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" onclick="goStep(2)">← Précédent</button>
+        <button class="btn btn-primary" onclick="goStep(4)">Suivant : Compétences →</button>
+      </div>
+    </div>
+
+    <!-- ─ STEP 4 : Compétences & Motivation ─ -->
+    <div class="step-page" id="step-4">
+      <div class="fg">
+        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Compétences & motivation</div></div>
+        <div class="fi full"><label for="p_comp">Compétences (optionnel)</label>
+          <textarea id="p_comp" placeholder="Certifications, logiciels maîtrisés…"></textarea></div>
+        <div class="fi full"><label for="p_motiv">Motivation (optionnel)</label>
+          <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
+        <div class="fi full" style="border:1.5px solid rgba(29,110,245,.15);border-radius:var(--rl);padding:.75rem;font-size:.74rem;color:var(--t3);line-height:1.5;display:flex;align-items:center;gap:10px">
+          <span style="font-size:1.2rem">🎯</span>
+          <span>Les offres <strong style="color:var(--blue)">France Travail</strong> (stage, alternance, emploi) sont <strong>intégrées automatiquement</strong> dans le radar — aucune configuration requise.</span>
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-ghost" onclick="goStep(3)">← Précédent</button>
+        <button class="btn btn-primary btn-lg" onclick="saveProfile()" id="btn-save-profile">💾 Sauvegarder & Lancer le Radar →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ RADAR ═══════════════════════════════════════════ -->
+<div class="page" id="page-radar">
+  <div id="pbar" class="pbar" style="display:none"></div>
+  <div id="sg" class="sg" style="display:none"></div>
+
+  <div class="card" style="margin-bottom:1rem">
+    <div class="ct">🎯 Radar géographique</div>
+    <div class="cs">Trouve les offres France Travail (stage, alternance, emploi) dans un rayon ajustable, classées de la plus proche à la plus éloignée.</div>
+    <div id="ft-status-chip" class="ft-chip" style="display:none"></div>
+    <div id="no-coords-banner" style="display:none;padding:10px 14px;border-radius:var(--r);background:rgba(251,191,36,.1);border:1px solid #ca8a04;color:#fbbf24;font-size:.8rem;margin-bottom:.75rem">
+      📍 <strong>Adresse manquante</strong> — Va dans <button onclick="goTab('profil')" class="btn btn-ghost btn-sm" style="padding:1px 8px;font-size:.75rem;margin:0 2px">Profil</button> et saisis ton adresse, puis sélectionne une suggestion dans la liste ou clique sur 📡 GPS.
+    </div>
+    <div class="radar-controls">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:200px">
+        <span style="font-size:.8rem;color:var(--t3);white-space:nowrap">Rayon :</span>
+        <input type="range" id="r_km" min="5" max="50" value="30" step="5"
+          oninput="document.getElementById('r_km_val').textContent=this.value+' km'" style="flex:1;padding:0" />
+        <span id="r_km_val" style="font-size:.875rem;font-weight:700;color:var(--blue);min-width:44px">30 km</span>
+      </div>
+      <button class="btn btn-primary" onclick="launchRadar()" id="radar-btn" aria-label="Lancer le scan radar">🔍 Scanner</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()" aria-label="Exporter les résultats en CSV">📥 CSV</button>
+    </div>
+  </div>
+
+  <div id="radar-banner" class="search-banner" style="display:none">
+    <div class="spin"></div><span id="radar-msg">Initialisation…</span>
+  </div>
+  <div id="api-diag" style="display:none;padding:9px 14px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);font-size:.75rem;color:var(--t3);line-height:1.7;margin-bottom:.75rem"></div>
+
+  <div class="card">
+    <div class="toolbar">
+      <input type="text" id="r_srch" placeholder="🔍  Filtrer les résultats…" oninput="renderRadar()" />
+      <select id="r_type" onchange="renderRadar()" style="width:auto;flex:0">
+        <option value="">Tous les types</option>
+      </select>
+    </div>
+    <div class="clist" id="r_list" aria-live="polite" aria-label="Résultats du radar"></div>
+  </div>
+</div>
+
+<!-- ══ SUIVI KANBAN ════════════════════════════════════ -->
+<div class="page" id="page-suivi">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+    <div>
+      <h2 style="font-size:1rem;font-weight:700;color:var(--t1)">📋 Suivi des candidatures</h2>
+      <div style="font-size:.78rem;color:var(--t3)" id="suivi-sub">Change le statut depuis le menu déroulant sur chaque carte.</div>
+    </div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="exportCSV()" aria-label="Exporter le suivi en CSV">📥 CSV</button>
+      <button class="btn btn-ghost btn-sm" onclick="goTab('email')" id="btn-write-email">✉️ Rédiger un email</button>
+    </div>
+  </div>
+  <div class="notice n-warn" id="j7-banner" style="display:none">
+    ⏰ <span id="j7-txt"></span>
+  </div>
+  <div class="kanban" id="kanban"></div>
+</div>
+
+<!-- ══ EMAIL ════════════════════════════════════════════ -->
+<div class="page" id="page-email">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:8px">
+    <h2 style="font-size:1rem;font-weight:700;color:var(--t1)">✉️ Générateur d'email</h2>
+    <button class="btn btn-ghost btn-sm" onclick="goTab('suivi')">← Suivi</button>
+  </div>
+  <div class="card" style="margin-bottom:1rem">
+    <div class="fg">
+      <div class="fi">
+        <label>Entreprise ciblée</label>
+        <select id="e_company" onchange="pickEmailCompany()" style="font-size:.85rem">
+          <option value="">— Sélectionner —</option>
+        </select>
+      </div>
+      <div class="fi">
+        <label>Variante</label>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost btn-sm" onclick="prevVar()" aria-label="Variante précédente">◀</button>
+          <span id="e_var_lbl" style="font-size:.8rem;color:var(--t3);padding:5px 0;flex:1;text-align:center">1/1</span>
+          <button class="btn btn-ghost btn-sm" onclick="nextVar()" aria-label="Variante suivante">▶</button>
+        </div>
+      </div>
+      <div class="fi full" id="e_contact_wrap" style="display:none">
+        <label>Nom du contact (si connu)</label>
+        <input id="e_contact" placeholder="ex : Mme Dupont — personnalise la salutation" oninput="renderEmail()" />
+      </div>
+    </div>
+  </div>
+  <div id="e_notice" style="display:none" class="notice n-info"></div>
+  <div class="ep" id="ep" style="min-height:200px"></div>
+  <div style="display:flex;gap:8px;margin-top:.875rem;flex-wrap:wrap">
+    <button class="btn btn-teal" onclick="copyEmail()" id="copy-btn">📋 Copier</button>
+    <button class="btn btn-ghost btn-sm" id="e_li_btn" style="display:none" onclick="openLinkedIn()" aria-label="Chercher le contact sur LinkedIn">🔍 Trouver le contact LinkedIn</button>
+    <button class="btn btn-green btn-sm" onclick="markEmailSent()" id="mark-sent-btn">✅ Marquer envoyé</button>
+    <button class="btn btn-ghost btn-sm" onclick="window.print()" aria-label="Imprimer l'email">🖨</button>
+  </div>
+  <div class="tipsbox">
+    <div class="tipsbox-title">📌 Mode d'emploi</div>
+    <ol>
+      <li>Sélectionne une entreprise du Suivi ci-dessus</li>
+      <li>Utilise <strong>🔍 Trouver le contact LinkedIn</strong> pour chercher le DSI ou RH</li>
+      <li>Colle le nom dans le champ Contact pour personnaliser la salutation</li>
+      <li>Copie l'email et envoie depuis ta messagerie avec ton CV en PDF</li>
+      <li>Reviens sur le Suivi pour marquer "Envoyé" et suivre la relance J+7</li>
+    </ol>
+  </div>
+</div>
+
+</div><!-- /main -->
+<div id="toast-container"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// SECTION 1 — CONFIG & DATA
+// ════════════════════════════════════════════════════════════
+const VERSION='4.0';
+const KM_STEP=5;
+const RADIUS_DEFAULT=30;
+
+// ─── France Travail API ───────────────────────────────────────────────────────
+// Proxy Cloudflare Worker — injecté au déploiement via GitHub Actions Secrets.
+const FT_PROXY_URL     = 'https://stagios-ft-proxy.fhoguin.workers.dev';
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FORMATION_CONFIG={
+  TIP:{label:'Technicien Informatique de Proximité (TIP)',emoji:'💻',
+    diploma:'Titre Professionnel TIP',
+    sectors:['ESN','Public','Education','Lycées','Santé','Industrie','Banque','Asso'],
+    romeCodes:['M1802','M1801','M1805'],
+    skills:'support utilisateur N1/N2, helpdesk, déploiement Windows 10/11, Active Directory, GLPI, réseau TCP/IP/DNS/DHCP'},
+  Compta:{label:'Comptabilité / Gestion',emoji:'📊',
+    diploma:'Titre Professionnel / BTS Comptabilité-Gestion',
+    sectors:['PME','Banque','Public','Industrie','Asso'],
+    romeCodes:['M1203','M1206','M1205'],
+    skills:'comptabilité générale et analytique, saisie et lettrage, TVA, rapprochement bancaire, Excel, logiciels comptables (Sage, Ciel, EBP)'},
+  Mecanique:{label:'Mécanique automobile',emoji:'🔧',
+    diploma:'CAP / Bac Pro Mécanique automobile',
+    sectors:['Garage','Industrie','Logistique','PME'],
+    romeCodes:['I1604','I1605','I1601'],
+    skills:'diagnostic électronique, entretien courant, pneumatiques, freinage, distribution, vidange, mécanique générale'},
+  Secretariat:{label:'Secrétariat / Assistanat',emoji:'📝',
+    diploma:'Titre Professionnel / BTS Assistant de Manager',
+    sectors:['PME','Public','Santé','Banque','Industrie','Asso'],
+    romeCodes:['M1607','M1604','M1602'],
+    skills:'gestion du courrier et des agendas, accueil, frappe et mise en forme de documents, Pack Office, outils collaboratifs'},
+  Commerce:{label:'Commerce / Vente',emoji:'🛍️',
+    diploma:'Titre Professionnel / BTS MCO / NDRC',
+    sectors:['PME','Industrie','Banque'],
+    romeCodes:['D1402','D1403','D1501'],
+    skills:'relation client, techniques de vente, merchandising, gestion de caisse, outils CRM, prospection commerciale'},
+  Electro:{label:'Électrotechnique / Électricité',emoji:'⚡',
+    diploma:'CAP / Bac Pro Électrotechnique',
+    sectors:['Industrie','Public','BTP'],
+    romeCodes:['I1308','I1306','I1304'],
+    skills:'câblage et raccordement électrique, lecture de plans, habilitation électrique, dépannage, automatismes'},
+  BTP:{label:'Bâtiment / BTP',emoji:'🏗️',
+    diploma:'CAP / Bac Pro Bâtiment',
+    sectors:['BTP','Industrie','Public'],
+    romeCodes:['F1101','F1106','F1201'],
+    skills:'lecture de plans, maçonnerie, coffrage, enduits, sécurité chantier, outils et matériaux de construction'},
+  Restauration:{label:'Restauration / Hôtellerie',emoji:'🍽️',
+    diploma:'CAP / Bac Pro Restauration',
+    sectors:['Restauration','Hôtellerie','Collectivité'],
+    romeCodes:['G1602','G1603','G1404'],
+    skills:'préparation culinaire, dressage, hygiène HACCP, service en salle, gestion des stocks, encaissement'},
+  Social:{label:'Aide à la personne / Social',emoji:'❤️',
+    diploma:'CAP AEPE / ADVF / BTS SP3S',
+    sectors:['Santé','Asso','Public'],
+    romeCodes:['K1302','K1207','K1205'],
+    skills:'accompagnement de la personne, aide aux gestes de la vie quotidienne, écoute active, premiers secours, travail en équipe pluridisciplinaire'},
+  Logistique:{label:'Logistique / Transport',emoji:'📦',
+    diploma:'CAP / Bac Pro Logistique',
+    sectors:['Logistique','Industrie','Commerce','PME'],
+    romeCodes:['N1103','N4101','N1301'],
+    skills:'gestion des stocks, préparation de commandes, utilisation WMS/ERP, CACES (ou en cours), expéditions et réceptions'},
+  Custom:{label:'Autre formation (personnalisée)',emoji:'✏️',diploma:'',sectors:[],romeCodes:[],skills:''},
+};
+
+
+const CRM_COLS=[
+  {id:'todo',   cls:'col-todo', lbl:'À contacter',  ico:'📭'},
+  {id:'sent',   cls:'col-sent', lbl:'Envoyé',        ico:'📤'},
+  {id:'follow', cls:'col-follow',lbl:'Relance',      ico:'⏰'},
+  {id:'int',    cls:'col-int',  lbl:'Entretien',     ico:'🤝'},
+  {id:'rej',    cls:'col-rej',  lbl:'Refus',         ico:'❌'},
+  {id:'acc',    cls:'col-acc',  lbl:'Accepté',       ico:'🎉'},
+];
+
+
+
+const SEARCH_ENGINES={
+  google:'https://www.google.com/search?q=',
+  bing:'https://www.bing.com/search?q=',
+  duckduckgo:'https://duckduckgo.com/?q=',
+  qwant:'https://www.qwant.com/?q=',
+  brave:'https://search.brave.com/search?q=',
+  ecosia:'https://www.ecosia.org/search?q=',
+};
+function searchUrl(query){
+  const e=SEARCH_ENGINES[S.searchEngine]||SEARCH_ENGINES.google;
+  return e+encodeURIComponent(query);
+}
+
+// Hash déterministe pour IDs stables (blacklist persistante entre scans)
+function _hid(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return(h>>>0).toString(36);}
+
+const PRELOADED=[];
+
+
+// ════════════════════════════════════════════════════════════
+// SECTION 2 — ÉTAT APPLICATION
+// ════════════════════════════════════════════════════════════
+let S={};              // profil étudiant
+let coords=null;       // {lat,lng} position
+let radarResults=[];   // résultats radar (PRELOADED + découverts)
+let crmData={};        // {id: {status, sentDate, notes, contact}}
+let emailVariant=0;
+let emailCompanyId=null;
+// FT token lives in sessionStorage (cleared on tab close); no in-memory copy needed
+
+// ── MODE DE RECHERCHE ─────────────────────────────────────────
+var MODE_HINTS={
+  stage_nr:'Recherche de stages de formation non rémunérés — lettres de motivation ciblées',
+  stage_r:'Recherche de stages conventionnés rémunérés — approche plus professionnelle',
+  alternance:"Recherche de contrats d'apprentissage ou de professionnalisation — liens alternance mis en avant",
+  emploi:"Recherche d'emploi CDI/CDD — candidature orientée poste et expérience"
+};
+function getMode(){
+  var el=document.querySelector('input[name="p_mode"]:checked');
+  return el?el.value:'stage_nr';
+}
+function onModeChange(){
+  var m=getMode();
+  var hint=document.getElementById('mode_hint');
+  if(hint)hint.textContent=MODE_HINTS[m]||'';
+  if(S&&S.prenom){S.mode=m;persist();}
+}
+function getModeLabel(){
+  var labels={stage_nr:'stage non rémunéré',stage_r:'stage rémunéré',alternance:'alternance',emploi:'emploi CDI/CDD'};
+  return labels[(S&&S.mode)||getMode()]||'stage';
+}
+function getModeObjet(){
+  var labels={stage_nr:'Recherche de stage non rémunéré',stage_r:'Candidature – Stage rémunéré',alternance:'Candidature – Alternance / apprentissage',emploi:'Candidature spontanée – CDI/CDD'};
+  return labels[(S&&S.mode)||getMode()]||labels.stage_nr;
+}
+function getFranceTravailUrl(companyName,city){
+  var q=encodeURIComponent(companyName||'');
+  var mode=(S&&S.mode)||getMode();
+  var typeContrat=mode==='alternance'?'&typeContrat=E2,FS':mode==='emploi'?'&typeContrat=CDI,CDD':'';
+  return 'https://candidat.francetravail.fr/offres/recherche?motsCles='+q+(city?'&ville='+encodeURIComponent(city):'')+typeContrat;
+}
+function getLaBonneAlternanceUrl(romes){
+  return 'https://labonnealternance.apprentissage.beta.gouv.fr/recherche-apprentissage?display=list&page=1&romes='+(romes||'')+'&radius=30';
+}
+
+
+// ── FORMATION & SECTEURS CUSTOM ─────────────────────────────────────────
+
+function onFormationChange(){
+  var val=document.getElementById('p_formation').value;
+  var wrap=document.getElementById('custom_formation_wrap');
+  var badge=document.getElementById('formation_badge');
+  if(val==='Custom'){wrap.style.display='flex';}else{wrap.style.display='none';}
+  if(val&&FORMATION_CONFIG[val]){
+    var fc=FORMATION_CONFIG[val];
+    badge.style.display='block';
+    badge.innerHTML=
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">'+
+        '<span style="font-size:1.4rem">'+fc.emoji+'</span>'+
+        '<div><div style="font-weight:700;font-size:.85rem;color:var(--t1)">'+escH(fc.label)+'</div>'+
+        '<div style="font-size:.74rem;color:var(--t3)">'+escH(fc.diploma)+'</div></div>'+
+      '</div>'+
+      '<div style="font-size:.73rem;color:var(--t3);margin-bottom:5px">Secteurs ciblés :</div>'+
+      '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
+        fc.sectors.map(function(s){return'<span style="padding:2px 8px;border-radius:20px;font-size:.69rem;font-weight:600;background:var(--blue-l);color:var(--blue)">'+escH(s)+'</span>';}).join('')+
+      '</div>'+
+      (fc.skills?'<div style="font-size:.72rem;color:var(--t4);margin-top:6px;font-style:italic">Compétences type : '+escH(fc.skills)+'</div>':'');
+  }else{badge.style.display='none';}
+}
+
+function getFormationConfig(){
+  var fid=S.formation||'Custom';
+  var base=FORMATION_CONFIG[fid]||FORMATION_CONFIG.Custom;
+  return Object.assign({},base);
+}
+
+function getSearchUrl(query){
+  return searchUrl(query);
+}
+
+
+// ── BLACKLIST ─────────────────────────────────────────────────────────────
+var _blacklist=new Set();
+var _showBlacklisted=false;
+
+function blacklist(id){
+  _blacklist.add(id);
+  saveBlacklist();
+  renderRadar();
+  updateBadges();
+}
+function unblacklist(id){
+  _blacklist.delete(id);
+  saveBlacklist();
+  renderRadar();
+  updateBadges();
+}
+function saveBlacklist(){
+  try{localStorage.setItem('tip_bl',JSON.stringify([..._blacklist]));}catch(e){}
+}
+function loadBlacklist(){
+  try{const d=localStorage.getItem('tip_bl');if(d)_blacklist=new Set(JSON.parse(d));}catch(e){}
+}
+
+function showBlacklistedModal(){
+  var blItems=radarResults.filter(function(c){return _blacklist.has(c.id);});
+  if(!blItems.length)return;
+  var content='<div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:1rem" id="bl-overlay" onclick="if(event.target.id===\'bl-overlay\')this.remove()">' +
+    '<div style="background:var(--card);border-radius:var(--rl);padding:1.25rem;max-width:500px;width:100%;max-height:70vh;overflow-y:auto;box-shadow:var(--sh2)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">' +
+        '<strong style="font-size:.9rem;color:var(--t1)">🚫 Structures masquées</strong>' +
+        '<button onclick="document.getElementById(\'bl-overlay\').remove()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--t3)">×</button>' +
+      '</div>' +
+      blItems.map(function(c){
+        return '<div style="display:flex;align-items:center;justify-content:space-between;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);margin-bottom:5px">' +
+          '<div><div style="font-size:.83rem;font-weight:600;color:var(--t1)">'+escH(c.n)+'</div>' +
+          '<div style="font-size:.72rem;color:var(--t3)">'+escH(c.t)+(c.v?' · '+escH(c.v):'')+'</div></div>' +
+          '<button class="btn btn-ghost btn-sm" onclick="unblacklist(\''+escA(c.id)+'\');document.getElementById(\'bl-overlay\').remove();showBlacklistedModal();" style="font-size:.72rem;color:var(--green)">↩ Restaurer</button>' +
+        '</div>';
+      }).join('') +
+      '<div style="margin-top:.75rem;display:flex;gap:6px;justify-content:flex-end">' +
+        '<button class="btn btn-ghost btn-sm" onclick="_blacklist.clear();saveBlacklist();renderRadar();updateBadges();document.getElementById(\'bl-overlay\').remove()">Tout restaurer</button>' +
+        '<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'bl-overlay\').remove()">Fermer</button>' +
+      '</div>' +
+    '</div>' +
+  '</div>';
+  document.body.insertAdjacentHTML('beforeend',content);
+}
+
+function toggleShowBlacklisted(){
+  _showBlacklisted=!_showBlacklisted;
+  renderRadar();
+}
+
+
+// ── SCAN CV — extraction + préremplissage ─────────────────────────
+async function handleCvUpload(event){
+  var file=event.target.files[0];
+  if(!file)return;
+  var status=document.getElementById('cv_status');
+  var preview=document.getElementById('cv_preview');
+  if(status)status.textContent='⏳ Lecture du CV…';
+  try{
+    var text='';
+    if(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf')){
+      text=await extractPdfText(file);
+    }else{
+      text=await new Promise(function(res,rej){
+        var r=new FileReader();
+        r.onload=function(e){res(e.target.result);};
+        r.onerror=rej;
+        r.readAsText(file,'utf-8');
+      });
+    }
+    text=(text||'').replace(/\s+/g,' ').trim();
+    if(!text||text.length<30){if(status)status.textContent='⚠️ CV vide ou illisible — essaie en .txt';return;}
+    S.cvText=text;
+    S.cvFileName=file.name;
+    S.cvParsed=parseCvForEmail(text);
+    var filled=autofillFromCv(text);
+    if(status)status.textContent='✅ CV chargé : '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
+    if(preview){preview.style.display='block';preview.textContent=text.substring(0,350)+(text.length>350?'…':'');}
+    persist();
+  }catch(e){
+    if(status)status.textContent='⚠️ Erreur lecture : '+e.message;
+    console.error(e);
+  }
+}
+
+async function extractPdfText(file){
+  if(typeof pdfjsLib==='undefined')throw new Error('pdf.js non chargé');
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  var ab=await file.arrayBuffer();
+  var pdf=await pdfjsLib.getDocument({data:ab}).promise;
+  var texts=[];
+  for(var i=1;i<=Math.min(pdf.numPages,6);i++){
+    var page=await pdf.getPage(i);
+    var content=await page.getTextContent();
+    texts.push(content.items.map(function(it){return it.str;}).join('\n'));
+  }
+  return texts.join('\n');
+}
+
+function autofillFromCv(text){
+  var filled=0;
+  var t=text||'';
+  var emailMatch=t.match(/[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}/);
+  if(emailMatch){filled+=setField('p_email',emailMatch[0]);}
+  var telMatch=t.match(/(?:\+33|0)\s*[1-9](?:[\s.\-]?\d{2}){4}/);
+  if(telMatch){filled+=setField('p_tel',telMatch[0].replace(/[\s.\-]/g,'').replace(/^33/,'+33'));}
+
+  var chunks=t.split(/[\n.;]/).map(function(l){return l.trim();}).filter(function(l){return l.length>2&&l.length<70;});
+  var nameFound=false;
+  var _skipName=/^(rue|avenue|boulevard|mail|t[eé]l[eé]phone|mobile|email|adresse|curriculum|vitae|profil|formation|exp[eé]rience|comp[eé]tence|stage|agence|p[oô]le|centre)/i;
+  for(var i=0;i<Math.min(25,chunks.length)&&!nameFound;i++){
+    var l=chunks[i];
+    // Prénom Nom ou Prénom NOM
+    var nm=l.match(/^([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]+)\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜa-zàáâäéèêëîïôùúûü\-]+)$/);
+    // PRENOM NOM ou NOM Prénom (tout caps)
+    if(!nm)nm=l.match(/^([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ]{2,20})\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ]{2,20})$/);
+    if(nm&&!_skipName.test(nm[0])){
+      var w1=nm[1],w2=nm[2];
+      // Détermine prénom (mixte/minuscule) vs nom (tout caps)
+      if(w1===w1.toUpperCase()&&w2!==w2.toUpperCase()){
+        filled+=setField('p_prenom',w2[0].toUpperCase()+w2.slice(1).toLowerCase());filled+=setField('p_nom',w1);
+      } else {
+        filled+=setField('p_prenom',w1);filled+=setField('p_nom',w2);
+      }
+      nameFound=true;
+    }
+  }
+  // Fallback : cherche prénom+nom dans les 400 premiers caractères (PDF sans sauts de ligne nets)
+  if(!nameFound){
+    var head=t.substring(0,400);
+    var nm2=head.match(/\b([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]{2,20})\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ]{2,20})\b/)||
+             head.match(/\b([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ]{2,20})\s+([A-ZÀÁÂÄÉÈÊËÎÏÔÙÚÛÜ][a-zàáâäéèêëîïôùúûü\-]{2,20})\b/);
+    if(nm2&&!_skipName.test(nm2[0])){
+      var a=nm2[1],b=nm2[2];
+      if(a===a.toUpperCase()&&b!==b.toUpperCase()){
+        filled+=setField('p_prenom',b[0].toUpperCase()+b.slice(1).toLowerCase());filled+=setField('p_nom',a);
+      } else {
+        filled+=setField('p_prenom',a);filled+=setField('p_nom',b);
+      }
+    }
+  }
+
+  var addrMatch=t.match(/(\d+\s+(?:rue|avenue|boulevard|impasse|allée|chemin|place|route)[^\n,;]{5,50}[\s,]+\d{5}\s+[A-Za-zÀ-ÖØ-öø-ÿ\-\s]{2,30})/i)||t.match(/(\d{5})\s+([A-Za-zÀ-ÖØ-öø-ÿ\-\s]{3,25})/);
+  if(addrMatch){filled+=setField('p_addr',addrMatch[0].trim());fetchSugg(addrMatch[0].trim());}
+
+  var diplomaPatterns=[
+    {rx:/Titre Professionnel\s+([^\n,;.]{5,60})/i,fid:'TIP',cust:''},
+    {rx:/TP\s+TIP\b/i,fid:'TIP',cust:''},
+    {rx:/BTS\s+([^\n,;.]{3,50})/i,fid:'Custom',cust:'BTS '},
+    {rx:/CAP\s+([^\n,;.]{3,50})/i,fid:'Custom',cust:'CAP '},
+    {rx:/Bac Pro\s+([^\n,;.]{3,50})/i,fid:'Custom',cust:'Bac Pro '},
+    {rx:/comptabilit[eé]/i,fid:'Compta',cust:''},
+    {rx:/m[eé]canique automobile/i,fid:'Mecanique',cust:''},
+    {rx:/secr[eé]tariat|assistanat/i,fid:'Secretariat',cust:''},
+    {rx:/commerce|vente|MCO|NDRC/i,fid:'Commerce',cust:''},
+    {rx:/[eé]lectrotechnique|[eé]lectricit[eé]/i,fid:'Electro',cust:''},
+    {rx:/b[aâ]timent|BTP|maçonnerie/i,fid:'BTP',cust:''},
+    {rx:/restauration|h[oô]tellerie|cuisine/i,fid:'Restauration',cust:''},
+    {rx:/aide.{0,10}personne|social|AEPE|ADVF/i,fid:'Social',cust:''},
+    {rx:/logistique|transport/i,fid:'Logistique',cust:''},
+    {rx:/informatique|num[eé]rique|r[eé]seau|syst[eè]me/i,fid:'TIP',cust:''}
+  ];
+  for(var di=0;di<diplomaPatterns.length;di++){
+    var dp=diplomaPatterns[di], dm=t.match(dp.rx), selF=document.getElementById('p_formation');
+    if(dm&&selF&&!selF.value){selF.value=dp.fid;onFormationChange();filled++;if(dp.fid==='Custom'&&dp.cust&&dm[1])filled+=setField('p_custom_formation',dp.cust+dm[1].trim().substring(0,60));break;}
+  }
+
+  var orgPatterns=[/AFPA[^\n,;]{0,40}/i,/GRETA[^\n,;]{0,40}/i,/CFA[^\n,;]{0,40}/i,/Lyc[eé]e[^\n,;]{0,40}/i,/[Ii]nstitut[^\n,;]{0,40}/i,/[Ee]cole[^\n,;]{0,40}/i,/Universit[eé][^\n,;]{0,40}/i,/IUT[^\n,;]{0,40}/i];
+  for(var oi=0;oi<orgPatterns.length;oi++){var om=t.match(orgPatterns[oi]);if(om){filled+=setField('p_etab',om[0].trim().substring(0,60));break;}}
+
+  var lines=t.split('\n').map(function(l){return l.trim();}).filter(function(l){return l.length>5&&l.length<200;});
+  var techWords=['Windows','Linux','Office','Excel','Word','Python','JavaScript','SQL','réseau','TCP','GLPI','Active Directory','Sage','Ciel','EBP','diagnostic','mécanique','soudure','béton','cuisine','HACCP'];
+  var techLines=lines.filter(function(l){return techWords.some(function(w){return l.toLowerCase().includes(w.toLowerCase());});});
+  if(techLines.length)filled+=setField('p_comp',techLines.slice(0,5).join(', ').substring(0,400));
+
+  return filled;
+}
+
+function setField(id,val){
+  var el=document.getElementById(id);
+  if(el&&!el.value&&val){el.value=String(val).trim();return 1;}
+  return 0;
+}
+
+function parseCvForEmail(text){
+  var result={experiences:[],certifs:[]};
+  var seen=new Set();
+
+  // Expériences : stage/alternance/poste chez X
+  var expRxList=[
+    /(?:stage|alternance|mission|apprentissage|contrat|CDD|CDI|int[eé]rim)\s+(?:\w+\s+){0,3}(?:chez|au sein de|au|à|en)\s+([^\n,;.(]{3,50})/gi,
+    /(?:technicien|assistant|agent|employ[eé]|op[eé]rateur|aide[- ]?\w*|charg[eé]|responsable)\s+(?:\w+\s+){0,2}(?:chez|au sein de|au|à|en)\s+([^\n,;.(]{3,50})/gi,
+  ];
+  expRxList.forEach(function(rx){
+    var m;
+    while((m=rx.exec(text))!==null){
+      var entry=m[0].replace(/\s+/g,' ').trim().substring(0,80);
+      var key=entry.toLowerCase().substring(0,25);
+      if(!seen.has(key)){seen.add(key);result.experiences.push(entry);}
+      if(result.experiences.length>=2)break;
+    }
+  });
+
+  // Certifications : CACES, habilitation, permis, TOEIC, PSC1, HACCP…
+  var certifRxList=[
+    /CACES\s*(?:R\s*\d+\s*)?\d+[^\n,;.]{0,15}/gi,
+    /habilitation\s+[eé]lectrique[^\n,;.]{0,25}/gi,
+    /permis\s+[A-Z][^\n,;.]{0,12}/gi,
+    /TOEIC[^\n,;.]{0,20}/gi,
+    /PSC\s*1\b|SST\b/g,
+    /HACCP[^\n,;.]{0,10}/gi,
+  ];
+  certifRxList.forEach(function(rx){
+    var m;
+    while((m=rx.exec(text))!==null){
+      var certif=m[0].replace(/\s+/g,' ').trim().substring(0,50);
+      if(!result.certifs.includes(certif))result.certifs.push(certif);
+      if(result.certifs.length>=4)break;
+    }
+  });
+
+  return(result.experiences.length||result.certifs.length)?result:null;
+}
+
+function persist(){try{localStorage.setItem('tip_v4',JSON.stringify({S,crmData,coords}));}catch(e){}}
+function restore(){
+  try{
+    const d=JSON.parse(localStorage.getItem('tip_v4')||'{}');
+    if(d.S)S=d.S;
+    if(d.crmData)crmData=d.crmData;
+    if(d.blacklist)_blacklist=new Set(d.blacklist);
+    if(d.coords)coords=d.coords;
+  }catch(e){}
+}
+
+function toast(msg,type){
+  type=type||'info';
+  var c=document.getElementById('toast-container');
+  var t=document.createElement('div');
+  t.className='toast toast-'+type;t.textContent=msg;
+  c.appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transform='translateY(8px)';setTimeout(function(){if(t.parentNode)t.remove();},220);},3200);
+}
+
+function updateBranding(){
+  var fc=FORMATION_CONFIG[S.formation]||{};
+  var label=fc.label||S.formationLabel||'Stagios';
+  var emoji=fc.emoji||'🎯';
+  var lsq=document.getElementById('logo-sq');
+  if(lsq)lsq.textContent=emoji;
+  var lt=document.getElementById('logo-text');
+  if(lt)lt.textContent=(S.prenom?S.prenom+' · ':'')+label;
+  document.title='Stagios — '+(label||'Radar & CRM');
+  var cs=document.getElementById('profil-cs');
+  if(cs&&S.prenom)cs.textContent=label+(S.etab?' · '+S.etab:'')+' — ces informations personnalisent tes emails et activent le radar géographique.';
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 3 — MODULE THÈME & NAVIGATION
+// ════════════════════════════════════════════════════════════
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('tip_theme',t);document.getElementById('tbtn').textContent=t==='dark'?'☀️':'🌙';}
+function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
+
+function goTab(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  document.getElementById('page-'+id).classList.add('on');
+  document.getElementById('tab-'+id).classList.add('on');
+  window.scrollTo(0,0);
+  if(id==='suivi')renderKanban();
+  if(id==='email')refreshEmailList();
+  if(id==='radar')renderRadar();
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 4 — MODULE GEO (Autocomplete & Distance)
+// ════════════════════════════════════════════════════════════
+let _addrT=null,_addrItems=[],_addrFocus=-1,_lastAddrForCoords='';
+
+function onAddrInput(v){
+  _addrFocus=-1;clearTimeout(_addrT);
+  if(v.length<3){closeDD();return;}
+  document.getElementById('geo_st').textContent='🔍 Recherche…';
+  _addrT=setTimeout(()=>fetchSugg(v),350);
+}
+async function fetchSugg(q){
+  try{
+    const r=await fetch(`https://api-adresse.data.gouv.fr/search/?q=${encodeURIComponent(q)}&limit=7`);
+    const d=await r.json();
+    _addrItems=d.features||[];renderDD(_addrItems);
+    document.getElementById('geo_st').textContent=_addrItems.length?`${_addrItems.length} suggestion(s) — clique la bonne`:'Aucun résultat';
+  }catch(e){
+    // Fallback Nominatim
+    try{
+      const r=await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&countrycodes=fr&limit=5`,{headers:{'User-Agent':'StageTIP/4.0'}});
+      const d=await r.json();
+      _addrItems=d.map(x=>({nom:x.display_name.split(', ').slice(0,2).join(', '),context:x.display_name.split(', ').slice(2,4).join(', '),lat:parseFloat(x.lat),lon:parseFloat(x.lon)}));
+      renderDDNom(_addrItems);
+    }catch(e2){document.getElementById('geo_st').textContent='⚠️ Erreur réseau';}
+  }
+}
+function renderDD(items){
+  const dd=document.getElementById('addr_dd');
+  if(!items.length){dd.style.display='none';return;}
+  dd.innerHTML=items.map((it,i)=>{
+    const props=it.properties||{};
+    const label=props.label||it.nom||'';
+    const ctx=props.context||it.context||'';
+    return`<div class="addr-item" data-idx="${i}" onmousedown="selectAddr(${i})">${label}<span class="addr-tag">${ctx}</span></div>`;
+  }).join('');
+  dd.style.display='block';
+}
+function renderDDNom(items){renderDD(items.map(it=>({properties:{label:it.nom,context:it.context},_lat:it.lat,_lon:it.lon})));}
+function selectAddr(i){
+  const it=_addrItems[i];const props=it.properties||{};
+  const geo=it.geometry?.coordinates||[it._lon||it.lon,it._lat||it.lat];
+  coords={lat:parseFloat(geo[1]||it._lat),lng:parseFloat(geo[0]||it._lon)};
+  const inp=document.getElementById('p_addr');
+  inp.value=props.label||it.nom||inp.value;
+  _lastAddrForCoords=inp.value;
+  closeDD();
+  document.getElementById('geo_st').textContent='✅ Position confirmée — '+inp.value.split(',').slice(0,2).join(',');
+  updateCoordsWarning();
+}
+function closeDD(){const dd=document.getElementById('addr_dd');if(dd)dd.style.display='none';_addrFocus=-1;}
+function onAddrKey(e){
+  const items=document.querySelectorAll('.addr-item');if(!items.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();_addrFocus=Math.min(_addrFocus+1,items.length-1);hlAddr();}
+  else if(e.key==='ArrowUp'){e.preventDefault();_addrFocus=Math.max(_addrFocus-1,0);hlAddr();}
+  else if(e.key==='Enter'&&_addrFocus>=0){e.preventDefault();selectAddr(_addrFocus);}
+  else if(e.key==='Escape')closeDD();
+}
+function hlAddr(){document.querySelectorAll('.addr-item').forEach((el,i)=>{el.classList.toggle('focused',i===_addrFocus);if(i===_addrFocus)el.scrollIntoView({block:'nearest'});});}
+document.addEventListener('click',e=>{if(!e.target.closest('.addr-wrap'))closeDD();});
+
+async function gpsLocate(){
+  const st=document.getElementById('geo_st');st.textContent='📡 Localisation…';
+  if(!navigator.geolocation){st.textContent='⚠️ GPS non supporté';return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    coords={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    const gpsLabel='GPS ('+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+')';
+    document.getElementById('p_addr').value=gpsLabel;
+    _lastAddrForCoords=gpsLabel;
+    st.textContent='✅ Position GPS détectée';
+    updateCoordsWarning();
+  },()=>st.textContent='⚠️ GPS refusé — saisis ton adresse');
+}
+
+function haversine(a,b,c,d){
+  const R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
+  const x=Math.sin(dLat/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));
+}
+function dist(c){if(!coords||!c.lat)return null;return haversine(coords.lat,coords.lng,c.lat,c.lng);}
+async function getCommuneFromCoords(lat,lng){
+  try{
+    const _r=await fetch('https://geo.api.gouv.fr/communes?lat='+lat+'&lon='+lng+'&fields=nom,code&format=json');
+    const _d=await _r.json();
+    return(_d&&_d.length)?{nom:_d[0].nom,code:_d[0].code}:null;
+  }catch(e){return null;}
+}
+function tier(d){
+  if(d===null)return{lbl:'',cls:'',s:99};
+  if(d<5)return{lbl:'🏠 '+d.toFixed(1)+' km',cls:'t1',s:1};
+  if(d<15)return{lbl:'🚶 '+d.toFixed(1)+' km',cls:'t2',s:2};
+  if(d<30)return{lbl:'🚌 '+d.toFixed(1)+' km',cls:'t3',s:3};
+  return{lbl:'🚗 '+d.toFixed(1)+' km',cls:'t4',s:4};
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 5 — MODULE API (Overpass + Entreprises + Alternance)
+// ════════════════════════════════════════════════════════════
+const NAF2T={
+  '6201Z':'ESN','6202A':'ESN','6202B':'ESN','6203Z':'ESN','6209Z':'ESN','9511Z':'ESN','6190Z':'ESN',
+  '6920Z':'Banque','6619B':'Banque','6622Z':'Banque','6491Z':'Banque','6511Z':'Banque','6512Z':'Banque',
+  '8411Z':'Public','8412Z':'Public','8413Z':'Public',
+  '8211Z':'PME','8219Z':'PME','8299Z':'PME','4619Z':'PME','4771Z':'PME','4759A':'PME','4643Z':'PME',
+  '4520A':'Garage','4520B':'Garage','4511Z':'Garage','4519Z':'Garage','4531Z':'Garage','4532Z':'Garage',
+  '4719B':'PME','4711A':'PME','4711B':'PME','4711D':'PME',
+  '4321A':'Industrie','4321B':'Industrie','2711Z':'Industrie','3320A':'Industrie','3513Z':'Industrie','4322A':'Industrie',
+  '4120A':'BTP','4120B':'BTP','4211Z':'BTP','4312A':'BTP','4391A':'BTP','4331Z':'BTP','4332A':'BTP','4399C':'BTP',
+  '5610A':'Restauration','5610B':'Restauration','5621Z':'Restauration','5590Z':'Restauration','5630Z':'Restauration',
+  '8810A':'Asso','8810B':'Asso','8899A':'Asso','8899B':'Asso','9499Z':'Asso','9411Z':'Asso','9412Z':'Asso',
+  '8720A':'Santé','8730A':'Santé','8730B':'Santé','8731Z':'Santé','8732Z':'Santé',
+  '4941A':'Logistique','4941B':'Logistique','5210B':'Logistique','5221Z':'Logistique','5224A':'Logistique','5224B':'Logistique','5229A':'Logistique',
+  '5010Z':'Logistique',
+  '8610Z':'Santé','8621Z':'Santé','8622A':'Santé','8622B':'Santé','8622C':'Santé',
+  '5813Z':'Médias','6020Z':'Médias','6010Z':'Médias','7311Z':'Médias',
+};
+
+function updateCoordsWarning(){
+  const b=document.getElementById('no-coords-banner');
+  if(!b)return;
+  b.style.display=coords?'none':'block';
+}
+
+function updateFTStatus(state){
+  const chip=document.getElementById('ft-status-chip');
+  if(!chip)return;
+  const hasProxy=(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__'));
+  if(state==='ok'){
+    chip.style.cssText='display:inline-flex;background:rgba(34,197,94,.13);border-color:var(--green);color:var(--green)';
+    chip.textContent='✅ Offres France Travail disponibles';
+  }else if(state==='error'){
+    chip.style.cssText='display:inline-flex;background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171';
+    chip.textContent='⚠️ Service France Travail indisponible — vérifie la configuration du Worker';
+  }else if(hasProxy){
+    chip.style.cssText='display:inline-flex;background:rgba(108,99,255,.12);border-color:var(--blue);color:var(--blue)';
+    chip.textContent='🔵 France Travail prêt — lance un scan pour activer';
+  }else{
+    chip.style.cssText='display:inline-flex;background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171';
+    chip.textContent='⚙️ Worker France Travail non configuré — vérifie le secret GitHub FT_PROXY_URL';
+  }
+}
+
+async function ftProxy(endpoint,method,body){
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))throw new Error('Proxy non configuré');
+  const _url=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
+  const r=await fetch(_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint,method:method||'GET',body:body||undefined})});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){
+    console.error('[FT Proxy] '+r.status,endpoint,JSON.stringify(data));
+    throw new Error('Proxy '+r.status+': '+(data.message||data.error||data.error_description||JSON.stringify(data)));
+  }
+  return data;
+}
+
+async function getFTToken(){
+  const _cached=sessionStorage.getItem('_ft_tok');
+  const _exp=parseInt(sessionStorage.getItem('_ft_tok_exp')||'0');
+  if(_cached&&Date.now()<_exp)return _cached;
+
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){
+    updateFTStatus('unconfigured');return null;
+  }
+
+  const _proxyUrl=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
+
+  try{
+    const _r=await fetch(_proxyUrl,{method:'POST'});
+    if(!_r.ok){updateFTStatus('error');return null;}
+    const _d=await _r.json();
+    if(!_d.access_token){updateFTStatus('error');return null;}
+    sessionStorage.setItem('_ft_tok',_d.access_token);
+    sessionStorage.setItem('_ft_tok_exp',String(Date.now()+(_d.expires_in-60)*1000));
+    updateFTStatus('ok');
+    return _d.access_token;
+  }catch(e){
+    updateFTStatus('error');return null;
+  }
+}
+
+async function fetchFranceTravail(lat,lng,rKm){
+  const token=await getFTToken();
+  if(!token)return[];
+  try{
+    const _fcFT=FORMATION_CONFIG[S.formation]||{};
+    const _romeReFT=/^[A-Z]\d{4}$/;
+    const _extraRFT=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeReFT.test(c));
+    const _romes=[...new Set([...(_fcFT.romeCodes||[]),..._extraRFT])].slice(0,5).join(',');
+    const _dist=Math.min(rKm,35);
+    const isAlt=(S.mode==='alternance');
+    const isEmploi=(S.mode==='emploi');
+
+    // Paramètres communs
+    const _base={nbrParPage:'50',sort:'1',distance:String(_dist)};
+    // Géolocalisation : commune INSEE si dispo, sinon lat/lng
+    if(S.communeInsee)_base.commune=S.communeInsee;
+    else{_base.latitude=String(lat);_base.longitude=String(lng);}
+    if(_romes)_base.codeROME=_romes;
+
+    const calls=[];
+
+    if(isAlt){
+      // Alternance : paramètre dédié (apprentissage + pro)
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,alternance:'true'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    } else if(isEmploi){
+      // Emploi classique CDI/CDD
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,typeContrat:'CDI,CDD'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    } else {
+      // Stage : CDD (les stages conventionnés apparaissent souvent en CDD court terme)
+      // + alternance pour proposer aussi de l'alternance à l'étudiant en stage
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,typeContrat:'CDD',nbrParPage:'30'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+      calls.push(fetch('https://api.francetravail.io/partenaire/offresdemploi/v2/offres/search?'+new URLSearchParams({..._base,alternance:'true',nbrParPage:'20'}),
+        {headers:{Authorization:'Bearer '+token,Accept:'application/json'}}).then(r=>r.ok?r.json():{resultats:[]}));
+    }
+
+    const results=await Promise.all(calls);
+    const seen=new Set();
+    return results.flatMap(d=>(d?.resultats||[]).map(o=>{
+      if(seen.has(o.id))return null;seen.add(o.id);
+      const _lt=parseFloat(o.lieuTravail?.latitude);
+      const _ln=parseFloat(o.lieuTravail?.longitude);
+      return{
+        id:'ft_'+o.id,
+        n:o.entreprise?.nom||o.intitule,
+        t:NAF2T[(o.entreprise?.codeNaf||'').replace(/\./g,'')]||(_fcFT.sectors&&_fcFT.sectors[0])||'PME',
+        v:o.lieuTravail?.libelle||'',
+        d:o.intitule+(o.salaire?.libelle?' — '+o.salaire.libelle:''),
+        e:'',
+        web:'https://candidat.francetravail.fr/offres/recherche/detail/'+o.id,
+        lat:isNaN(_lt)?lat:_lt,lng:isNaN(_ln)?lng:_ln,
+        src:'France Travail',hasOffer:true,ft:true,
+        contractType:o.typeContrat?.libelle||'',
+        altOffer:!!(o.alternance)
+      };
+    }).filter(Boolean)).filter(o=>o.n&&o.n.length>1);
+  }catch(e){return[];}
+}
+
+async function fetchLaBonneBoite(lat,lng,rKm){
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))return[];
+  const _fc=FORMATION_CONFIG[S.formation]||{};
+  const _romeRe=/^[A-Z]\d{4}$/;
+  const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
+  const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,5);
+  if(!_romes.length)return[];
+  try{
+    const _p=new URLSearchParams({latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),page:'1',page_size:'100'});
+    _romes.forEach(r=>_p.append('rome',r));
+    const data=await ftProxy('/partenaire/labonneboite/v2/recherche?'+_p);
+    if(!data||!data.items)return[];
+    return data.items.map(c=>({
+      id:'lbb_'+(c.siret||c.company_name||Math.random()),
+      n:c.company_name||'',
+      t:(_fc.sectors&&_fc.sectors[0])||'PME',
+      v:c.city||'',
+      d:(c.naf_label||'')+(c.headcount_min!=null?' · '+c.headcount_min+'-'+c.headcount_max+' sal.':''),
+      e:'',web:'',
+      lat:parseFloat(c.location?.lat)||lat,
+      lng:parseFloat(c.location?.lon)||lng,
+      src:'La Bonne Boite',lbb:true,
+      lbbStars:parseFloat(c.hiring_potential)||0,
+    })).filter(c=>c.n);
+  }catch(e){return[];}
+}
+
+async function lookupRomeo(){
+  const btn=document.getElementById('romeo-btn');
+  if(btn){btn.disabled=true;btn.textContent='⏳';}
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){toast('Worker proxy non configuré','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+  const fc=FORMATION_CONFIG[S.formation]||{};
+  const query=fc.label||(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value:null)||'';
+  if(!query){toast('Sélectionne d\'abord ta formation','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+  try{
+    const data=await ftProxy('/partenaire/romeo/v2/predictionMetiers','POST',{appellations:[{intitule:query,identifiant:'1'}],options:{nomAppelant:'stagios',nbResultats:5}});
+    const _romeo=Array.isArray(data)?data:[data];
+    const resultats=(_romeo[0]?.metiersRome||[]);
+    const codes=resultats.slice(0,5).map(x=>x.codeRome||'').filter(Boolean);
+    if(!codes.length){toast('Aucun code ROME trouvé pour "'+query+'"','warn');if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}return;}
+    const el=document.getElementById('p_rome_codes');
+    if(el)el.value=codes.join(', ');
+    S.extraRomeCodes=codes.join(', ');
+    toast('Codes ROME détectés : '+codes.join(', '),'ok');
+  }catch(e){
+    toast('Erreur ROMEO : '+e.message,'warn');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🤖 Auto';}
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 6 — MODULE RADAR
+// ════════════════════════════════════════════════════════════
+let radarRunning=false;
+
+function rebuildTypeFilter(){
+  const sel=document.getElementById('r_type');
+  const prev=sel.value;
+  const types=[...new Set(radarResults.map(c=>c.t).filter(Boolean))].sort();
+  sel.innerHTML='<option value="">Tous les types</option>'+types.map(t=>'<option value="'+escH(t)+'">'+escH(t)+'</option>').join('');
+  if(prev&&types.includes(prev))sel.value=prev;
+}
+
+async function launchRadar(){
+  if(!coords){toast("Définis d'abord ton adresse dans l'onglet Profil et sélectionne une suggestion.",'warn');return;}
+  if(radarRunning)return;
+  radarRunning=true;
+  const rKm=parseInt(document.getElementById('r_km').value);
+  const rm=rKm*1000;
+  const btn=document.getElementById('radar-btn');
+  const banner=document.getElementById('radar-banner');
+  const msg=t=>{const el=document.getElementById('radar-msg');if(el)el.innerHTML=t;};
+  const reset=()=>{radarRunning=false;btn.disabled=false;btn.innerHTML='🔍 Scanner';banner.style.display='none';};
+  btn.disabled=true;btn.innerHTML='<span class="spin" style="display:inline-block;vertical-align:middle;margin-right:6px"></span>Scan…';
+  banner.style.display='flex';
+  msg('📍 Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
+
+  var _fc=S.formation?FORMATION_CONFIG[S.formation]:null;
+  var _relevantSectors=_fc&&_fc.sectors&&_fc.sectors.length?new Set(_fc.sectors):null;
+  radarResults=PRELOADED.filter(function(c){return !_relevantSectors||_relevantSectors.has(c.t);});
+  if(S.customSectors&&S.customSectors.length){
+    var _customSet=new Set(S.customSectors.map(function(s){return s.toLowerCase();}));
+    var _extraPre=PRELOADED.filter(function(c){return!radarResults.includes(c)&&_customSet.has((c.t||'').toLowerCase());});
+    radarResults=radarResults.concat(_extraPre);
+  }
+
+  const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
+  const _formationAmenities=(_fc&&_fc.osmAmenities)||[];
+  const allAmenities=[...new Set([...activeCatDefs.flatMap(c=>c.osm||[]),..._formationAmenities])];
+  const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+  const _formationNaf=(_fc&&_fc.nafCodes)||[];
+  const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf||[]),..._formationNaf,...extraNaf])];
+  const osmOffices=['government','it','association','company'];
+
+  const tasks=[];
+  if(allAmenities.length||osmOffices.length){
+    msg('🔍 Scan OpenStreetMap…');
+    tasks.push(fetchOverpass(coords.lat,coords.lng,rm,allAmenities,osmOffices));
+  }
+  if(allNaf.length){
+    msg('🔍 Annuaire Entreprises…');
+    tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
+  }
+  if(S.mode==='alternance'){
+    msg('🔍 La Bonne Alternance…');
+    tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
+  }
+  if(S.mode==='stage_nr'){
+    msg('🔍 Immersion Facilitée (PMSMP)…');
+    tasks.push(fetchImmersion(coords.lat,coords.lng,rKm));
+  }
+  if(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__')){
+    msg('🔍 France Travail — offres réelles…');
+    tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
+  }
+  if(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__')){
+    msg('🔍 La Bonne Boite — entreprises à fort potentiel…');
+    tasks.push(fetchLaBonneBoite(coords.lat,coords.lng,rKm));
+  }
+
+  const all=await Promise.allSettled(tasks);
+  const seen=new Set(radarResults.map(c=>c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8)));
+  all.forEach(r=>{
+    if(r.status!=='fulfilled')return;
+    (r.value||[]).forEach(c=>{
+      const k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
+      if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push({...c,disc:true});}
+    });
+  });
+
+  radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).filter(c=>c._dist===null||c._dist<=rKm).sort((a,b)=>(a._dist??999)-(b._dist??999));
+
+  updateBadges();
+  rebuildTypeFilter();
+  const _preCount=PRELOADED.filter(c=>{const d=dist(c);return d===null||d<=rKm;}).length;
+  const _newCount=radarResults.length-_preCount;
+  let _msgFinal='✅ '+radarResults.length+' structures dans '+rKm+' km';
+  _msgFinal+=' ('+_preCount+' pré-chargées';
+  if(_newCount>0)_msgFinal+=', +'+_newCount+' trouvées via APIs';
+  _msgFinal+=')';
+  if(_preCount===radarResults.length&&radarResults.length>0)_msgFinal+=' — APIs sans résultats supplémentaires';
+  msg(_msgFinal);
+  const _diagEl=document.getElementById('api-diag');
+  if(_diagEl){
+    let _diag='<strong>Position scannée :</strong> '+coords.lat.toFixed(5)+', '+coords.lng.toFixed(5)+'<br>';
+    _diag+='<strong>Pré-chargées dans le rayon :</strong> '+_preCount+'<br>';
+    _diag+='<strong>Découvertes via APIs :</strong> '+_newCount+'<br>';
+    if(_newCount===0){
+      _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
+      _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
+      _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
+      _diag+="Les APIs externes (Overpass, Annuaire Entreprises) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
+    }
+    _diagEl.innerHTML=_diag;_diagEl.style.display='block';
+  }
+  setTimeout(()=>banner.style.display='none',5000);
+  reset();
+  renderRadar();
+}
+
+function renderRadar(){
+  const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
+  const tf=document.getElementById('r_type')?.value||'';
+  const all=radarResults.filter(c=>!_blacklist.has(c.id));
+  let fl=all.filter(c=>
+    (!tf||c.t===tf)&&
+    (!q||(c.n||'').toLowerCase().includes(q)||(c.t||'').toLowerCase().includes(q)||(c.v||'').toLowerCase().includes(q))
+  );
+  const blCount=radarResults.filter(c=>_blacklist.has(c.id)).length;
+  const blSection=blCount>0
+    ?'<div style="margin-top:1rem;padding:.5rem .75rem;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);display:flex;align-items:center;justify-content:space-between"><span style="font-size:.75rem;color:var(--t4)">🚫 '+blCount+' structure'+(blCount>1?'s':'')+' masquée'+(blCount>1?'s':'')+'</span><button class="btn btn-ghost btn-sm" onclick="showBlacklistedModal()" style="font-size:.72rem">Gérer</button></div>'
+    :'';
+  if(!radarResults.length){
+    document.getElementById('r_list').innerHTML='<div class="empty" style="padding:2.5rem 1rem;text-align:center">'
+      +'<div style="font-size:2rem;margin-bottom:.5rem">🔍</div>'
+      +'<div style="font-weight:700;margin-bottom:.35rem">Lance le radar pour découvrir des structures</div>'
+      +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Remplis ton profil avec une adresse, puis clique sur <strong>Scanner</strong></div>'
+      +'<button class="btn btn-primary" onclick="goTab(\'profil\')">Compléter mon profil →</button>'
+      +'</div>'+blSection;
+    return;
+  }
+  if(!fl.length){
+    var _msg=tf||q
+      ?'<div class="empty" style="padding:2rem 1rem;text-align:center">'
+        +'<div style="font-size:1.5rem;margin-bottom:.5rem">🔎</div>'
+        +'<div style="font-weight:700;margin-bottom:.35rem">Aucun résultat pour ces filtres</div>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">'+(tf?'Type : <strong>'+tf+'</strong>  ':'')+( q?'Recherche : <strong>'+q+'</strong>':'')+'</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'r_srch\').value=\'\';document.getElementById(\'r_type\').value=\'\';renderRadar()">Effacer les filtres</button>'
+        +'</div>'
+      :'<div class="empty" style="padding:2rem 1rem;text-align:center">'
+        +'<div style="font-size:1.5rem;margin-bottom:.5rem">📫</div>'
+        +'<div style="font-weight:700;margin-bottom:.35rem">Aucune structure dans cette zone</div>'
+        +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">Essaie d\'augmenter le rayon de recherche</div>'
+        +'<button class="btn btn-ghost btn-sm" onclick="goTab(\'profil\')">Modifier le profil</button>'
+        +'</div>';
+    document.getElementById('r_list').innerHTML=_msg+blSection;
+    return;
+  }
+  const tiers=[
+    {max:5,  ico:'🏠',lbl:'Très proches',   cls:'t1'},
+    {max:15, ico:'🚶',lbl:'Proches (5–15 km)', cls:'t2'},
+    {max:30, ico:'🚌',lbl:'Accessibles (15–30 km)',cls:'t3'},
+    {max:50, ico:'🚗',lbl:'Envisageables (30–50 km)',cls:'t4'},
+    {max:9999,ico:'📍',lbl:'Plus loin',      cls:'t4'},
+  ];
+  function renderSection(items,title,color){
+    if(!items.length)return'';
+    let h='<div style="margin:1.1rem 0 .4rem;padding:.45rem .75rem;border-radius:var(--r);background:var(--bg2);border-left:3px solid '+color+';font-weight:700;font-size:.85rem;color:var(--t1)">'+title+' <span style="font-weight:400;color:var(--t3);font-size:.78rem">('+items.length+')</span></div>';
+    tiers.forEach((tier,ti)=>{
+      const prev=tiers[ti-1]?.max??0;
+      const grp=items.filter(c=>{const d=c._dist??9999;return d<tier.max&&d>=prev;});
+      if(!grp.length)return;
+      h+='<div class="sdiv-dist '+tier.cls+'">'+tier.ico+' '+tier.lbl+' — '+grp.length+' structure'+(grp.length>1?'s':'')+'</div>';
+      h+=grp.map(radarCard).join('');
+    });
+    return h;
+  }
+  const offres=fl.filter(c=>c.cat==='offre'||(c.hasOffer&&c.ft));
+  const entreprises=fl.filter(c=>!(c.cat==='offre'||(c.hasOffer&&c.ft)));
+  let h='';
+  if(offres.length)h+=renderSection(offres,'📋 Offres d\'emploi','var(--blue)');
+  if(entreprises.length)h+=renderSection(entreprises,'🏢 Entreprises à contacter','var(--green)');
+  document.getElementById('r_list').innerHTML=h+blSection;
+}
+
+function escA(s){return String(s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/'/g,'&#39;').replace(/</g,'&lt;');}
+function escH(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function radarCard(c){
+  var d=c._dist, cid=escA(c.id||'');
+  var inCRM=crmData[c.id];
+  var badges='';
+  if(c.disc)badges+='<span class="disc-badge">découvert</span> ';
+  if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
+  if(c.alt)badges+='<span class="alt-badge">alternance</span> ';
+  if(c.ft){
+    var _ftLabel='FT'+(c.contractType?' · '+c.contractType:'')+(c.altOffer?' · Alt':'');
+    badges+='<span class="ft-badge">🎯 '+escH(_ftLabel)+'</span>';
+  }
+  if(c.lbb){
+    var _stars=c.lbbStars||0;
+    var _starStr=_stars>=2.5?'⭐⭐⭐':_stars>=1.5?'⭐⭐':_stars>=0.5?'⭐':'';
+    badges+='<span style="background:rgba(34,197,94,.12);color:#16a34a;border:1px solid rgba(34,197,94,.3);padding:1px 6px;border-radius:20px;font-size:.68rem;white-space:nowrap">🏢'+(_starStr?' '+_starStr:'')+'</span>';
+  }
+
+  // Distance
+  var distBadge=d!=null?'<span style="font-size:.68rem;color:var(--t4);white-space:nowrap">📍 '+(d<1?(d*1000).toFixed(0)+' m':d.toFixed(1)+' km')+'</span>':'';
+
+  // Logo
+  var _dom=c.web?(c.web.replace(/https?:\/\//,'').split('/')[0].split('?')[0].replace('www.','')):'';;
+  var _logoInner=_dom
+    ?'<img src="https://logo.clearbit.com/'+escA(_dom)+'" width="36" height="36" style="border-radius:8px;object-fit:contain" onerror="this.style.display=\'none\';this.nextSibling.style.display=\'flex\'">'
+     +'<span style="display:none;width:36px;height:36px;border-radius:8px;background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>'
+    :'<span style="display:flex;width:36px;height:36px;border-radius:8px;background:var(--bg3);align-items:center;justify-content:center;font-weight:800;font-size:.78rem;color:var(--t3)">'+escH(ini(c.n))+'</span>';
+
+  // ── Liens dans le body ──
+  var engine=(S&&S.searchEngine)||'google';
+  var searchQuery=c.n+(c.v?' '+c.v.split(',')[0].trim():'')+' recrutement RH contact email';
+  var googleBtn='<a class="btn btn-ghost btn-sm" href="'+searchUrl(searchQuery)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔍 Google</a>';
+
+  // Site web (vrai site, pas URL FT/LBB)
+  var hasRealWeb=c.web&&c.web.indexOf('http')===0&&c.web.indexOf('labonneboite')===-1&&c.web.indexOf('francetravail')===-1;
+  var webBtn=hasRealWeb?'<a class="btn btn-ghost btn-sm" href="'+escA(c.web)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">🌐 Site</a>':'';
+
+  // Lien offre FT
+  var offreBtn=c.ft&&c.web?'<a class="btn btn-primary btn-sm" href="'+escA(c.web)+'" target="_blank" rel="noopener" onclick="event.stopPropagation()">🎯 Voir l\'offre</a>':'';
+
+  // Email copier
+  var emailCopyBtn=c.e?'<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="event.stopPropagation();cpEmail(this)" title="Copier : '+escA(c.e)+'">📧 '+escH(c.e.split('@')[0])+'</button>':'';
+
+  // LinkedIn
+  var liBtn='<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="event.stopPropagation();openLinkedInFor(this.dataset.cid)" title="Chercher le contact RH sur LinkedIn">🔗 LinkedIn</button>';
+
+  // CRM
+  var crmCol=inCRM?CRM_COLS.find(function(x){return x.id===inCRM.status;}):null;
+  var crmBtn=inCRM
+    ?'<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();goTab(\'suivi\')" style="color:var(--green)">📋 '+escH(crmCol?crmCol.lbl:'Suivi')+'</button>'
+    :'<button class="btn btn-primary btn-sm" data-cid="'+cid+'" onclick="event.stopPropagation();addToSuivi(this.dataset.cid)">➕ Suivi</button>';
+
+  // Email génération
+  var emailGenBtn='<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="event.stopPropagation();openEmailFor(this.dataset.cid)" title="Générer email de candidature">✉ Email</button>';
+
+  // Masquer
+  var blBtn='<button class="btn btn-sm" style="background:transparent;border:1.5px solid var(--red-l);color:var(--red);padding:4px 8px;font-size:.78rem" data-cid="'+cid+'" onclick="event.stopPropagation();blacklist(this.dataset.cid)" title="Masquer">🚫</button>';
+
+  // Méta détails (body)
+  var metaLine='';
+  if(c.v)metaLine+=escH(c.v);
+  if(c.d)metaLine+=(metaLine?' · ':'')+escH(c.d);
+
+  var safeId=cid.replace(/[^a-z0-9_-]/gi,'_');
+
+  return '<div class="cc" id="cc-'+safeId+'" onclick="toggleCard(\''+safeId+'\',event)">'+
+    '<div class="cc-hdr">'+
+      '<div class="clog" style="overflow:hidden;flex-shrink:0">'+_logoInner+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div class="cn">'+escH(c.n)+
+          ' <span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span>'+
+          ' '+badges+
+        '</div>'+
+        '<div style="font-size:.69rem;color:var(--t4);margin-top:1px">'+distBadge+(c.v?' · '+escH(c.v.split(',')[0]):'')+'</div>'+
+      '</div>'+
+      '<span class="cc-chev">▾</span>'+
+    '</div>'+
+    '<div class="cc-body">'+
+      (metaLine?'<div class="cc-desc">'+metaLine+'</div>':'')+
+      '<div class="cc-links">'+
+        offreBtn+webBtn+googleBtn+emailCopyBtn+liBtn+emailGenBtn+crmBtn+blBtn+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+
+function cpEmail(btn){
+  var id=btn.dataset.cid;
+  var c=radarResults.find(function(x){return x.id===id;});
+  if(!c||!c.e)return;
+  navigator.clipboard.writeText(c.e);
+  var orig=btn.textContent;btn.textContent='✓';
+  setTimeout(function(){btn.textContent=orig;},1500);
+}
+
+function toggleCard(id,e){
+  if(e)e.stopPropagation();
+  var el=document.getElementById('cc-'+id);
+  if(el)el.classList.toggle('open');
+}
+
+
+function ini(n){return(n||'?').split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 6b — STEPPER & UX
+// ════════════════════════════════════════════════════════════
+let currentStep=1;
+
+function goStep(n){
+  if(n>currentStep&&!validateStep(currentStep))return;
+  currentStep=n;
+  [1,2,3,4].forEach(function(i){
+    var p=document.getElementById('step-'+i);
+    if(p)p.classList.toggle('on',i===n);
+    var d=document.getElementById('sdot-'+i);
+    if(d){d.classList.toggle('active',i===n);d.classList.toggle('done',i<n);}
+    var num=d&&d.querySelector('.step-num');
+    if(num)num.setAttribute('aria-current',i===n?'step':'false');
+  });
+  document.querySelector('.card') && document.querySelector('#page-profil .card').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function validateStep(n){
+  var ok=true;
+  var rules={
+    1:[{id:'p_prenom',err:'err_prenom'},{id:'p_nom',err:'err_nom'},{id:'p_tel',err:'err_tel'},{id:'p_email',err:'err_email'}],
+    2:[{id:'p_formation',err:'err_formation'}],
+    3:[],4:[]
+  };
+  (rules[n]||[]).forEach(function(r){
+    var el=document.getElementById(r.id);
+    var err=document.getElementById(r.err);
+    var fi=el&&el.closest('.fi');
+    var empty=!el||!el.value.trim();
+    if(err)err.style.display=empty?'block':'none';
+    if(fi)fi.classList.toggle('has-err',empty);
+    if(empty)ok=false;
+  });
+  if(!ok)toast('Remplis les champs obligatoires avant de continuer.','warn');
+  return ok;
+}
+
+// First-time banner
+function initFirstBanner(){
+  if(!localStorage.getItem('stagios_welcomed')){
+    var b=document.getElementById('first-banner');
+    if(b)b.style.display='flex';
+  }
+}
+function dismissFirstBanner(){
+  localStorage.setItem('stagios_welcomed','1');
+  var b=document.getElementById('first-banner');
+  if(b){b.style.opacity='0';b.style.transition='opacity .3s';setTimeout(function(){b.style.display='none';},300);}
+}
+
+// Confirmation modal
+function confirmModal(title,body,labelOk,onConfirm){
+  var ov=document.createElement('div');
+  ov.className='modal-overlay';
+  ov.setAttribute('role','dialog');
+  ov.setAttribute('aria-modal','true');
+  ov.setAttribute('aria-labelledby','modal-title');
+  ov.innerHTML='<div class="modal-box"><div class="modal-title" id="modal-title">'+escH(title)+'</div><div class="modal-body">'+escH(body)+'</div><div class="modal-actions"><button class="btn btn-ghost btn-sm" onclick="this.closest(\'.modal-overlay\').remove()" aria-label="Annuler">Annuler</button><button class="btn" style="background:var(--red);color:#fff;border-color:var(--red)" id="modal-ok">'+escH(labelOk)+'</button></div></div>';
+  document.body.appendChild(ov);
+  ov.querySelector('#modal-ok').onclick=function(){ov.remove();onConfirm();};
+  ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+}
+
+// Button loading state
+function setLoading(btn,loading,label){
+  if(!btn)return;
+  if(loading){btn.disabled=true;btn._orig=btn.innerHTML;btn.innerHTML='<span class="spin" style="display:inline-block;margin-right:6px"></span>'+(label||'Chargement…');}
+  else{btn.disabled=false;if(btn._orig!==undefined)btn.innerHTML=btn._orig;}
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 7 — MODULE CRM & KANBAN
+// ════════════════════════════════════════════════════════════
+function addToSuivi(id){
+  if(!id)return;
+  if(!crmData[id]){
+    var _c=radarResults.find(function(r){return r.id===id;});
+    crmData[id]={status:'todo',sentDate:null,notes:'',contact:'',
+      _snap:_c?{n:_c.n,t:_c.t,v:_c.v,e:_c.e,web:_c.web,src:_c.src,lat:_c.lat,lng:_c.lng}:null};
+  }
+  persist();updateBadges();renderRadar();
+}
+
+function setStatus(id,status){
+  if(!crmData[id])crmData[id]={status,sentDate:null,notes:'',contact:''};
+  crmData[id].status=status;
+  if(status==='sent'&&!crmData[id].sentDate)crmData[id].sentDate=new Date().toISOString().split('T')[0];
+  persist();updateBadges();renderKanban();
+}
+
+function daysSince(d){if(!d)return null;return Math.floor((Date.now()-new Date(d))/(1000*60*60*24));}
+
+function renderKanban(){
+  var allTracked=Object.keys(crmData).map(function(id){
+    var fromRadar=radarResults.find(function(r){return r.id===id;});
+    if(fromRadar)return fromRadar;
+    var snap=crmData[id]&&crmData[id]._snap;
+    return snap?Object.assign({id:id,_dist:null},snap):null;
+  }).filter(Boolean);
+  var j7List=allTracked.filter(function(c){
+    var days=daysSince(crmData[c.id]&&crmData[c.id].sentDate);
+    return crmData[c.id]&&crmData[c.id].status==='sent'&&days!==null&&days>=7;
+  });
+  var jb=document.getElementById('j7-banner');
+  if(j7List.length){
+    jb.style.display='flex';
+    document.getElementById('j7-txt').textContent=j7List.length+' candidature'+(j7List.length>1?'s':'')+' sans r\u00e9ponse depuis 7+ jours : '+j7List.map(function(c){return c.n;}).join(', ');
+  } else jb.style.display='none';
+
+  var kbHtml='';
+  CRM_COLS.forEach(function(col){
+    var cards=allTracked.filter(function(c){return crmData[c.id]&&crmData[c.id].status===col.id;});
+    var cardsHtml='';
+    cards.forEach(function(c){
+      var crm=crmData[c.id]||{};
+      var days=daysSince(crm.sentDate);
+      var isJ7=col.id==='sent'&&days!==null&&days>=7;
+      var cid=escA(c.id||'');
+      var tierH=c._dist!==undefined&&c._dist!==null?'<span class="tier '+tier(c._dist).cls+'" style="font-size:.63rem">'+escH(c._dist.toFixed(1)+' km')+'</span>':'';
+
+      var opts='';
+      CRM_COLS.forEach(function(x){
+        opts+='<option value="'+escA(x.id)+'"'+(x.id===col.id?' selected':'')+'>'+escH(x.ico+' '+x.lbl)+'</option>';
+      });
+
+      cardsHtml+='<div class="kb-card'+(isJ7?' j7':'')+'" id="kb-'+cid+'">'+
+        '<div class="kb-cname">'+escH(c.n)+'</div>'+
+        '<div class="kb-meta">'+
+          '<span class="badge b-'+escA(c.t||'PME')+'">'+escH(c.t)+'</span> '+tierH+
+          (isJ7?' <span class="kb-j7">\u23f0 J+'+days+'</span>':'')+
+          (crm.sentDate?' <span style="font-size:.67rem;color:var(--t4)">'+escH(crm.sentDate)+'</span>':'')+
+        '</div>'+
+        '<div class="kb-actions">'+
+          '<select class="btn btn-ghost btn-sm status-sel" data-cid="'+cid+'" onchange="setStatus(this.dataset.cid,this.value)">'+opts+'</select>'+
+          '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)">✉</button>'+
+        '</div>'+
+      '</div>';
+    });
+
+    kbHtml+='<div class="kb-col '+escA(col.cls)+'">'+
+      '<div class="kb-hdr">'+
+        '<span class="kb-title">'+escH(col.ico+' '+col.lbl)+'</span>'+
+        '<span class="kb-count">'+cards.length+'</span>'+
+      '</div>'+
+      (cardsHtml||'<div style="font-size:.75rem;color:var(--t4);text-align:center;padding:1rem">Vide</div>')+
+    '</div>';
+  });
+  document.getElementById('kanban').innerHTML=kbHtml;
+}
+
+
+function updateBadges(){
+  const tracked=Object.keys(crmData).length;
+  const inRadar=radarResults.length;
+  document.getElementById('badge-radar').textContent=inRadar||'';
+  document.getElementById('badge-radar').style.display=inRadar?'':'none';
+  document.getElementById('badge-suivi').textContent=tracked||'';
+  document.getElementById('badge-suivi').style.display=tracked?'':'none';
+  if(document.getElementById('sg').style.display!=='none'){
+    const ns=Object.values(crmData).filter(c=>c.status==='sent').length;
+    document.getElementById('sg').innerHTML=[
+      {n:inRadar,l:'Structures trouvées'},
+      {n:tracked,l:'Entreprises suivies'},
+      {n:ns,l:'Emails envoyés'},
+      {n:Object.values(crmData).filter(c=>c.status==='acc').length,l:'✅ Accepté'},
+    ].map(s=>`<div class="sc"><div class="sn">${s.n}</div><div class="sl">${s.l}</div></div>`).join('');
+  }
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 8 — MOTEUR EMAIL DYNAMIQUE
+// ════════════════════════════════════════════════════════════
+const EMAIL_VARIANTS=2;
+
+// Paragraphes "pourquoi cette structure" — 2 formulations par type
+const _CTX={
+ESN:[
+(n,fl)=>`${n} m'attire particulièrement pour la diversité des environnements clients et la polyvalence que ce type de structure exige au quotidien. Intervenir sur des contextes techniques variés, auprès d'utilisateurs aux profils différents, c'est précisément le terrain sur lequel un(e) candidat(e) en ${fl} peut progresser rapidement et démontrer sa capacité d'adaptation.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est votre positionnement d'acteur du numérique et la réalité du terrain que vous proposez : des missions concrètes, des clients exigeants, une nécessité permanente de réactivité. C'est exactement le type d'environnement où les compétences acquises en ${fl} prennent tout leur sens.`,
+],
+Public:[
+(n,fl)=>`Le service public représente pour moi bien plus qu'un cadre professionnel. Travailler à la fiabilité des outils utilisés par des agents dont la mission impacte directement des usagers, c'est une responsabilité concrète qui donne du sens à chaque intervention. C'est cette dimension qui me motive à intégrer ${n}.`,
+(n,fl)=>`${n} m'intéresse pour le sérieux et la rigueur qu'implique le service public. Garantir le bon fonctionnement des outils au quotidien, dans un environnement structuré et exigeant, c'est exactement le cadre dans lequel je souhaite mettre à profit ma formation en ${fl}.`,
+],
+Santé:[
+(n,fl)=>`Le secteur de la santé est l'un de ceux où chaque intervention a un poids réel. Un équipement défaillant dans un service de soins, c'est une conséquence directe sur les patients et les soignants. C'est cette dimension — la responsabilité portée par la fiabilité — qui m'attire dans l'environnement de ${n}, et dont je mesure pleinement l'exigence.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est la conscience que dans votre secteur, les outils ne sont pas accessoires : ils soutiennent des missions critiques. Intervenir avec rigueur et discrétion dans un environnement aussi sensible, c'est précisément ce à quoi ma formation en ${fl} me prépare.`,
+],
+Lycées:[
+(n,fl)=>`Un établissement scolaire, c'est un parc informatique hétérogène, des utilisateurs aux profils très variés — enseignants, personnel administratif, élèves —, des contraintes liées au réseau académique, et une disponibilité permanente requise. C'est le type d'environnement où les compétences de terrain prennent tout leur sens, et c'est pourquoi je souhaite réaliser ma période au sein de ${n}.`,
+(n,fl)=>`Ce qui m'a attiré(e) vers les établissements scolaires, c'est la réalité quotidienne du poste : maintenir les équipements opérationnels pour que l'enseignement puisse avoir lieu, accompagner des utilisateurs qui ont besoin que ça fonctionne. Chaque intervention compte vraiment.`,
+],
+Asso:[
+(n,fl)=>`Dans une structure associative, les compétences professionnelles sont au service d'une mission qui dépasse le seul objectif commercial. Maintenir des outils fiables pour des équipes souvent en sous-effectif, avec des ressources limitées, c'est une forme d'engagement que je trouve particulièrement motivante. C'est pour cette raison que je souhaite effectuer ma période au sein de ${n}.`,
+(n,fl)=>`${n} m'attire pour une raison simple : ici, les compétences techniques ont une utilité directe au service d'un projet humain. Je suis autonome, débrouillard(e), et habitué(e) à trouver des solutions adaptées plutôt qu'à appliquer une procédure standard — ce qui me semble particulièrement pertinent dans votre contexte.`,
+],
+Garage:[
+(n,fl)=>`Un garage ou une structure automobile, c'est un environnement où la rigueur et la précision ne sont pas optionnelles : chaque intervention engage la sécurité du client. C'est ce niveau d'exigence qui m'attire dans ${n}, et c'est dans ce type de contexte que je souhaite consolider mes compétences en ${fl}.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est la réalité du métier que vous exercez : des diagnostics, des interventions diverses, et une clientèle qui compte sur vous. C'est exactement le terrain sur lequel un professionnel en formation en ${fl} peut apprendre le plus vite et le plus efficacement.`,
+],
+Commerce:[
+(n,fl)=>`${n} m'attire pour la réalité du terrain commercial : contact client direct, gestion des produits, dynamique d'équipe. C'est dans ce type d'environnement que les compétences acquises en ${fl} — relation client, techniques de vente, organisation — prennent toute leur valeur.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est votre positionnement commercial et la diversité des missions que ce type de structure peut proposer. Évoluer dans un environnement orienté client et résultats, c'est exactement ce que je recherche pour consolider ma formation en ${fl}.`,
+],
+Restauration:[
+(n,fl)=>`La restauration est un secteur d'exigence : rapidité, précision, hygiène, travail en équipe — tout doit fonctionner en même temps. C'est dans cet environnement que les compétences acquises en ${fl} ont le plus de poids. Je souhaite effectuer ma période au sein de ${n} pour y trouver ce niveau d'intensité et de réalisme professionnel.`,
+(n,fl)=>`${n} m'intéresse pour la réalité concrète du service que vous proposez. En cuisine ou en salle, chaque geste compte, et c'est précisément ce type d'environnement — exigeant, rythmé, centré sur le client — que je recherche pour mettre ma formation en ${fl} à l'épreuve.`,
+],
+Social:[
+(n,fl)=>`Travailler dans le secteur social ou médico-social, c'est exercer un métier où la qualité de l'accompagnement a un impact direct sur des personnes fragilisées. C'est cette dimension humaine et concrète qui m'attire vers ${n}, et c'est dans ce cadre que je souhaite mettre mes compétences en ${fl} au service d'une mission qui a du sens.`,
+(n,fl)=>`${n} m'attire pour l'engagement humain qui caractérise votre structure. Dans ce secteur, la rigueur professionnelle et l'écoute active sont au cœur de chaque intervention. C'est exactement le type d'environnement dans lequel je souhaite progresser en ${fl}.`,
+],
+};
+_CTX.Education=_CTX.ESN;_CTX.Coworking=_CTX.ESN;_CTX.PME=_CTX.ESN;_CTX.Médias=_CTX.ESN;
+_CTX.Banque=_CTX.Public;_CTX.Industrie=_CTX.ESN;_CTX.Logistique=_CTX.ESN;_CTX.BTP=_CTX.ESN;
+_CTX.Hôtellerie=_CTX.Restauration;_CTX.Collectivité=_CTX.Public;
+
+function refreshEmailList(){
+  var sel=document.getElementById('e_company');
+  var current=sel.value;
+  var opts='<option value="">— Sélectionner une entreprise du suivi —</option>';
+  if(radarResults.length){
+    radarResults.forEach(function(c){
+      var inSuivi=!!crmData[c.id];
+      var style=inSuivi?'':' style="color:var(--t4)"';
+      var note=inSuivi?'':" — ajouter au suivi d'abord";
+      opts+='<option value="'+escA(c.id)+'"'+style+'>'+escH(c.n)+' ('+escH(c.t)+')'+escH(note)+'</option>';
+    });
+  } else {
+    opts+="<option disabled>Lance d'abord le radar</option>";
+  }
+  sel.innerHTML=opts;
+  if(current)sel.value=current;
+}
+
+function openEmailFor(id){
+  emailCompanyId=id;emailVariant=0;
+  goTab('email');
+  setTimeout(()=>{document.getElementById('e_company').value=id;renderEmail();},50);
+}
+function pickEmailCompany(){emailCompanyId=document.getElementById('e_company').value;emailVariant=0;renderEmail();}
+
+
+function generateEmail(s,c,ct,v){
+  var fc=FORMATION_CONFIG[s.formation]||{};
+  var mode=s.mode||getMode();
+  var diploma=fc.diploma||s.formationLabel||s.formation||'formation professionnelle';
+  var label=fc.label||s.formationLabel||'ma formation';
+  var skills=s.comp||fc.skills||'compétences acquises en formation';
+  var prenom=s.prenom||'';var nom=s.nom||'';
+  var prenomNom=(prenom+' '+nom).trim()||'Étudiant(e)';
+  var etab=s.etab||'mon organisme de formation';
+  var sal=ct?'Bonjour '+ct+',':'Madame, Monsieur,';
+  var vi=(v||0)%EMAIL_VARIANTS;
+  var periode=(s.debut&&s.fin)?' du '+s.debut+' au '+s.fin:'';
+  var periodeLabel=(s.debut&&s.fin)?' – Du '+s.debut+' au '+s.fin:'';
+
+  var sujets={
+    stage_nr:'Recherche de période en entreprise – '+diploma+' – '+prenomNom+periodeLabel,
+    stage_r:'Candidature stage rémunéré – '+diploma+' – '+prenomNom+periodeLabel,
+    alternance:'Candidature alternance – '+diploma+' – '+prenomNom,
+    emploi:'Candidature spontanée – '+diploma+' – '+prenomNom,
+  };
+  var objet='Objet : '+(sujets[mode]||sujets.stage_nr);
+
+  var intros={
+    stage_nr:[
+      'Je me permets de vous contacter dans le cadre de ma formation '+diploma+' au sein de '+etab+". Je suis à la recherche d\'une période en entreprise non rémunérée"+periode+' afin de valider mon parcours en situation professionnelle réelle.',
+      'En formation '+diploma+' à '+etab+", je suis à la recherche d\'une structure pour effectuer ma période en entreprise obligatoire"+periode+'. Cette période, non rémunérée, constitue une étape clé dans la validation de mon diplôme.',
+    ],
+    stage_r:[
+      'En formation '+diploma+' à '+etab+", je suis à la recherche d\'un stage rémunéré"+periode+' afin de consolider mes compétences en situation professionnelle concrète.',
+      'Actuellement en formation '+diploma+' à '+etab+', je vous contacte pour candidater à un stage rémunéré'+periode+". Je souhaite mettre mes acquis à l\'épreuve du terrain dans une structure comme la vôtre.",
+    ],
+    alternance:[
+      'Actuellement en formation '+diploma+", je suis en recherche d\'un contrat d\'alternance afin de combiner apprentissage théorique et expérience terrain dans une structure comme la vôtre.",
+      'En cours de formation '+diploma+' à '+etab+", je souhaite rejoindre une équipe en alternance. Ce format correspond à ma façon d\'apprendre : dans l\'action, aux côtés de professionnels.",
+    ],
+    emploi:[
+      "Titulaire (ou en cours de validation) d\'un "+diploma+", je suis en recherche active d\'un poste et souhaite vous adresser ma candidature spontanée.",
+      "Fort(e) d\'une formation en "+diploma+', je me permets de vous adresser ma candidature pour un poste en CDI ou CDD au sein de votre structure.',
+    ],
+  };
+  var intro=(intros[mode]||intros.stage_nr)[vi];
+
+  var ctxArr=_CTX[c.t]||_CTX.ESN;
+  var pourquoi=ctxArr[vi%ctxArr.length](c.n,label);
+
+  var skillsParas=[
+    "Ma formation m\'a permis de développer des compétences en "+skills+'.',
+    'Techniquement, mon parcours couvre '+skills+". Au-delà des aspects techniques, j\'ai également travaillé ma capacité à m\'adapter, à communiquer et à trouver des solutions en autonomie.",
+  ];
+  var skillsPara=skillsParas[vi];
+  if(s.motiv)skillsPara+='\n\n'+s.motiv;
+  if(s.cvParsed){
+    var _cvAdd=[];
+    if(s.cvParsed.experiences&&s.cvParsed.experiences.length){
+      _cvAdd.push('Mon parcours comprend '+s.cvParsed.experiences[0].toLowerCase()+", une expérience qui m\'a permis de confronter mes acquis à la réalité du terrain.");
+    }
+    if(s.cvParsed.certifs&&s.cvParsed.certifs.length){
+      var _cStr=s.cvParsed.certifs.length===1
+        ?'titulaire du '+s.cvParsed.certifs[0]
+        :'titulaire de '+s.cvParsed.certifs.join(', ');
+      _cvAdd.push('Je suis par ailleurs '+_cStr+'.');
+    }
+    if(_cvAdd.length)skillsPara+='\n\n'+_cvAdd.join(' ');
+  }
+
+  var closings={
+    stage_nr:[
+      "Je serais sincèrement heureux(se) de vous présenter mon projet lors d\'un entretien, à la date qui vous conviendra. Je reste disponible pour toute information complémentaire.",
+      'Je reste disponible pour un entretien à votre convenance et pourrai vous transmettre mon CV en pièce jointe sur demande.',
+    ],
+    stage_r:[
+      'Je serais heureux(se) de vous rencontrer pour discuter du contenu du stage et de vos attentes. Mon CV est disponible sur demande.',
+      "N\'hésitez pas à me contacter pour que nous puissions échanger. Je suis disponible pour un entretien dès que vous le souhaitez.",
+    ],
+    alternance:[
+      "Je serais ravi(e) d\'échanger avec vous sur les possibilités de collaboration en alternance, à votre convenance.",
+      "N\'hésitez pas à me contacter pour que nous puissions nous rencontrer et évoquer ensemble une possible alternance.",
+    ],
+    emploi:[
+      'Mon CV vous permettra de mieux cerner mon parcours. Je reste disponible pour un entretien dès que vous le souhaitez.',
+      'Je serais heureux(se) de vous rencontrer pour vous présenter mon profil et ma motivation. Je suis disponible selon vos disponibilités.',
+    ],
+  };
+  var closing=(closings[mode]||closings.stage_nr)[vi];
+
+  var formel=['Public','Santé','Lycées','Education','Banque'].includes(c.t)&&!ct;
+  var politesse=formel
+    ?"Dans l\'attente de votre retour, veuillez agréer, Madame, Monsieur, l\'expression de mes salutations distinguées."
+    :'Cordialement,';
+
+  var sig=prenomNom+'\n'+(s.tel?s.tel+' · ':'')+( s.email||'')+'\n'+diploma+(etab?' – '+etab:'');
+
+  return objet+'\n\n'+sal+'\n\n'+intro+'\n\n'+pourquoi+'\n\n'+skillsPara+'\n\n'+closing+'\n\n'+politesse+'\n'+sig;
+}
+
+function renderEmail(){
+  const c=radarResults.find(x=>x.id===emailCompanyId);
+  if(!c){document.getElementById('ep').innerHTML='<div style="padding:2rem;text-align:center;color:var(--t4)">Sélectionne une entreprise</div>';return;}
+  const crm=crmData[c.id]||{};
+  const ct=(document.getElementById('e_contact').value||crm.contact||'').trim();
+  const txt=generateEmail(S,c,ct,emailVariant);
+  window._email=txt;
+  const lines=txt.split('\n');
+  const obj=lines[0].startsWith('Objet :')?lines[0].replace('Objet :','').trim():'';
+  const body=lines.slice(1).join('\n').trim();
+  document.getElementById('ep').innerHTML='<div class="eh">'+
+    '<div class="ef"><span class="efl">De</span><span>'+(S.prenom||'?')+' '+(S.nom||'?')+' &lt;'+(S.email||'?')+'&gt;</span></div>'+
+    '<div class="ef"><span class="efl">À</span><span style="color:var(--blue)">'+(c.e||'email: voir site officiel')+'</span></div>'+
+    (obj?'<div class="ef"><span class="efl">Objet</span><strong class="efl2">'+esc(obj)+'</strong></div>':'')+
+    '<div class="ef"><span class="efl">Mode</span><span style="font-size:.75rem;color:var(--t3)">'+esc(getModeLabel())+'</span></div>'+
+    '</div><div class="ebody">'+esc(body)+'</div>';
+  var _vLabels=['Formelle & élaborée','Claire & directe'];
+  document.getElementById('e_var_lbl').textContent=_vLabels[emailVariant%EMAIL_VARIANTS]||((emailVariant%EMAIL_VARIANTS+1)+'/'+EMAIL_VARIANTS);
+  document.getElementById('e_contact_wrap').style.display='flex';
+  const li=document.getElementById('e_li_btn');
+  li.style.display='block';li.dataset.cid=c.id;
+  const nb=document.getElementById('e_notice');
+  if(!c.e){nb.className='notice n-warn';nb.style.display='flex';nb.innerHTML='⚠️ Pas d\'email vérifié — <a href="'+escA(searchUrl(c.n+' recrutement contact email RH'))+'" target="_blank" style="color:var(--amber);font-weight:700">chercher le contact</a>.';}
+  else{nb.className='notice n-info';nb.style.display='flex';nb.textContent='📧 Email : '+c.e;}
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function nextVar(){emailVariant=(emailVariant+1)%EMAIL_VARIANTS;renderEmail();}
+function prevVar(){emailVariant=(EMAIL_VARIANTS+emailVariant-1)%EMAIL_VARIANTS;renderEmail();}
+function copyEmail(){navigator.clipboard.writeText(window._email||'').then(()=>{const b=document.getElementById('copy-btn');b.textContent='✅ Copié !';b.style.background='var(--green)';setTimeout(()=>{b.textContent='📋 Copier';b.style.background='';},2500);});}
+
+function markEmailSent(){
+  if(!emailCompanyId)return;
+  setStatus(emailCompanyId,'sent');
+  const b=document.getElementById('mark-sent-btn');b.textContent='✓ Marqué !';b.disabled=true;
+  setTimeout(()=>{b.textContent='✅ Marquer envoyé';b.disabled=false;},2000);
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 9 — LINKEDIN & LIENS EXTERNES
+// ════════════════════════════════════════════════════════════
+function openLinkedInFor(id){
+  const c=radarResults.find(x=>x.id===id);if(!c)return;
+  const kw=encodeURIComponent(`("DSI" OR "Directeur Informatique" OR "Responsable IT" OR "IT Manager" OR "Responsable Support" OR "RH") "${c.n}"`);
+  window.open(`https://www.linkedin.com/search/results/people/?keywords=${kw}`,'_blank');
+}
+function openLinkedIn(){const id=document.getElementById('e_li_btn').dataset.cid;if(id)openLinkedInFor(id);}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 10 — EXPORT / IMPORT
+// ════════════════════════════════════════════════════════════
+function exportCSV(){
+  const header='Entreprise,Type,Statut,Email,Site,Distance (km),Date envoi,PMSMP,Alternance,Source';
+  const rows=radarResults.filter(c=>crmData[c.id]).map(c=>{
+    const crm=crmData[c.id]||{};
+    return[c.n,c.t,crm.status||'',c.e||'',c.web||'',c._dist?.toFixed(1)||'',crm.sentDate||'',c.pmsmp?'Oui':'',c.alt?'Oui':'',c.src||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',');
+  });
+  dl([header,...rows].join('\n'),'stage-tip-suivi.csv','text/csv');
+}
+function exportJSON(){
+  var _fname='stagios-'+(S.prenom||'etudiant').toLowerCase().replace(/\s+/g,'-')+'-'+(S.nom||'').toLowerCase().replace(/\s+/g,'-')+'.json';
+  dl(JSON.stringify({version:VERSION,date:new Date().toISOString(),profil:S,coords,radarResults,crmData},null,2),_fname,'application/json');
+}
+function importJSON(ev){
+  const f=ev.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=e=>{
+    try{
+      const d=JSON.parse(e.target.result);
+      if(d.profil)S=d.profil;if(d.coords)coords=d.coords;
+      if(d.radarResults)radarResults=d.radarResults;if(d.crmData)crmData=d.crmData;
+    if(d.blacklist)_blacklist=new Set(d.blacklist);
+      persist();fillProfileForm();updateBadges();
+      toast('Sauvegarde restaurée — '+Object.keys(crmData).length+' entreprises en suivi','ok');
+    }catch(err){toast('Fichier JSON invalide','err');}
+  };r.readAsText(f);
+}
+function dl(data,name,type){
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();
+}
+
+// ════════════════════════════════════════════════════════════
+// SECTION 11 — PROFIL & INITIALISATION
+// ════════════════════════════════════════════════════════════
+async function saveProfile(){
+  const f=id=>document.getElementById(id)?.value.trim()||'';
+  if(!f('p_prenom')||!f('p_nom')||!f('p_tel')||!f('p_email')){
+    toast('Merci de remplir les champs obligatoires : prénom, nom, téléphone et email.','warn');return;
+  }
+  const fmt={day:'numeric',month:'long',year:'numeric'};
+  const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
+  if(d1&&d2&&new Date(d1)>=new Date(d2)){toast('La date de fin doit être après la date de début.','warn');return;}
+  const _fid=document.getElementById('p_formation')?.value||'Custom';
+  const _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
+  const _customFName=f('p_custom_formation');
+  const _oldCvText=S.cvText||'';
+  const _oldCvFileName=S.cvFileName||'';
+  const _oldCvParsed=S.cvParsed||null;
+  S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab')||'mon organisme de formation',
+    formation:_fid,
+    formationLabel:_fid==='Custom'?(_customFName||'Formation personnalisée'):_fc.label,
+    formationDiploma:_fid==='Custom'?(_customFName||''):_fc.diploma,
+    formationEmoji:_fc.emoji||'✏️',
+    searchEngine:document.getElementById('p_search_engine')?.value||'google',
+    mode:getMode(),
+    extraNafCodes:f('p_naf_codes'),
+    extraRomeCodes:f('p_rome_codes'),
+    cvText:_oldCvText,
+    cvFileName:_oldCvFileName,
+     debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
+     fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
+     comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
+    cvParsed:_oldCvParsed,
+    addr:f('p_addr'),debutRaw:d1||'2026-06-05',finRaw:d2||'2026-07-31'};
+  persist();
+  updateBranding();
+  showPbar();
+  goTab('radar');
+  // Géocoder l'adresse si elle a changé ou n'est pas encore géocodée
+  const _currentAddr=f('p_addr');
+  if(_currentAddr && _currentAddr!==_lastAddrForCoords && !_currentAddr.startsWith('GPS')){
+    document.getElementById('geo_st').textContent='🔍 Géocodage de l\'adresse…';
+    try{
+      const _gr=await fetch('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(_currentAddr)+'&limit=1');
+      const _gd=await _gr.json();
+      if(_gd.features&&_gd.features.length>0){
+        const _gf=_gd.features[0],_gg=_gf.geometry.coordinates;
+        coords={lat:parseFloat(_gg[1]),lng:parseFloat(_gg[0])};
+        _lastAddrForCoords=_currentAddr;
+        document.getElementById('geo_st').textContent='✅ Adresse géocodée : '+(_gf.properties.label||'').split(',').slice(0,2).join(',');
+        const _comm=await getCommuneFromCoords(coords.lat,coords.lng);
+        if(_comm){S.communeInsee=_comm.code;S.communeNom=_comm.nom;persist();}
+        showPbar();updateCoordsWarning();
+      }
+    }catch(_ge){
+      document.getElementById('geo_st').textContent='⚠️ Géocodage échoué. Sélectionne une suggestion dans la liste ou utilise le GPS.';
+    }
+  }
+  if(coords)launchRadar();else{
+    document.getElementById('radar-banner').style.display='flex';
+    document.getElementById('radar-msg').textContent='💡 Saisis ton adresse et sélectionne une suggestion dans la liste déroulante, ou clique sur 📡 GPS.';
+    setTimeout(()=>document.getElementById('radar-banner').style.display='none',8000);
+  }
+}
+
+function showPbar(){
+  const pb=document.getElementById('pbar'),sg=document.getElementById('sg');
+  if(!S.prenom)return;
+  pb.style.display='flex';sg.style.display='grid';
+  var modeLabel=getModeLabel();
+  pb.innerHTML=`<div class="avatar">${S.ini||'?'}</div><div><div class="pbar-name">${S.prenom} ${S.nom}</div><div class="pbar-sub">${S.formationLabel||'Formation'} · ${modeLabel} · ${S.etab} · ${S.debut} au ${S.fin}${coords?' · 📍 position activée':''}</div></div><button class="btn btn-ghost btn-sm" style="margin-left:auto" onclick="goTab('profil')">Modifier</button>`;
+  updateBadges();
+}
+
+function fillProfileForm(){
+  if(S.formation){
+    const sel=document.getElementById('p_formation');
+    if(sel)sel.value=S.formation;
+    onFormationChange();
+  }
+  if(S.searchEngine){
+    const sel=document.getElementById('p_search_engine');
+    if(sel)sel.value=S.searchEngine;
+  }
+  if(S.mode){
+    const modeEl=document.querySelector('input[name="p_mode"][value="'+S.mode+'"]');
+    if(modeEl)modeEl.checked=true;
+    onModeChange();
+  }
+  if(S.extraRomeCodes){
+    const romeEl=document.getElementById('p_rome_codes');
+    if(romeEl)romeEl.value=S.extraRomeCodes;
+  }
+  if(S.cvFileName){
+    const st=document.getElementById('cv_status');
+    if(st)st.textContent='✅ CV chargé : '+S.cvFileName;
+  }
+  ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
+    const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
+  });
+  if(S.addr){const _adEl=document.getElementById('p_addr');if(_adEl)_adEl.value=S.addr;}
+  if(S.debutRaw){const _dbEl=document.getElementById('p_debut');if(_dbEl)_dbEl.value=S.debutRaw;}
+  if(S.finRaw){const _dfEl=document.getElementById('p_fin');if(_dfEl)_dfEl.value=S.finRaw;}
+  updateBranding();
+  showPbar();
+}
+
+// INIT
+(function(){
+  const t=localStorage.getItem('tip_theme')||(window.matchMedia?.('(prefers-color-scheme:dark)').matches?'dark':'light');
+  applyTheme(t);
+  onModeChange();
+  loadBlacklist();
+  restore();
+  initFirstBanner();
+  if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
+  updateFTStatus(null);
+  updateCoordsWarning();
+  // Enter key advances stepper (not on textareas or last step)
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter')return;
+    var tag=(e.target.tagName||'').toLowerCase();
+    if(tag==='textarea'||tag==='select'||tag==='button')return;
+    var inStep=e.target.closest('.step-page');
+    if(!inStep)return;
+    var stepN=parseInt(inStep.id.replace('step-',''));
+    if(stepN<4){e.preventDefault();goStep(stepN+1);}
+  });
+})();
+</script>
+
+</body>
+</html>
