@@ -470,11 +470,11 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     <summary>⚙️ Paramètres avancés</summary>
     <div class="fg" style="margin-top:.875rem">
       <div class="fi">
-        <label>🗺 Clé Google Maps API <span style="font-size:.7rem;color:var(--t4)">(Places API — stockée localement)</span></label>
-        <input id="p_gm_key" type="password" placeholder="AIza…" autocomplete="off"
-          title="Clé Google Cloud avec Places API (New) activée — jamais envoyée à un serveur">
-        <div class="field-hint">Optionnel — active la source Google Maps dans le radar pour des résultats de qualité.
-          <a href="https://console.cloud.google.com/apis/library/places-backend.googleapis.com" target="_blank" rel="noopener" style="color:var(--blue)">Obtenir une clé →</a>
+        <label>🤖 Clé Gemini API <span style="font-size:.7rem;color:var(--t4)">(Google AI Studio — gratuite)</span></label>
+        <input id="p_gemini_key" type="password" placeholder="AIza…" autocomplete="off"
+          title="Clé Gemini API — jamais envoyée à un serveur tiers, uniquement à l'API Google AI">
+        <div class="field-hint">Active la recherche IA dans le radar — Gemini cherche les entreprises adaptées à ta formation.
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--blue)">Obtenir une clé gratuite →</a>
         </div>
       </div>
       <div class="fi">
@@ -534,8 +534,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     </div>
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:.5rem">
       <span style="font-size:.72rem;color:var(--t4);white-space:nowrap;font-weight:600">Sources :</span>
-      <label class="src-toggle" id="src-gm-lbl" title="Google Maps Places API — résultats géo de haute qualité (clé API requise)">
-        <input type="checkbox" id="src-gm"> 🗺 Google Maps
+      <label class="src-toggle" id="src-gemini-lbl" title="Gemini AI — recherche intelligente d'entreprises adaptées à ta formation (clé API Gemini requise)">
+        <input type="checkbox" id="src-gemini"> 🤖 Gemini AI
       </label>
       <label class="src-toggle" title="Annuaire officiel SIRENE / recherche-entreprises.api.gouv.fr">
         <input type="checkbox" id="src-sirene" checked> 🏢 Annuaire SIRENE
@@ -713,21 +713,21 @@ const FORMATION_CONFIG={
 
 
 const CATS=[
-  {id:'ESN',        ico:'💻', lbl:'IT & ESN',           naf:['6202B','9511Z','6203Z','6209Z','6202A','6201Z'],        gmTypes:[]},
-  {id:'Public',     ico:'🏛️', lbl:'Public & Admins',    naf:[],                                                       gmTypes:['city_hall','local_government_office','courthouse']},
-  {id:'Education',  ico:'🎓', lbl:'Université & BTS',   naf:[],                                                       gmTypes:['university','community_college']},
-  {id:'Lycées',     ico:'🏫', lbl:'Lycées & Collèges',  naf:[],                                                       gmTypes:['secondary_school','primary_school','school']},
-  {id:'Santé',      ico:'🏥', lbl:'Santé & Médical',    naf:['8610Z','8621Z','8622A','8622B'],                        gmTypes:['hospital','doctor','medical_lab']},
-  {id:'Banque',     ico:'🏦', lbl:'Banque & Assurance', naf:['6920Z','6619B','6491Z'],                                gmTypes:['bank','accounting','insurance_agency']},
-  {id:'Industrie',  ico:'🏭', lbl:'Industrie & Énergie',naf:['4321A','4321B','2711Z','3320A'],                        gmTypes:['electrician']},
-  {id:'Garage',     ico:'🔧', lbl:'Auto & Mécanique',   naf:['4520B','4511Z','4519Z','4531Z'],                        gmTypes:['car_repair','car_dealer']},
-  {id:'BTP',        ico:'🏗️', lbl:'Bâtiment & BTP',    naf:['4120A','4120B','4312A','4391A'],                        gmTypes:['general_contractor','plumber','roofing_contractor']},
-  {id:'Restauration',ico:'🍽️',lbl:'Restauration & Hôtel',naf:['5610B','5621Z','5590Z'],                              gmTypes:['restaurant','cafe','lodging']},
-  {id:'Asso',       ico:'🤝', lbl:'Associatif & ONG',   naf:['8810B','8899A','8899B'],                                gmTypes:[]},
-  {id:'Logistique', ico:'🚚', lbl:'Transport & Infra',  naf:['4941A','4941B','5210B','5224A'],                        gmTypes:['moving_company','storage','transit_depot']},
-  {id:'Coworking',  ico:'🌱', lbl:'Coworking & Tech',   naf:['6831Z','6820B','7022Z','7490B'],                        gmTypes:['coworking_space']},
-  {id:'PME',        ico:'🏢', lbl:'Commerce & Distrib.',naf:['4711A','4711B','4711D','8211Z'],                        gmTypes:['supermarket','department_store','store']},
-  {id:'Médias',     ico:'📡', lbl:'Médias & Télécoms',  naf:['6020Z','6010Z','7311Z'],                                gmTypes:[]},
+  {id:'ESN',        ico:'💻', lbl:'IT & ESN',           naf:['6202B','9511Z','6203Z','6209Z','6202A','6201Z']},
+  {id:'Public',     ico:'🏛️', lbl:'Public & Admins',    naf:[]},
+  {id:'Education',  ico:'🎓', lbl:'Université & BTS',   naf:[]},
+  {id:'Lycées',     ico:'🏫', lbl:'Lycées & Collèges',  naf:[]},
+  {id:'Santé',      ico:'🏥', lbl:'Santé & Médical',    naf:['8610Z','8621Z','8622A','8622B']},
+  {id:'Banque',     ico:'🏦', lbl:'Banque & Assurance', naf:['6920Z','6619B','6491Z']},
+  {id:'Industrie',  ico:'🏭', lbl:'Industrie & Énergie',naf:['4321A','4321B','2711Z','3320A']},
+  {id:'Garage',     ico:'🔧', lbl:'Auto & Mécanique',   naf:['4520B','4511Z','4519Z','4531Z']},
+  {id:'BTP',        ico:'🏗️', lbl:'Bâtiment & BTP',    naf:['4120A','4120B','4312A','4391A']},
+  {id:'Restauration',ico:'🍽️',lbl:'Restauration & Hôtel',naf:['5610B','5621Z','5590Z']},
+  {id:'Asso',       ico:'🤝', lbl:'Associatif & ONG',   naf:['8810B','8899A','8899B']},
+  {id:'Logistique', ico:'🚚', lbl:'Transport & Infra',  naf:['4941A','4941B','5210B','5224A']},
+  {id:'Coworking',  ico:'🌱', lbl:'Coworking & Tech',   naf:['6831Z','6820B','7022Z','7490B']},
+  {id:'PME',        ico:'🏢', lbl:'Commerce & Distrib.',naf:['4711A','4711B','4711D','8211Z']},
+  {id:'Médias',     ico:'📡', lbl:'Médias & Télécoms',  naf:['6020Z','6010Z','7311Z']},
 ];
 
 const CRM_COLS=[
@@ -1322,16 +1322,16 @@ function initRadarSourceToggles(){
       if(lbl){lbl.classList.add('src-disabled');lbl.title='Proxy France Travail non configuré — non disponible';}
     }
   });
-  // Google Maps toggle — actif seulement si clé configurée
-  const gmInp=document.getElementById('src-gm');
-  const gmLbl=document.getElementById('src-gm-lbl');
-  if(gmInp){
-    if(S.gmKey){
-      gmInp.checked=true;
+  // Gemini toggle — actif seulement si clé configurée
+  const gemInp=document.getElementById('src-gemini');
+  const gemLbl=document.getElementById('src-gemini-lbl');
+  if(gemInp){
+    if(S.geminiKey){
+      gemInp.checked=true;
     } else {
-      gmInp.checked=false;
-      gmInp.disabled=true;
-      if(gmLbl){gmLbl.classList.add('src-disabled');gmLbl.title='Ajoute ta clé Google Maps API dans Profil → Paramètres avancés';}
+      gemInp.checked=false;
+      gemInp.disabled=true;
+      if(gemLbl){gemLbl.classList.add('src-disabled');gemLbl.title='Ajoute ta clé Gemini API dans Profil → Paramètres avancés (gratuit sur aistudio.google.com)';}
     }
   }
   // Alternance toggle only relevant in alternance mode
@@ -1881,78 +1881,42 @@ function rebuildTypeFilter(){
 }
 
 // Maps a Google Place type to our CATS id
-const _GM_TYPE_CAT={
-  university:'Education',community_college:'Education',
-  secondary_school:'Lycées',primary_school:'Lycées',school:'Lycées',
-  hospital:'Santé',doctor:'Santé',medical_lab:'Santé',
-  bank:'Banque',accounting:'Banque',insurance_agency:'Banque',
-  electrician:'Industrie',
-  car_repair:'Garage',car_dealer:'Garage',
-  general_contractor:'BTP',plumber:'BTP',roofing_contractor:'BTP',
-  restaurant:'Restauration',cafe:'Restauration',lodging:'Restauration',
-  city_hall:'Public',local_government_office:'Public',courthouse:'Public',
-  moving_company:'Logistique',storage:'Logistique',transit_depot:'Logistique',
-  coworking_space:'Coworking',
-  supermarket:'PME',department_store:'PME',store:'PME',
-};
+async function fetchGemini(lat,lng,rKm,geminiKey){
+  const _fc=FORMATION_CONFIG[S.formation]||{};
+  const formationLabel=_fc.label||S.formation||'stage';
+  const city=S.addr?S.addr.split(',').slice(-2).join(',').trim():'la zone autour de '+lat.toFixed(3)+','+lng.toFixed(3);
+  const activeCatLabels=CATS.filter(c=>activeCats.has(c.id)).map(c=>c.lbl).join(', ');
 
-async function fetchGooglePlaces(lat,lng,rKm,gmKey,activeCatIds){
-  const radius=Math.min(rKm*1000,50000);
-  const results=[];
-  const seen=new Set();
+  const prompt=`Tu es un assistant spécialisé dans la recherche de stages en France.
+Recherche 20 entreprises ou établissements réels et actuellement actifs pour un stage de "${formationLabel}" dans un rayon de ${rKm} km autour de ${city}.
+Catégories souhaitées : ${activeCatLabels}.
+Pour chaque structure, retourne un objet JSON. Réponds UNIQUEMENT avec un tableau JSON valide (sans markdown, sans texte avant/après) :
+[{"n":"Nom exact","t":"ESN|Public|Education|Lycées|Santé|Banque|Industrie|Garage|BTP|Restauration|Asso|Logistique|Coworking|PME|Médias","d":"Adresse complète","web":"https://site.com ou vide","v":"Ville"}]`;
 
-  // Build per-category requests (only cats with gmTypes)
-  const requests=CATS
-    .filter(c=>activeCatIds.has(c.id)&&c.gmTypes&&c.gmTypes.length)
-    .map(cat=>({catId:cat.id, types:cat.gmTypes}));
-
-  await Promise.all(requests.map(async({catId,types})=>{
-    try{
-      const body={
-        includedTypes:types,
-        maxResultCount:20,
-        rankPreference:'DISTANCE',
-        locationRestriction:{circle:{center:{latitude:lat,longitude:lng},radius}}
-      };
-      const r=await fetch('https://places.googleapis.com/v1/places:searchNearby',{
-        method:'POST',
-        headers:{
-          'Content-Type':'application/json',
-          'X-Goog-Api-Key':gmKey,
-          'X-Goog-FieldMask':'places.id,places.displayName,places.formattedAddress,places.location,places.types,places.websiteUri,places.businessStatus'
-        },
-        body:JSON.stringify(body)
-      });
-      if(!r.ok){
-        const err=await r.json().catch(()=>({}));
-        console.warn('[Google Places]',catId,r.status,err?.error?.message||'');
-        return;
-      }
-      const data=await r.json();
-      (data.places||[]).forEach(p=>{
-        if(p.businessStatus&&p.businessStatus!=='OPERATIONAL')return;
-        if(seen.has(p.id))return;
-        seen.add(p.id);
-        // Determine best category type from returned place types
-        let t=catId;
-        for(const pt of(p.types||[])){
-          if(_GM_TYPE_CAT[pt]){t=_GM_TYPE_CAT[pt];break;}
-        }
-        results.push({
-          id:'gm-'+p.id,
-          n:p.displayName?.text||'Inconnu',
-          t,
-          web:p.websiteUri||'',
-          d:p.formattedAddress||'',
-          lat:p.location?.latitude,
-          lng:p.location?.longitude,
-          src:'Google Maps',
-          gm:true
-        });
-      });
-    }catch(ex){console.warn('[Google Places]',catId,ex.message);}
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+geminiKey,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({
+      tools:[{google_search:{}}],
+      contents:[{parts:[{text:prompt}]}]
+    })
+  });
+  if(!r.ok){
+    const err=await r.json().catch(()=>({}));
+    throw new Error('Gemini '+(err.error?.status||r.status)+': '+(err.error?.message||'Erreur inconnue'));
+  }
+  const data=await r.json();
+  const text=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+  const m=text.match(/\[[\s\S]*?\]/);
+  if(!m)throw new Error('Gemini: réponse non parseable');
+  const items=JSON.parse(m[0]);
+  return items.filter(e=>e&&e.n).map((e,i)=>({
+    id:'gem_'+i+'_'+Date.now(),
+    n:e.n,t:e.t||'PME',
+    d:e.d||'',web:e.web||'',v:e.v||'',
+    lat,lng,
+    src:'Gemini AI'
   }));
-  return results;
 }
 
 async function launchRadar(){
@@ -1983,7 +1947,7 @@ async function launchRadar(){
   const _formationNaf=(_fc&&_fc.nafCodes)||[];
   const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf||[]),..._formationNaf,...extraNaf])];
 
-  const useGM=document.getElementById('src-gm')?.checked&&!!S.gmKey;
+  const useGemini=document.getElementById('src-gemini')?.checked&&!!S.geminiKey;
   const useSIRENE=document.getElementById('src-sirene')?.checked!==false;
   const useLBB=document.getElementById('src-lbb')?.checked!==false;
   const useFT=document.getElementById('src-ft')?.checked!==false;
@@ -1991,9 +1955,9 @@ async function launchRadar(){
   const hasProxy=FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__');
 
   const tasks=[];
-  if(useGM){
-    msg('🗺 Google Maps Places…');
-    tasks.push(fetchGooglePlaces(coords.lat,coords.lng,rKm,S.gmKey,activeCats));
+  if(useGemini){
+    msg('🤖 Gemini AI — recherche intelligente…');
+    tasks.push(fetchGemini(coords.lat,coords.lng,rKm,S.geminiKey));
   }
   if(useSIRENE&&allNaf.length){
     msg('🔍 Annuaire Entreprises…');
@@ -2044,7 +2008,7 @@ async function launchRadar(){
       _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
       _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
       _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
-      _diag+="Les APIs externes (Annuaire Entreprises, Google Maps) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
+      _diag+="Les APIs externes (Annuaire Entreprises, Gemini AI) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
     }
     _diagEl.innerHTML=_diag;_diagEl.style.display='block';
   }
@@ -2127,7 +2091,7 @@ function radarCard(c){
   var badges='';
   // Badge source — couleur par origine des données
   var _srcStyles={
-    'Google Maps':         ['🗺','#4285f4',  'rgba(66,133,244,.15)', 'rgba(66,133,244,.3)'],
+    'Gemini AI':           ['🤖','#8b5cf6',  'rgba(139,92,246,.15)', 'rgba(139,92,246,.3)'],
     'Annuaire Entreprises':['📋','var(--t3)','var(--bg2)',           'var(--brd)'],
     'France Travail':      ['🎯','var(--blue)','rgba(59,130,246,.12)','rgba(59,130,246,.3)'],
     'La Bonne Boite':      ['⭐','#16a34a',  'rgba(34,197,94,.12)',  'rgba(34,197,94,.3)'],
@@ -2736,7 +2700,7 @@ async function saveProfile(){
     formationDiploma:_fid==='Custom'?(_customFName||''):_fc.diploma,
     formationEmoji:_fc.emoji||'✏️',
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
-    gmKey:document.getElementById('p_gm_key')?.value.trim()||S.gmKey||'',
+    geminiKey:document.getElementById('p_gemini_key')?.value.trim()||S.geminiKey||'',
     mode:getMode(),
     extraNafCodes:f('p_naf_codes'),
     extraRomeCodes:f('p_rome_codes'),
@@ -2814,7 +2778,7 @@ function fillProfileForm(){
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
-  if(S.gmKey){const _gmEl=document.getElementById('p_gm_key');if(_gmEl)_gmEl.value=S.gmKey;}
+  if(S.geminiKey){const _gEl=document.getElementById('p_gemini_key');if(_gEl)_gEl.value=S.geminiKey;}
   if(S.addr){const _adEl=document.getElementById('p_addr');if(_adEl)_adEl.value=S.addr;}
   if(S.debutRaw){const _dbEl=document.getElementById('p_debut');if(_dbEl)_dbEl.value=S.debutRaw;}
   if(S.finRaw){const _dfEl=document.getElementById('p_fin');if(_dfEl)_dfEl.value=S.finRaw;}
