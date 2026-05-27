@@ -291,6 +291,9 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
 .rome-sector-tags{display:flex;flex-wrap:wrap;gap:3px;margin:4px 0 4px}
 .rome-sector-tag{padding:1px 6px;border-radius:8px;font-size:.62rem;font-weight:600;background:var(--bg3);color:var(--t3);border:1px solid var(--brd2);line-height:1.5;white-space:nowrap}
+.rome-preview-item{display:flex;flex-wrap:wrap;align-items:center;gap:5px;padding:6px 10px;border:1px solid var(--brd2);border-radius:var(--r);background:var(--bg3);margin-bottom:4px}
+.rome-preview-del{background:none;border:none;color:var(--t4);cursor:pointer;font-size:.8rem;padding:0 2px;line-height:1;margin-left:auto;flex-shrink:0}
+.rome-preview-del:hover{color:var(--red)}
 /* ── TOASTS ──────────────────────────────────────────── */
 #toast-container{position:fixed;bottom:88px;right:1.25rem;z-index:9999;display:flex;flex-direction:column;gap:7px;pointer-events:none;align-items:flex-end}
 .toast{padding:11px 16px;border-radius:var(--rl);font-size:.82rem;font-weight:600;color:#fff;box-shadow:var(--shadow2);pointer-events:auto;max-width:360px;line-height:1.45;transition:opacity .2s,transform .2s;font-family:var(--ff-h)}
@@ -398,14 +401,14 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <input id="p_naf_codes" placeholder="ex : 4520A, 6202B, 8411Z" title="Codes NAF pour affiner la recherche entreprise">
         <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Sépare les codes par des virgules. Ils s'ajoutent à ceux de ta formation.</div>
       </div>
-      <div class="fi">
-        <label>Codes ROME supplémentaires (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
-        <div style="display:flex;gap:6px;margin-bottom:6px">
-          <input id="romeo-search" placeholder="Chercher un métier pour trouver les codes ROME…" style="flex:1;font-size:.8rem" title="Tape un métier et clique 🤖 pour sélectionner les codes ROME" onkeydown="if(event.key==='Enter'){event.preventDefault();lookupRomeo();}">
-          <button type="button" id="romeo-btn" onclick="lookupRomeo()" class="btn" style="padding:6px 10px;font-size:.75rem;white-space:nowrap" title="Sélectionner les codes ROME via l'IA France Travail">🤖 Chercher</button>
-        </div>
-        <input id="p_rome_codes" placeholder="ex : M1801, M1802" style="width:100%" title="Codes ROME pour La Bonne Boite et France Travail">
-        <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Tape un métier ci-dessus et clique 🤖 pour sélectionner les codes ROME, ou saisis-les directement.</div>
+      <div class="fi full">
+        <label style="display:flex;align-items:center;justify-content:space-between">
+          <span>Codes ROME <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" style="font-size:.8rem;text-decoration:none;opacity:.6" title="Chercher sur Métierscope">🔍</a></span>
+          <button type="button" onclick="lookupRomeo()" class="btn btn-ghost btn-sm" style="font-size:.72rem;padding:4px 10px" title="Ouvrir le sélecteur de codes ROME avec détails secteurs">🎯 Sélectionner</button>
+        </label>
+        <div id="rome-preview" style="margin-bottom:6px;min-height:0"></div>
+        <input id="p_rome_codes" placeholder="Codes sélectionnés via 🎯 ou saisis manuellement…" style="width:100%;font-size:.82rem" oninput="updateRomePreview()" title="Codes ROME — utilise le bouton 🎯 pour sélectionner avec détails">
+        <div style="font-size:.68rem;color:var(--t4);margin-top:3px">Clique <strong style="color:var(--t3)">🎯 Sélectionner</strong> pour choisir les codes ROME avec les secteurs associés, ou saisis-les directement ci-dessus.</div>
       </div>
       <div class="fi">
         <label>🔍 Moteur de recherche par défaut</label>
@@ -436,140 +439,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <textarea id="p_comp" placeholder="Certifications, logiciels maîtrisés…"></textarea></div>
       <div class="fi full"><label>Motivation (optionnel)</label>
         <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
-    </div>
-
-    <!-- ─ STEP 1 : Identité ─ -->
-    <div class="step-page on" id="step-1">
-      <div class="fg">
-        <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
-          <label for="cv_input" style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.4rem">📄 Importer ton CV — préremplissage automatique</label>
-          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px">
-            <label class="btn btn-primary btn-sm" style="cursor:pointer" aria-label="Choisir mon CV PDF ou TXT">
-              📎 Choisir mon CV (PDF ou TXT)
-              <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
-            </label>
-            <span id="cv_status" style="font-size:.76rem;color:var(--blue)" aria-live="polite">Aucun CV chargé</span>
-          </div>
-          <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--card);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6"></div>
-          <div style="font-size:.71rem;color:var(--blue);opacity:.7;margin-top:4px">Le CV peut remplir automatiquement le profil, la formation, l'adresse et les compétences.</div>
-        </div>
-        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Identité</div></div>
-        <div class="fi"><label for="p_prenom">Prénom *</label><input id="p_prenom" placeholder="Léa" autocomplete="given-name" /><div class="field-err" id="err_prenom">Prénom requis</div></div>
-        <div class="fi"><label for="p_nom">Nom *</label><input id="p_nom" placeholder="Martin" autocomplete="family-name" /><div class="field-err" id="err_nom">Nom requis</div></div>
-        <div class="fi"><label for="p_tel">Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" autocomplete="tel" /><div class="field-err" id="err_tel">Téléphone requis</div></div>
-        <div class="fi"><label for="p_email">Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" autocomplete="email" /><div class="field-err" id="err_email">Email requis</div></div>
-        <div class="fi full"><label for="p_etab">Organisme de formation</label>
-          <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR, … (optionnel)" /></div>
-      </div>
-      <div class="step-nav">
-        <div></div>
-        <button class="btn btn-primary" onclick="goStep(2)">Suivant : Formation →</button>
-      </div>
-    </div>
-
-    <!-- ─ STEP 2 : Formation & Objectif ─ -->
-    <div class="step-page" id="step-2">
-      <div class="fg">
-        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Formation & objectif</div></div>
-        <div class="fi full"><label for="p_formation">Formation / Métier *</label>
-          <select id="p_formation" onchange="onFormationChange()">
-            <option value="">— Sélectionner une formation —</option>
-            <option value="TIP">💻 Technicien Informatique de Proximité (TIP)</option>
-            <option value="Compta">📊 Comptabilité / Gestion</option>
-            <option value="Mecanique">🔧 Mécanique automobile</option>
-            <option value="Secretariat">📝 Secrétariat / Assistanat</option>
-            <option value="Commerce">🛍️ Commerce / Vente</option>
-            <option value="Electro">⚡ Électrotechnique / Électricité</option>
-            <option value="BTP">🏗️ Bâtiment / BTP</option>
-            <option value="Restauration">🍽️ Restauration / Hôtellerie</option>
-            <option value="Social">❤️ Aide à la personne / Social</option>
-            <option value="Logistique">📦 Logistique / Transport</option>
-            <option value="Custom">✏️ Autre (personnalisé)</option>
-          </select>
-          <div class="field-err" id="err_formation">Formation requise</div>
-          <div id="formation_badge" class="formation-badge" style="display:none"></div>
-        </div>
-        <div class="fi full" id="custom_formation_wrap" style="display:none">
-          <label for="p_custom_formation">Nom exact de ta formation</label>
-          <input id="p_custom_formation" placeholder="ex : Technicien en automatismes industriels">
-        </div>
-        <div class="fi full" style="background:var(--blue-l);border:1.5px solid rgba(29,110,245,.25);border-radius:var(--rl);padding:.875rem">
-          <label style="font-size:.8rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:.5rem">🎯 Objectif de recherche</label>
-          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px" id="mode_grid">
-            <label class="mode-opt" id="mode_opt_stage_nr"><input type="radio" name="p_mode" value="stage_nr" checked onchange="onModeChange()"><span>📋 Stage non rémunéré</span></label>
-            <label class="mode-opt" id="mode_opt_stage_r"><input type="radio" name="p_mode" value="stage_r" onchange="onModeChange()"><span>💰 Stage rémunéré</span></label>
-            <label class="mode-opt" id="mode_opt_alternance"><input type="radio" name="p_mode" value="alternance" onchange="onModeChange()"><span>🔄 Alternance</span></label>
-            <label class="mode-opt" id="mode_opt_emploi"><input type="radio" name="p_mode" value="emploi" onchange="onModeChange()"><span>💼 Emploi CDI/CDD</span></label>
-          </div>
-          <div id="mode_hint" style="font-size:.72rem;color:var(--blue);margin-top:6px;opacity:.8"></div>
-        </div>
-        <div class="fi"><label for="p_debut">Début de stage / contrat</label><input id="p_debut" type="date" value="2026-06-05" /></div>
-        <div class="fi"><label for="p_fin">Fin de stage / contrat</label><input id="p_fin" type="date" value="2026-07-31" /></div>
-      </div>
-      <div class="step-nav">
-        <button class="btn btn-ghost" onclick="goStep(1)">← Précédent</button>
-        <button class="btn btn-primary" onclick="goStep(3)">Suivant : Localisation →</button>
-      </div>
-    </div>
-
-    <!-- ─ STEP 3 : Localisation & Paramètres ─ -->
-    <div class="step-page" id="step-3">
-      <div class="fg">
-        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Localisation</div></div>
-        <div class="fi full"><label for="p_addr">📍 Adresse (pour le radar de distance)</label>
-          <div style="display:flex;gap:8px">
-            <div class="addr-wrap">
-              <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
-                oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" aria-label="Adresse pour le radar" aria-autocomplete="list" aria-controls="addr_dd" />
-              <div id="addr_dd" class="addr-dd" role="listbox" aria-label="Suggestions d'adresse"></div>
-            </div>
-            <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" aria-label="Utiliser ma position GPS" style="flex-shrink:0">📡 GPS</button>
-          </div>
-          <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:4px" aria-live="polite"></div>
-        </div>
-        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Paramètres de recherche</div></div>
-        <div class="fi">
-          <label for="p_rome_codes" style="display:flex;align-items:center;gap:6px">Codes ROME (optionnel) <a href="https://candidat.francetravail.fr/metierscope/" target="_blank" rel="noopener" title="Trouver mon code ROME sur Métierscope" aria-label="Chercher sur Métierscope" style="font-size:.8rem;text-decoration:none;opacity:.75">🔍</a></label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input id="p_rome_codes" placeholder="ex : M1801, M1802, K1302" title="Codes ROME pour cibler les offres France Travail, LBA et Immersion" style="flex:1">
-            <button class="btn btn-ghost btn-sm" id="romeo-btn" onclick="lookupRomeo()" title="Trouver automatiquement les codes ROME via l'IA France Travail" style="flex-shrink:0;white-space:nowrap">🤖 Auto</button>
-          </div>
-          <div style="font-size:.68rem;color:var(--t4);margin-top:2px">Clique <strong style="color:var(--t3)">🤖 Auto</strong> pour trouver les codes ROME automatiquement selon ta formation, ou renseigne-les manuellement.</div>
-        </div>
-        <div class="fi">
-          <label for="p_search_engine">Moteur de recherche par défaut</label>
-          <select id="p_search_engine">
-            <option value="google">Google</option>
-            <option value="bing">Bing</option>
-            <option value="duckduckgo">DuckDuckGo</option>
-            <option value="qwant">Qwant 🇫🇷</option>
-            <option value="ecosia">Ecosia 🌱</option>
-            <option value="brave">Brave</option>
-          </select>
-        </div>
-      </div>
-      <div class="step-nav">
-        <button class="btn btn-ghost" onclick="goStep(2)">← Précédent</button>
-        <button class="btn btn-primary" onclick="goStep(4)">Suivant : Compétences →</button>
-      </div>
-    </div>
-
-    <!-- ─ STEP 4 : Compétences & Motivation ─ -->
-    <div class="step-page" id="step-4">
-      <div class="fg">
-        <div class="fi full"><div class="sdiv" style="margin:.35rem 0 .25rem">Compétences & motivation</div></div>
-        <div class="fi full"><label for="p_comp">Compétences (optionnel)</label>
-          <textarea id="p_comp" placeholder="Certifications, logiciels maîtrisés…"></textarea></div>
-        <div class="fi full"><label for="p_motiv">Motivation (optionnel)</label>
-          <textarea id="p_motiv" placeholder="Tes points forts, ta motivation…"></textarea></div>
-        <div class="fi full" style="border:1.5px solid rgba(29,110,245,.15);border-radius:var(--rl);padding:.75rem;font-size:.74rem;color:var(--t3);line-height:1.5;display:flex;align-items:center;gap:10px">
-          <span style="font-size:1.2rem">🎯</span>
-          <span>Les offres <strong style="color:var(--blue)">France Travail</strong> (stage, alternance, emploi) sont <strong>intégrées automatiquement</strong> dans le radar — aucune configuration requise.</span>
-        </div>
-      </div>
-      <div class="step-nav">
-        <button class="btn btn-ghost" onclick="goStep(3)">← Précédent</button>
-        <button class="btn btn-primary btn-lg" onclick="saveProfile()" id="btn-save-profile">💾 Sauvegarder & Lancer le Radar →</button>
+      <div class="fi full" style="margin-top:.5rem">
+        <button class="btn btn-primary btn-lg" onclick="saveProfile()" id="btn-save-profile" style="width:100%">💾 Sauvegarder & Lancer le Radar →</button>
       </div>
     </div>
   </div>
@@ -1775,7 +1646,38 @@ function applyRomePicker(){
   document.querySelectorAll('[id="p_rome_codes"]').forEach(el=>{el.value=merged.join(', ');});
   S.extraRomeCodes=merged.join(', ');
   toast('✅ Codes ROME : '+[..._romeSelected].join(', '),'ok');
+  updateRomePreview();
   document.getElementById('rome-picker-overlay')?.remove();
+}
+
+function updateRomePreview(){
+  const inp=document.getElementById('p_rome_codes');
+  const box=document.getElementById('rome-preview');
+  if(!box)return;
+  const codes=(inp?.value||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+  if(!codes.length){box.innerHTML='';return;}
+  const allCat={};
+  Object.values(ROME_CATALOG||{}).forEach(arr=>(arr||[]).forEach(e=>{allCat[e.code]=e;}));
+  box.innerHTML=codes.map(code=>{
+    const e=allCat[code];
+    const label=e?escH(e.label):`<span style="color:var(--t4)">Code inconnu</span>`;
+    const sectors=e&&e.sectors?e.sectors.slice(0,4).map(s=>`<span class="rome-sector-tag">${escH(s)}</span>`).join(''):'';
+    return `<div class="rome-preview-item">
+      <span style="font-size:.72rem;font-weight:800;color:var(--primary);font-family:var(--ff-h)">${escH(code)}</span>
+      <span style="font-size:.75rem;font-weight:600;color:var(--t1)">${label}</span>
+      ${sectors?`<div class="rome-sector-tags" style="margin:0">${sectors}</div>`:''}
+      <button class="rome-preview-del" onclick="removeRomeCode('${escH(code)}')" title="Retirer ce code">×</button>
+    </div>`;
+  }).join('');
+}
+
+function removeRomeCode(code){
+  const inp=document.getElementById('p_rome_codes');
+  if(!inp)return;
+  const codes=inp.value.split(',').map(c=>c.trim()).filter(c=>c&&c.toUpperCase()!==code.toUpperCase());
+  inp.value=codes.join(', ');
+  S.extraRomeCodes=inp.value;
+  updateRomePreview();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2570,6 +2472,7 @@ function fillProfileForm(){
   if(S.extraRomeCodes){
     const romeEl=document.getElementById('p_rome_codes');
     if(romeEl)romeEl.value=S.extraRomeCodes;
+    updateRomePreview();
   }
   if(S.cvFileName){
     const st=document.getElementById('cv_status');
