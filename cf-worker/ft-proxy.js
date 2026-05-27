@@ -1,9 +1,12 @@
 const TOKEN_ENDPOINT = 'https://entreprise.francetravail.fr/connexion/oauth2/access_token?realm=/partenaire';
 const API_BASE       = 'https://api.francetravail.io';
 
-// Try full scope (including LBB v2) first; fall back to minimal if LBB not authorized
-const SCOPE_FULL = 'api_offresdemploiv2 o2dsoffre api_labonneboitev2 labonneboiteio';
-const SCOPE_MIN  = 'api_offresdemploiv2 o2dsoffre';
+// Each API gets its own token so a failing LBB scope doesn't break FT offres
+const API_SCOPES = [
+  { prefix: '/partenaire/labonneboite/', scopes: ['api_labonneboitev2 search office', 'api_labonneboitev2'] },
+  { prefix: '/partenaire/romeo/',        scopes: ['api_romeov2'] },
+  { prefix: '/partenaire/',              scopes: ['api_offresdemploiv2 o2dsoffre'] },
+];
 
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
@@ -18,15 +21,15 @@ function json(data, status = 200) {
   });
 }
 
-let _tok = null;
-let _tokExp = 0;
+// Per-scope token cache
+const tokenCache = {};
 
 async function tryFetchToken(env, scope) {
   const body = new URLSearchParams({
     grant_type:    'client_credentials',
     client_id:     env.FT_CLIENT_ID,
     client_secret: env.FT_CLIENT_SECRET,
-    scope:         scope,
+    scope,
   });
   const res = await fetch(TOKEN_ENDPOINT, {
     method:  'POST',
@@ -39,21 +42,26 @@ async function tryFetchToken(env, scope) {
   return { ok: true, data };
 }
 
-async function getToken(env) {
-  if (_tok && Date.now() < _tokExp) return { ok: true, token: _tok };
+async function getTokenForEndpoint(env, endpoint) {
+  // Find which scope list applies to this endpoint
+  const entry = API_SCOPES.find(e => endpoint.startsWith(e.prefix));
+  const scopeList = entry ? entry.scopes : ['api_offresdemploiv2 o2dsoffre'];
 
-  // Try full scope first (LBB included), fall back to minimal so FT always works
-  let lastErr = null;
-  for (const scope of [SCOPE_FULL, SCOPE_MIN]) {
+  for (const scope of scopeList) {
+    const cached = tokenCache[scope];
+    if (cached && Date.now() < cached.exp) {
+      return { ok: true, token: cached.tok, scope };
+    }
     const r = await tryFetchToken(env, scope);
     if (r.ok) {
-      _tok    = r.data.access_token;
-      _tokExp = Date.now() + (r.data.expires_in - 60) * 1000;
-      return { ok: true, token: _tok };
+      tokenCache[scope] = {
+        tok: r.data.access_token,
+        exp: Date.now() + (r.data.expires_in - 60) * 1000,
+      };
+      return { ok: true, token: tokenCache[scope].tok, scope };
     }
-    lastErr = r;
   }
-  return { ok: false, status: lastErr?.status, detail: lastErr?.detail };
+  return { ok: false, detail: `Aucun scope fonctionnel pour ${endpoint}` };
 }
 
 async function handleRequest(request, env) {
@@ -62,9 +70,6 @@ async function handleRequest(request, env) {
   if (!env.FT_CLIENT_ID || !env.FT_CLIENT_SECRET)
     return json({ error: 'Secrets manquants — configure FT_CLIENT_ID et FT_CLIENT_SECRET' }, 503);
 
-  const tok = await getToken(env);
-  if (!tok.ok) return json({ error: 'Échec token FT', ftStatus: tok.status, ftDetail: tok.detail }, 502);
-
   let reqBody = {};
   try {
     const txt = await request.text();
@@ -72,19 +77,32 @@ async function handleRequest(request, env) {
   } catch (_) {}
 
   if (reqBody.endpoint) {
+    if (!reqBody.endpoint.startsWith('/partenaire/'))
+      return json({ error: 'Endpoint interdit' }, 403);
+
+    const tok = await getTokenForEndpoint(env, reqBody.endpoint);
+    if (!tok.ok) return json({ error: 'Échec token FT', detail: tok.detail }, 502);
+
     const url = API_BASE + reqBody.endpoint;
     const ftHeaders = { Authorization: 'Bearer ' + tok.token, Accept: 'application/json' };
     if (reqBody.body) ftHeaders['Content-Type'] = 'application/json';
+
     const ftRes = await fetch(url, {
       method:  reqBody.method || 'GET',
       headers: ftHeaders,
       body:    reqBody.body ? JSON.stringify(reqBody.body) : undefined,
     });
-    const data = await ftRes.json().catch(() => ({}));
+    const text = await ftRes.text();
+    let data = {};
+    try { data = JSON.parse(text); } catch (_) { data = { raw: text.slice(0, 1000) }; }
+    if (!ftRes.ok) data._scope = tok.scope;
     return json(data, ftRes.status);
   }
 
-  return json({ access_token: tok.token, expires_in: Math.round((_tokExp - Date.now()) / 1000) });
+  // Health / token check (no endpoint provided)
+  const tok = await getTokenForEndpoint(env, '/partenaire/');
+  if (!tok.ok) return json({ error: 'Échec token FT', detail: tok.detail }, 502);
+  return json({ ok: true, scope: tok.scope, expires_in: Math.round((tokenCache[tok.scope]?.exp - Date.now()) / 1000) });
 }
 
 export default {
