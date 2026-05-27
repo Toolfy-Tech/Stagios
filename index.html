@@ -533,9 +533,6 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <label class="src-toggle" id="src-gm-lbl" title="Google Maps Places API — résultats géo de haute qualité (clé API requise)">
         <input type="checkbox" id="src-gm"> 🗺 Google Maps
       </label>
-      <label class="src-toggle" title="Données géographiques OpenStreetMap (peut contenir des fantômes)">
-        <input type="checkbox" id="src-osm"> 🌐 OpenStreetMap
-      </label>
       <label class="src-toggle" title="Annuaire officiel SIRENE / recherche-entreprises.api.gouv.fr">
         <input type="checkbox" id="src-sirene" checked> 🏢 Annuaire SIRENE
       </label>
@@ -705,21 +702,21 @@ const FORMATION_CONFIG={
 
 
 const CATS=[
-  {id:'ESN',        ico:'💻', lbl:'IT & ESN',           osm:[],                              naf:['6202B','9511Z','6203Z','6209Z','6202A','6201Z'],        gmTypes:[]},
-  {id:'Public',     ico:'🏛️', lbl:'Public & Admins',    osm:['townhall'],                    naf:['8411Z','8412Z','8413Z','8422Z','8423Z','8425Z'],        gmTypes:['city_hall','local_government_office','courthouse']},
-  {id:'Education',  ico:'🎓', lbl:'Université & BTS',   osm:['university','college'],         naf:['8542Z','8541Z','8559A','8559B','8560Z'],                gmTypes:['university','community_college']},
-  {id:'Lycées',     ico:'🏫', lbl:'Lycées & Collèges',  osm:['school'],                      naf:['8531Z','8532Z','8520Z','8510Z'],                        gmTypes:['secondary_school','primary_school','school']},
-  {id:'Santé',      ico:'🏥', lbl:'Santé & Médical',    osm:['hospital','clinic','nursing_home'], naf:['8610Z','8621Z','8622A','8622B','8622C'],           gmTypes:['hospital','doctor','medical_lab']},
-  {id:'Banque',     ico:'🏦', lbl:'Banque & Assurance', osm:['bank'],                        naf:['6920Z','6619B','6622Z','6491Z'],                        gmTypes:['bank','accounting','insurance_agency']},
-  {id:'Industrie',  ico:'🏭', lbl:'Industrie & Énergie',osm:[],                              naf:['4321A','4321B','2711Z','3320A'],                        gmTypes:['electrician']},
-  {id:'Garage',     ico:'🔧', lbl:'Auto & Mécanique',   osm:['car_repair','fuel'],            naf:['4520A','4520B','4511Z','4519Z','4531Z'],                gmTypes:['car_repair','car_dealer']},
-  {id:'BTP',        ico:'🏗️', lbl:'Bâtiment & BTP',    osm:[],                              naf:['4120A','4120B','4211Z','4312A','4391A'],                gmTypes:['general_contractor','plumber','roofing_contractor']},
-  {id:'Restauration',ico:'🍽️',lbl:'Restauration & Hôtel',osm:['restaurant','fast_food','cafe','hotel'],naf:['5610A','5610B','5621Z','5590Z'],             gmTypes:['restaurant','cafe','lodging']},
-  {id:'Asso',       ico:'🤝', lbl:'Associatif & ONG',   osm:['social_facility'],              naf:['8810A','8810B','8899A','8899B','9499Z'],                gmTypes:[]},
-  {id:'Logistique', ico:'🚚', lbl:'Transport & Infra',  osm:['station'],                     naf:['4941A','4941B','5210B','5221Z','5224A'],                gmTypes:['moving_company','storage','transit_depot']},
-  {id:'Coworking',  ico:'🌱', lbl:'Coworking & Tech',   osm:['coworking_space'],              naf:['6831Z','6820B','7022Z','7490B'],                        gmTypes:['coworking_space']},
-  {id:'PME',        ico:'🏢', lbl:'Commerce & Distrib.',osm:['mall','supermarket'],           naf:['4719B','4711A','4711B','4711D','8211Z','8219Z'],        gmTypes:['supermarket','department_store','store']},
-  {id:'Médias',     ico:'📡', lbl:'Médias & Télécoms',  osm:['newspaper'],                   naf:['5813Z','6020Z','6010Z','7311Z'],                        gmTypes:[]},
+  {id:'ESN',        ico:'💻', lbl:'IT & ESN',           naf:['6202B','9511Z','6203Z','6209Z','6202A','6201Z'],        gmTypes:[]},
+  {id:'Public',     ico:'🏛️', lbl:'Public & Admins',    naf:['8411Z','8412Z','8413Z','8422Z','8423Z','8425Z'],        gmTypes:['city_hall','local_government_office','courthouse']},
+  {id:'Education',  ico:'🎓', lbl:'Université & BTS',   naf:['8542Z','8541Z','8559A','8559B','8560Z'],                gmTypes:['university','community_college']},
+  {id:'Lycées',     ico:'🏫', lbl:'Lycées & Collèges',  naf:['8531Z','8532Z','8520Z','8510Z'],                        gmTypes:['secondary_school','primary_school','school']},
+  {id:'Santé',      ico:'🏥', lbl:'Santé & Médical',    naf:['8610Z','8621Z','8622A','8622B','8622C'],                gmTypes:['hospital','doctor','medical_lab']},
+  {id:'Banque',     ico:'🏦', lbl:'Banque & Assurance', naf:['6920Z','6619B','6622Z','6491Z'],                        gmTypes:['bank','accounting','insurance_agency']},
+  {id:'Industrie',  ico:'🏭', lbl:'Industrie & Énergie',naf:['4321A','4321B','2711Z','3320A'],                        gmTypes:['electrician']},
+  {id:'Garage',     ico:'🔧', lbl:'Auto & Mécanique',   naf:['4520A','4520B','4511Z','4519Z','4531Z'],                gmTypes:['car_repair','car_dealer']},
+  {id:'BTP',        ico:'🏗️', lbl:'Bâtiment & BTP',    naf:['4120A','4120B','4211Z','4312A','4391A'],                gmTypes:['general_contractor','plumber','roofing_contractor']},
+  {id:'Restauration',ico:'🍽️',lbl:'Restauration & Hôtel',naf:['5610A','5610B','5621Z','5590Z'],                      gmTypes:['restaurant','cafe','lodging']},
+  {id:'Asso',       ico:'🤝', lbl:'Associatif & ONG',   naf:['8810A','8810B','8899A','8899B','9499Z'],                gmTypes:[]},
+  {id:'Logistique', ico:'🚚', lbl:'Transport & Infra',  naf:['4941A','4941B','5210B','5221Z','5224A'],                gmTypes:['moving_company','storage','transit_depot']},
+  {id:'Coworking',  ico:'🌱', lbl:'Coworking & Tech',   naf:['6831Z','6820B','7022Z','7490B'],                        gmTypes:['coworking_space']},
+  {id:'PME',        ico:'🏢', lbl:'Commerce & Distrib.',naf:['4719B','4711A','4711B','4711D','8211Z','8219Z'],        gmTypes:['supermarket','department_store','store']},
+  {id:'Médias',     ico:'📡', lbl:'Médias & Télécoms',  naf:['5813Z','6020Z','6010Z','7311Z'],                        gmTypes:[]},
 ];
 
 const CRM_COLS=[
@@ -1208,56 +1205,8 @@ function tier(d){
 }
 
 // ════════════════════════════════════════════════════════════
-// SECTION 5 — MODULE API (Overpass + Entreprises + Alternance)
+// SECTION 5 — MODULE API (Entreprises + Alternance + Google Maps)
 // ════════════════════════════════════════════════════════════
-async function fetchOverpass(lat,lng,rm,amenities,offices){
-  const cond=[
-    ...amenities.flatMap(a=>[
-      `node["amenity"="${a}"](around:${rm},${lat},${lng});`,
-      `way["amenity"="${a}"](around:${rm},${lat},${lng});`
-    ]),
-    ...offices.flatMap(o=>[
-      `node["office"="${o}"](around:${rm},${lat},${lng});`,
-      `way["office"="${o}"](around:${rm},${lat},${lng});`
-    ]),
-  ].join('');
-  if(!cond)return[];
-  const q=`[out:json][timeout:30];(${cond});out body center;`;
-  try{
-    const r=await fetch(`https://overpass-api.de/api/interpreter?data=${encodeURIComponent(q)}`);
-    const d=await r.json();
-    const am2t={
-      hospital:'Santé',clinic:'Santé',doctors:'Santé',nursing_home:'Santé',social_facility:'Asso',
-      school:'Lycées',college:'Education',university:'Education',
-      townhall:'Public',government:'Public',
-      coworking_space:'Coworking',bank:'Banque',
-      association:'Asso',it:'ESN',
-      car_repair:'Garage',car_parts:'Garage',fuel:'Garage',
-      restaurant:'Restauration',fast_food:'Restauration',cafe:'Restauration',hotel:'Restauration',
-      supermarket:'PME',mall:'PME',
-      station:'Logistique',
-    };
-    return(d.elements||[])
-      .filter(e=>e.tags&&e.tags.name&&e.tags.name.length>1)
-      .map(e=>{
-        const lt=e.type==='node'?e.lat:(e.center?e.center.lat:null);
-        const ln=e.type==='node'?e.lon:(e.center?e.center.lon:null);
-        if(!lt||!ln)return null;
-        const a=e.tags.amenity||e.tags.office||'';
-        const t=am2t[a]||null;
-        if(!t)return null;
-        const addr=[e.tags['addr:housenumber'],e.tags['addr:street'],
-                    e.tags['addr:postcode'],e.tags['addr:city']].filter(Boolean).join(' ')
-                   ||e.tags['addr:city']||'';
-        return{id:'osm_'+e.id,n:e.tags.name,t,v:addr,d:a,
-               e:e.tags.email||e.tags['contact:email']||'',
-               web:e.tags.website||e.tags['contact:website']||'',
-               phone:e.tags.phone||e.tags['contact:phone']||'',
-               lat:lt,lng:ln,src:'OpenStreetMap'};
-      })
-      .filter(Boolean);
-  }catch(ex){console.warn('Overpass error:',ex);return[];}
-}
 
 const NAF2T={
   '6201Z':'ESN','6202A':'ESN','6202B':'ESN','6203Z':'ESN','6209Z':'ESN','9511Z':'ESN','6190Z':'ESN',
@@ -2018,15 +1967,11 @@ async function launchRadar(){
   }
 
   const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
-  const _formationAmenities=(_fc&&_fc.osmAmenities)||[];
-  const allAmenities=[...new Set([...activeCatDefs.flatMap(c=>c.osm||[]),..._formationAmenities])];
   const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
   const _formationNaf=(_fc&&_fc.nafCodes)||[];
   const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf||[]),..._formationNaf,...extraNaf])];
-  const osmOffices=['government','it','association','company'];
 
   const useGM=document.getElementById('src-gm')?.checked&&!!S.gmKey;
-  const useOSM=document.getElementById('src-osm')?.checked;
   const useSIRENE=document.getElementById('src-sirene')?.checked!==false;
   const useLBB=document.getElementById('src-lbb')?.checked!==false;
   const useFT=document.getElementById('src-ft')?.checked!==false;
@@ -2037,10 +1982,6 @@ async function launchRadar(){
   if(useGM){
     msg('🗺 Google Maps Places…');
     tasks.push(fetchGooglePlaces(coords.lat,coords.lng,rKm,S.gmKey,activeCats));
-  }
-  if(useOSM&&(allAmenities.length||osmOffices.length)){
-    msg('🔍 Scan OpenStreetMap…');
-    tasks.push(fetchOverpass(coords.lat,coords.lng,rm,allAmenities,osmOffices));
   }
   if(useSIRENE&&allNaf.length){
     msg('🔍 Annuaire Entreprises…');
@@ -2091,7 +2032,7 @@ async function launchRadar(){
       _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
       _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
       _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
-      _diag+="Les APIs externes (Overpass, Annuaire Entreprises) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
+      _diag+="Les APIs externes (Annuaire Entreprises, Google Maps) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
     }
     _diagEl.innerHTML=_diag;_diagEl.style.display='block';
   }
@@ -2175,7 +2116,6 @@ function radarCard(c){
   // Badge source — couleur par origine des données
   var _srcStyles={
     'Google Maps':         ['🗺','#4285f4',  'rgba(66,133,244,.15)', 'rgba(66,133,244,.3)'],
-    'OpenStreetMap':       ['🌐','#e06b22',  'rgba(224,107,34,.12)', 'rgba(224,107,34,.3)'],
     'Annuaire Entreprises':['📋','var(--t3)','var(--bg2)',           'var(--brd)'],
     'France Travail':      ['🎯','var(--blue)','rgba(59,130,246,.12)','rgba(59,130,246,.3)'],
     'La Bonne Boite':      ['⭐','#16a34a',  'rgba(34,197,94,.12)',  'rgba(34,197,94,.3)'],
