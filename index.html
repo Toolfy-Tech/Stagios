@@ -1296,6 +1296,59 @@ async function fetchImmersion(lat,lng,rKm){
   return [];
 }
 
+function updateCoordsWarning(){
+  const b=document.getElementById('no-coords-banner');
+  if(b)b.style.display=coords?'none':'block';
+}
+
+function updateFTStatus(state){
+  const chip=document.getElementById('ft-status-chip');
+  if(!chip)return;
+  const hasProxy=(FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__'));
+  if(state==='ok'){
+    chip.style.cssText='display:inline-flex;background:rgba(34,197,94,.13);border-color:var(--green);color:var(--green)';
+    chip.textContent='✅ Offres France Travail disponibles';
+  }else if(state==='error'){
+    chip.style.cssText='display:inline-flex;background:rgba(239,68,68,.1);border-color:var(--red);color:#f87171';
+    chip.textContent='⚠️ Service France Travail indisponible';
+  }else if(hasProxy){
+    chip.style.cssText='display:inline-flex;background:rgba(108,99,255,.12);border-color:var(--blue);color:var(--blue)';
+    chip.textContent='🔵 France Travail prêt — lance un scan pour activer';
+  }else{
+    chip.style.display='none';
+  }
+}
+
+async function ftProxy(endpoint,method,body){
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))throw new Error('Proxy non configuré');
+  const _url=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
+  const r=await fetch(_url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({endpoint,method:method||'GET',body:body||undefined})});
+  const data=await r.json().catch(()=>({}));
+  if(!r.ok){
+    console.error('[FT Proxy] '+r.status,endpoint,JSON.stringify(data));
+    throw new Error('Proxy '+r.status+': '+(data.message||data.error||data.error_description||JSON.stringify(data)));
+  }
+  return data;
+}
+
+async function getFTToken(){
+  const _cached=sessionStorage.getItem('_ft_tok');
+  const _exp=parseInt(sessionStorage.getItem('_ft_tok_exp')||'0');
+  if(_cached&&Date.now()<_exp)return _cached;
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){updateFTStatus('unconfigured');return null;}
+  const _proxyUrl=FT_PROXY_URL.startsWith('http')?FT_PROXY_URL:'https://'+FT_PROXY_URL;
+  try{
+    const _r=await fetch(_proxyUrl,{method:'POST'});
+    if(!_r.ok){updateFTStatus('error');return null;}
+    const _d=await _r.json();
+    if(!_d.access_token){updateFTStatus('error');return null;}
+    sessionStorage.setItem('_ft_tok',_d.access_token);
+    sessionStorage.setItem('_ft_tok_exp',String(Date.now()+(_d.expires_in-60)*1000));
+    updateFTStatus('ok');
+    return _d.access_token;
+  }catch(e){updateFTStatus('error');return null;}
+}
+
 async function fetchFranceTravail(lat,lng,rKm){
   const token=await getFTToken();
   if(!token)return[];
