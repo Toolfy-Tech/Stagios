@@ -35,6 +35,7 @@ jobs:
         run: |
           mkdir _site
           cp index.html _site/
+          cp manifest.json _site/ 2>/dev/null || true
           cp professeurs.html _site/ 2>/dev/null || true
 
       - name: Upload artifact Pages
