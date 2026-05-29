@@ -264,7 +264,17 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .src-toggle{display:inline-flex;align-items:center;gap:5px;cursor:pointer;font-size:.76rem;color:var(--t3);background:var(--bg2);border:1px solid var(--brd);border-radius:20px;padding:3px 10px 3px 7px;transition:border-color .15s,color .15s;user-select:none;white-space:nowrap}
 .src-toggle:has(input:checked){border-color:var(--primary);color:var(--t1);background:var(--primary-t)}
 .src-toggle input{width:13px;height:13px;accent-color:var(--primary);cursor:pointer}
-.src-toggle.src-disabled{opacity:.45;cursor:default}
+.src-toggle.src-disabled{opacity:.45;cursor:pointer}
+/* ── GEMINI TUTO ─────────────────────────────────── */
+.gemini-tuto{background:linear-gradient(135deg,rgba(139,92,246,.07),rgba(99,102,241,.04));border:1px solid rgba(139,92,246,.22);border-radius:12px;padding:.9rem 1rem .8rem;margin-top:.6rem}
+.gemini-free-badge{display:inline-flex;align-items:center;gap:5px;background:rgba(34,197,94,.14);color:#15803d;border:1px solid rgba(34,197,94,.28);border-radius:20px;font-size:.68rem;font-weight:700;padding:2px 10px;margin-bottom:.65rem;letter-spacing:.01em}
+.gemini-steps{list-style:none;padding:0;margin:.4rem 0 .8rem;display:flex;flex-direction:column;gap:.5rem}
+.gemini-steps li{display:flex;align-items:flex-start;gap:.65rem;font-size:.77rem;color:var(--t2);line-height:1.45}
+.gemini-steps li .sn{min-width:21px;height:21px;border-radius:50%;background:var(--primary);color:#fff;font-size:.62rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.gemini-steps li code{background:var(--bg2);border:1px solid var(--brd);border-radius:4px;padding:0 4px;font-size:.73rem;font-family:monospace;color:var(--primary)}
+.gemini-cta{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;border:none;border-radius:10px;padding:.65rem 1.2rem;font-size:.82rem;font-weight:600;cursor:pointer;width:100%;margin-top:.2rem;text-decoration:none;transition:opacity .15s,transform .1s}
+.gemini-cta:hover{opacity:.88;transform:translateY(-1px)}
+.gemini-privacy{font-size:.67rem;color:var(--t4);text-align:center;margin-top:.45rem;line-height:1.4}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
 @media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}.btn{min-height:44px}.btn-sm{min-height:40px;padding:8px 12px}.step-lbl{display:none}}
 @media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(130px,1fr))}.tab{padding:7px 10px;font-size:.68rem;gap:4px}.step-lbl{display:none}}
@@ -473,8 +483,20 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <label>🤖 Clé Gemini API <span style="font-size:.7rem;color:var(--t4)">(Google AI Studio — gratuite)</span></label>
         <input id="p_gemini_key" type="password" placeholder="AIza…" autocomplete="off"
           title="Clé Gemini API — jamais envoyée à un serveur tiers, uniquement à l'API Google AI">
-        <div class="field-hint">Active la recherche IA dans le radar — Gemini cherche les entreprises adaptées à ta formation.
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" style="color:var(--blue)">Obtenir une clé gratuite →</a>
+        <div class="gemini-tuto">
+          <div class="gemini-free-badge">✅ Gratuit &nbsp;·&nbsp; Sans carte bancaire &nbsp;·&nbsp; 15 requêtes / min</div>
+          <div style="font-size:.8rem;font-weight:600;color:var(--t1);margin-bottom:.5rem">Obtenir ta clé en 2 minutes — même sans expérience :</div>
+          <ol class="gemini-steps">
+            <li><span class="sn">1</span><span>Clique sur le bouton violet ci-dessous — <strong>Google AI Studio</strong> s'ouvre dans un nouvel onglet</span></li>
+            <li><span class="sn">2</span><span>Connecte-toi avec ton compte <strong>Google</strong> habituel (Gmail, YouTube… c'est le même)</span></li>
+            <li><span class="sn">3</span><span>Clique sur le bouton bleu <strong>"Create API key"</strong>, puis <strong>"Create API key in new project"</strong></span></li>
+            <li><span class="sn">4</span><span>Une clé apparaît — copie-la (elle commence par <code>AIza</code>)</span></li>
+            <li><span class="sn">5</span><span>Reviens ici, colle-la dans le champ ci-dessus, puis clique <strong>"Enregistrer le profil"</strong></span></li>
+          </ol>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="gemini-cta">
+            🔑 Ouvrir Google AI Studio →
+          </a>
+          <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
         </div>
       </div>
       <div class="fi">
@@ -1331,7 +1353,27 @@ function initRadarSourceToggles(){
     } else {
       gemInp.checked=false;
       gemInp.disabled=true;
-      if(gemLbl){gemLbl.classList.add('src-disabled');gemLbl.title='Ajoute ta clé Gemini API dans Profil → Paramètres avancés (gratuit sur aistudio.google.com)';}
+      if(gemLbl){
+        gemLbl.classList.add('src-disabled');
+        gemLbl.title='Clique pour configurer ta clé Gemini gratuite';
+        gemLbl.addEventListener('click',e=>{
+          e.preventDefault();
+          // Aller à l'onglet Profil
+          const profilTab=document.querySelector('.tab[data-tab="profil"]')||[...document.querySelectorAll('.tab')].find(t=>t.textContent.includes('Profil'));
+          if(profilTab)profilTab.click();
+          setTimeout(()=>{
+            const advDetails=document.querySelector('.pcard-advanced');
+            if(advDetails)advDetails.open=true;
+            const keyEl=document.getElementById('p_gemini_key');
+            if(keyEl){
+              keyEl.scrollIntoView({behavior:'smooth',block:'center'});
+              keyEl.focus();
+              const tuto=keyEl.closest('.fi')?.querySelector('.gemini-tuto');
+              if(tuto){tuto.style.transition='box-shadow .3s';tuto.style.boxShadow='0 0 0 3px rgba(139,92,246,.45)';setTimeout(()=>{tuto.style.boxShadow='';},1800);}
+            }
+          },250);
+        });
+      }
     }
   }
   // Alternance toggle only relevant in alternance mode
