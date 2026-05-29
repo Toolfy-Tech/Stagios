@@ -446,7 +446,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <label class="dm-upload-zone" for="dm_cv_input"
         ondragover="event.preventDefault();this.classList.add('dm-dz-over')"
         ondragleave="this.classList.remove('dm-dz-over')"
-        ondrop="event.preventDefault();this.classList.remove('dm-dz-over');if(event.dataTransfer.files.length)handleCvUpload({target:{files:event.dataTransfer.files}},true)">
+        ondrop="event.preventDefault();this.classList.remove('dm-dz-over');if(event.dataTransfer.files.length)handleCvUpload({target:{files:event.dataTransfer.files}},true)"
         <div class="dm-upload-icon">📄</div>
         <div class="dm-upload-title">Glisse ton CV ici ou clique pour choisir</div>
         <div class="dm-upload-sub">PDF ou TXT — analysé instantanément par Gemini</div>
@@ -1072,9 +1072,12 @@ function toggleShowBlacklisted(){
 
 
 // ── SCAN CV — extraction + préremplissage ─────────────────────────
+var _cvUploadActive=false;
 async function handleCvUpload(event, fromDemarrer){
+  if(_cvUploadActive)return;
+  _cvUploadActive=true;
   var file=event.target.files[0];
-  if(!file)return;
+  if(!file){_cvUploadActive=false;return;}
   var status=document.getElementById('cv_status');
   var preview=document.getElementById('cv_preview');
   if(fromDemarrer){
@@ -1135,6 +1138,8 @@ async function handleCvUpload(event, fromDemarrer){
     if(fromDemarrer){var m4=document.getElementById('dm-loading-msg');if(m4)m4.textContent='⚠️ Erreur : '+e.message;renderDemarrer();}
     else if(status)status.textContent='⚠️ Erreur lecture : '+e.message;
     console.error(e);
+  }finally{
+    _cvUploadActive=false;
   }
 }
 
