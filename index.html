@@ -61,6 +61,8 @@ html[data-theme=light] .hdr{background:rgba(240,239,255,.92)}
 .hdr-ia-dot{position:absolute;top:4px;right:5px;width:7px;height:7px;border-radius:50%;border:1.5px solid var(--bg)}
 .hdr-ia-dot.on{background:#16a34a}
 .hdr-ia-dot.off{background:var(--t4)}
+.ai-prov-badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;background:var(--primary-l);color:var(--purple);border:1px solid rgba(108,99,255,.30);margin-top:.4rem}
+.ai-prov-badge.free{background:var(--green-l);color:var(--green);border-color:rgba(67,233,123,.30)}
 
 /* ── BOTTOM PILL NAV ────────────────────────────────── */
 .tabnav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:8px;background:linear-gradient(135deg,rgba(30,41,59,.90) 0%,rgba(15,23,42,.95) 45%,rgba(11,16,32,.97) 100%);border:1.5px solid rgba(108,99,255,.40);border-radius:40px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 10px 28px rgba(108,99,255,.28),0 14px 24px rgba(0,0,0,.55);z-index:200;white-space:nowrap}
@@ -424,17 +426,19 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <li><span class="sn">4</span><span>Une clé apparaît — copie-la (elle commence généralement par <code>AIza</code>)</span></li>
         <li><span class="sn">5</span><span>Colle-la dans le champ ci-dessous et clique <strong>"Activer Gemini"</strong></span></li>
       </ol>
-      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="gemini-cta" style="margin-bottom:.8rem">
+      <a id="dm-key-link" href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="gemini-cta" style="margin-bottom:.8rem">
         🔑 Ouvrir Google AI Studio →
       </a>
       <div class="ia-key-row">
-        <input id="dm_key" type="password" placeholder="Colle ta clé Gemini ici…" autocomplete="off"
-          title="Clé Gemini API — stockée uniquement sur cet appareil"
+        <input id="dm_key" type="password" placeholder="Colle ta clé IA ici…" autocomplete="off"
+          title="Clé API — stockée uniquement sur cet appareil"
+          oninput="onDmKeyInput(this.value)"
           onkeydown="if(event.key==='Enter')saveDemarreurKey()">
-        <button class="btn btn-primary" onclick="saveDemarreurKey()">✅ Activer Gemini</button>
+        <button class="btn btn-primary" onclick="saveDemarreurKey()">✅ Activer l'IA</button>
       </div>
+      <div id="dm-prov-badge" class="ai-prov-badge free" style="display:none"></div>
       <div style="margin-top:.55rem;display:flex;align-items:center;gap:.6rem;font-size:.78rem">
-        <label for="dm_model" style="font-weight:600;color:var(--t3);flex-shrink:0;white-space:nowrap">Modèle Gemini :</label>
+        <label for="dm_model" style="font-weight:600;color:var(--t3);flex-shrink:0;white-space:nowrap">Modèle :</label>
         <select id="dm_model" style="flex:1;padding:5px 9px;font-size:.76rem">
           <option value="gemini-2.5-flash">gemini-2.5-flash (recommandé)</option>
           <option value="gemini-2.5-pro">gemini-2.5-pro (meilleur)</option>
@@ -661,9 +665,11 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     <summary>⚙️ Paramètres avancés</summary>
     <div class="fg" style="margin-top:.875rem">
       <div class="fi">
-        <label>🤖 Clé Gemini API <span style="font-size:.7rem;color:var(--t4)">(Google AI Studio — gratuite)</span></label>
-        <input id="p_gemini_key" type="password" placeholder="Clé Gemini API…" autocomplete="off"
-          title="Clé Gemini API — jamais envoyée à un serveur tiers, uniquement à l'API Google AI">
+        <label>🤖 Clé IA <span style="font-size:.7rem;color:var(--t4)">(Gemini, ChatGPT, Claude, Groq, Mistral…)</span></label>
+        <input id="p_gemini_key" type="password" placeholder="Clé API (sk-…, gsk_…, AIza…)" autocomplete="off"
+          title="Clé API — jamais envoyée à un serveur tiers, stockée uniquement sur cet appareil"
+          oninput="onProfKeyInput(this.value)">
+        <div id="p-prov-badge" class="ai-prov-badge free" style="display:none"></div>
         <div class="gemini-tuto">
           <div class="gemini-free-badge">✅ Gratuit &nbsp;·&nbsp; Sans carte bancaire &nbsp;·&nbsp; 15 requêtes / min</div>
           <div style="font-size:.8rem;font-weight:600;color:var(--t1);margin-bottom:.5rem">Obtenir ta clé en 2 minutes — même sans expérience :</div>
@@ -747,8 +753,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     </div>
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:.5rem">
       <span style="font-size:.72rem;color:var(--t4);white-space:nowrap;font-weight:600">Sources :</span>
-      <label class="src-toggle" id="src-gemini-lbl" title="Gemini AI — recherche intelligente d'entreprises adaptées à ta formation (clé API Gemini requise)">
-        <input type="checkbox" id="src-gemini"> 🤖 Gemini AI
+      <label class="src-toggle" id="src-gemini-lbl" title="IA — recherche intelligente d'entreprises adaptées à ta formation (clé API requise)">
+        <input type="checkbox" id="src-gemini"> 🤖 IA
       </label>
       <label class="src-toggle" title="Annuaire officiel SIRENE / recherche-entreprises.api.gouv.fr">
         <input type="checkbox" id="src-sirene" checked> 🏢 Annuaire SIRENE
@@ -1152,8 +1158,8 @@ async function handleCvUpload(event, fromDemarrer){
     S.cvFileName=file.name;
     S.cvParsed=parseCvForEmail(text);
     var filled=0;
-    if(S.geminiKey){
-      if(fromDemarrer){var m3=document.getElementById('dm-loading-msg');if(m3)m3.textContent='Gemini analyse ton CV…';}
+    if(_activeAiKey()){
+      if(fromDemarrer){var m3=document.getElementById('dm-loading-msg');if(m3)m3.textContent='IA analyse ton CV…';}
       else if(status)status.textContent='🤖 Analyse IA du CV en cours…';
       try{
         const aiData=await geminiParseCv(text);
@@ -1308,13 +1314,7 @@ Format attendu (null si absent) :
 
 CV :
 ${text.substring(0,8000)}`;
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+_geminiModel()+':generateContent?key='+S.geminiKey,{
-    method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
-  });
-  if(!r.ok)throw new Error('Gemini '+r.status);
-  const data=await r.json();
-  const raw=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  const raw=await callAI(prompt);
   const match=raw.match(/\{[\s\S]*\}/);
   if(!match)throw new Error('JSON introuvable dans la réponse');
   return JSON.parse(match[0]);
@@ -1402,9 +1402,9 @@ function renderCvProfile(){
 }
 
 async function geminiGenerateEmail(){
-  if(!S.geminiKey){
-    toast('Configure ta clé Gemini dans Démarrer d\'abord','warn');
-    goTab('demarrer');return;
+  if(!_activeAiKey()){
+    toast('Configure ta clé IA dans Démarrer d\'abord','warn');
+    goToIASettings();return;
   }
   const c=radarResults.find(x=>x.id===emailCompanyId);
   if(!c){toast('Sélectionne d\'abord une entreprise dans le Suivi','warn');return;}
@@ -1443,13 +1443,7 @@ ${((S.prenom||'')+' '+(S.nom||'')).trim()}
 ${S.tel||''}${S.email?' · '+S.email:''}`;
 
   try{
-    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+_geminiModel()+':generateContent?key='+S.geminiKey,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
-    });
-    if(!r.ok)throw new Error('Gemini API '+r.status);
-    const data=await r.json();
-    const txt=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    const txt=await callAI(prompt);
     if(!txt)throw new Error('Réponse vide');
     window._email=txt;
     _emailAiMode=true;
@@ -1461,16 +1455,16 @@ ${S.tel||''}${S.email?' · '+S.email:''}`;
       '<div class="ef"><span class="efl">De</span><span>'+esc((S.prenom||'?')+' '+(S.nom||'?'))+' &lt;'+(S.email||'?')+'&gt;</span></div>'+
       '<div class="ef"><span class="efl">À</span><span style="color:var(--blue)">'+(c.e||'email: voir site officiel')+'</span></div>'+
       (obj?'<div class="ef"><span class="efl">Objet</span><strong class="efl2">'+esc(obj)+'</strong></div>':'')+
-      '<div class="ef"><span class="efl">Mode</span><span style="font-size:.75rem;color:#8b5cf6;font-weight:600">🤖 Gemini AI — email unique</span></div>'+
+      '<div class="ef"><span class="efl">Mode</span><span style="font-size:.75rem;color:#8b5cf6;font-weight:600">🤖 '+(AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA')+' — email unique</span></div>'+
       '</div><div class="ebody">'+esc(body)+'</div>';
     document.getElementById('e_var_lbl').textContent='✨ Email IA';
     const tb=document.getElementById('btn-tpl-email');if(tb)tb.style.display='inline-flex';
     toast('🤖 Email personnalisé généré !','ok');
   }catch(e){
-    toast('Gemini : '+e.message,'error');
+    toast('IA : '+e.message,'error');
     console.error(e);
   }finally{
-    if(btn){btn.disabled=false;btn.textContent='🤖 Gemini IA';}
+    if(btn){btn.disabled=false;btn.textContent='🤖 IA';}
   }
 }
 
@@ -1572,7 +1566,7 @@ function goTab(id){
   if(id==='demarrer')renderDemarrer();
 }
 function renderDemarrer(){
-  const hasKey=!!S.geminiKey;
+  const hasKey=!!_activeAiKey();
   const hasProfile=!!S.prenom;
   const state=!hasKey?'setup':!hasProfile?'upload':'ready';
   document.querySelectorAll('.dm-state').forEach(el=>el.classList.remove('on'));
@@ -1644,13 +1638,89 @@ function _populateDmReady(){
     else{dmAddrCard.style.border='';dmAddrCard.style.background='';}
   }
 }
-function renderIAPage(){renderDemarrer();}
-function _geminiModel(){
-  if(S.geminiModel)return S.geminiModel;
-  const sel=document.getElementById('dm_model')||document.getElementById('p_gemini_model');
-  if(sel&&sel.options.length)return sel.options[0].value;
-  return'gemini-2.5-flash';
+// ════════════════════════════════════════════════════════════
+// SECTION AI — MULTI-PROVIDER SUPPORT
+// ════════════════════════════════════════════════════════════
+const AI_PROVIDERS={
+  gemini:{label:'Google Gemini',emoji:'✨',free:true,helpUrl:'https://aistudio.google.com/app/apikey',helpLabel:'Google AI Studio',placeholder:'Clé Google AI Studio…',models:['gemini-2.5-flash','gemini-2.5-pro','gemini-2.0-flash','gemini-1.5-flash','gemini-1.5-pro']},
+  openai:{label:'OpenAI / ChatGPT',emoji:'🤖',free:false,helpUrl:'https://platform.openai.com/api-keys',helpLabel:'OpenAI Platform',placeholder:'sk-…',models:['gpt-4o','gpt-4o-mini','gpt-4-turbo','gpt-3.5-turbo']},
+  anthropic:{label:'Anthropic / Claude',emoji:'🧠',free:false,helpUrl:'https://console.anthropic.com/settings/keys',helpLabel:'Console Anthropic',placeholder:'sk-ant-…',models:['claude-opus-4-8','claude-sonnet-4-6','claude-haiku-4-5-20251001','claude-3-5-sonnet-latest','claude-3-5-haiku-latest']},
+  groq:{label:'Groq',emoji:'⚡',free:true,helpUrl:'https://console.groq.com/keys',helpLabel:'Console Groq',placeholder:'gsk_…',models:['llama-3.3-70b-versatile','llama-3.1-8b-instant','gemma2-9b-it','mixtral-8x7b-32768']},
+  mistral:{label:'Mistral AI',emoji:'💨',free:false,helpUrl:'https://console.mistral.ai/api-keys',helpLabel:'Console Mistral',placeholder:'Clé Mistral…',models:['mistral-large-latest','mistral-medium-latest','mistral-small-latest']},
+};
+function detectAiProvider(key){
+  if(!key||key.length<10)return'gemini';
+  if(key.startsWith('sk-ant-'))return'anthropic';
+  if(key.startsWith('gsk_'))return'groq';
+  if(key.startsWith('sk-'))return'openai';
+  if(/^[a-f0-9]{32,}$/i.test(key)&&!key.startsWith('AI'))return'mistral';
+  return'gemini';
 }
+function _activeAiKey(){const p=S.aiProvider||'gemini';if(p==='gemini')return S.geminiKey||'';return(S.aiKeys||{})[p]||'';}
+function _activeAiModel(){const p=S.aiProvider||'gemini';if(p==='gemini')return S.geminiModel||'gemini-2.5-flash';return(S.aiModels||{})[p]||AI_PROVIDERS[p]?.models[0]||'';}
+function _saveAiKey(key,provider){provider=provider||S.aiProvider||'gemini';if(!S.aiKeys)S.aiKeys={};S.aiKeys[provider]=key;if(provider==='gemini')S.geminiKey=key;}
+function _saveAiModel(model,provider){provider=provider||S.aiProvider||'gemini';if(!S.aiModels)S.aiModels={};S.aiModels[provider]=model;if(provider==='gemini')S.geminiModel=model;}
+function populateModelSelect(selId,provider){
+  const sel=document.getElementById(selId);if(!sel)return;
+  const models=AI_PROVIDERS[provider]?.models||['gemini-2.5-flash'];
+  const current=_activeAiModel();
+  sel.innerHTML=models.map(m=>'<option value="'+escH(m)+'"'+(m===current?' selected':'')+'>'+escH(m)+'</option>').join('');
+}
+function _showAiProvBadge(badgeId,key){
+  const badge=document.getElementById(badgeId);if(!badge)return;
+  if(!key||key.length<10){badge.style.display='none';return;}
+  const p=detectAiProvider(key);const pc=AI_PROVIDERS[p]||AI_PROVIDERS.gemini;
+  badge.textContent=pc.emoji+' '+pc.label+' détecté'+(pc.free?' · Gratuit':'');
+  badge.className='ai-prov-badge'+(pc.free?' free':'');
+  badge.style.display='';
+}
+function onDmKeyInput(val){
+  val=val.trim();
+  _showAiProvBadge('dm-prov-badge',val);
+  const p=detectAiProvider(val);
+  populateModelSelect('dm_model',p);
+  const link=document.getElementById('dm-key-link');
+  if(link){const pc=AI_PROVIDERS[p];link.href=pc.helpUrl;link.textContent='🔑 '+pc.helpLabel+' →';}
+}
+function onProfKeyInput(val){
+  val=val.trim();
+  _showAiProvBadge('p-prov-badge',val);
+  const p=detectAiProvider(val);
+  populateModelSelect('p_gemini_model',p);
+}
+async function callAI(prompt){
+  const p=S.aiProvider||'gemini';const key=_activeAiKey();const model=_activeAiModel();
+  if(!key)throw new Error('Aucune clé IA configurée');
+  if(p==='gemini'){
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+model+':generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}],generationConfig:{temperature:.3,maxOutputTokens:2048}})
+    });
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Gemini '+r.status+': '+(e.error?.message||r.statusText));}
+    const d=await r.json();return d.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  }
+  if(p==='anthropic'){
+    const r=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01'},
+      body:JSON.stringify({model,max_tokens:2048,messages:[{role:'user',content:prompt}]})
+    });
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error('Claude '+r.status+': '+(e.error?.message||r.statusText));}
+    const d=await r.json();return d.content?.[0]?.text||'';
+  }
+  const bases={openai:'https://api.openai.com',mistral:'https://api.mistral.ai',groq:'https://api.groq.com/openai',deepseek:'https://api.deepseek.com'};
+  const base=bases[p]||'https://api.openai.com';
+  const r=await fetch(base+'/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+    body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:.3})
+  });
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(p+' '+r.status+': '+(e.error?.message||r.statusText));}
+  const d=await r.json();return d.choices?.[0]?.message?.content||'';
+}
+
+function renderIAPage(){renderDemarrer();}
+function _geminiModel(){return _activeAiModel();}
 async function loadGeminiModels(key){
   try{
     const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key));
@@ -1679,7 +1749,7 @@ async function loadGeminiModels(key){
 function updateHdrIA(){
   const dot=document.getElementById('hdr-ia-dot');
   if(!dot)return;
-  if(S.geminiKey){dot.className='hdr-ia-dot on';}else{dot.className='hdr-ia-dot off';}
+  if(_activeAiKey()){dot.className='hdr-ia-dot on';}else{dot.className='hdr-ia-dot off';}
 }
 function goToIASettings(){
   goTab('demarrer');
@@ -1687,38 +1757,43 @@ function goToIASettings(){
   const el=document.getElementById('dm-setup');
   if(el)el.classList.add('on');
   const ki=document.getElementById('dm_key');
-  if(ki&&S.geminiKey)ki.value=S.geminiKey;
+  const _curKey=_activeAiKey();
+  if(ki&&_curKey){ki.value=_curKey;onDmKeyInput(_curKey);}
   const mi=document.getElementById('dm_model');
-  if(mi&&S.geminiModel)mi.value=S.geminiModel;
+  if(mi&&_activeAiModel())mi.value=_activeAiModel();
 }
 function saveDemarreurKey(){
   var inp=document.getElementById('dm_key');
   var key=(inp?.value||'').trim();
-  if(!key||key.length<10){toast('Colle ta clé Gemini API (minimum 10 caractères)','warn');return;}
-  S.geminiKey=key;
-  var modelVal=(document.getElementById('dm_model')?.value||_geminiModel());
-  S.geminiModel=modelVal;
+  if(!key||key.length<10){toast('Colle ta clé API (min. 10 caractères)','warn');return;}
+  const provider=detectAiProvider(key);
+  S.aiProvider=provider;
+  _saveAiKey(key,provider);
+  var modelVal=document.getElementById('dm_model')?.value||AI_PROVIDERS[provider]?.models[0]||'gemini-2.5-flash';
+  _saveAiModel(modelVal,provider);
   persist();
-  var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
+  var profEl=document.getElementById('p_gemini_key');if(profEl){profEl.value=key;onProfKeyInput(key);}
   var profMod=document.getElementById('p_gemini_model');if(profMod)profMod.value=modelVal;
   initRadarSourceToggles();
-  loadGeminiModels(key);
+  if(provider==='gemini')loadGeminiModels(key);
   updateHdrIA();
   renderDemarrer();
-  toast('🤖 Gemini activé — charge ton CV pour créer ton profil !','ok');
+  toast('🤖 '+(AI_PROVIDERS[provider]?.label||'IA')+' activé — charge ton CV !','ok');
 }
 function saveGeminiKeyFromIA(){
   var inp=document.getElementById('dm_key')||document.getElementById('ia_key');
   var key=(inp?.value||'').trim();
-  if(!key||key.length<10){toast('Colle ta clé Gemini API (minimum 10 caractères)','warn');return;}
-  S.geminiKey=key;
+  if(!key||key.length<10){toast('Colle ta clé API (min. 10 caractères)','warn');return;}
+  const provider=detectAiProvider(key);
+  S.aiProvider=provider;
+  _saveAiKey(key,provider);
   persist();
-  var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
+  var profEl=document.getElementById('p_gemini_key');if(profEl){profEl.value=key;onProfKeyInput(key);}
   initRadarSourceToggles();
-  loadGeminiModels(key);
+  if(provider==='gemini')loadGeminiModels(key);
   updateHdrIA();
   renderDemarrer();
-  toast('🤖 Gemini activé — charge ton CV pour créer ton profil !','ok');
+  toast('🤖 '+(AI_PROVIDERS[provider]?.label||'IA')+' activé — charge ton CV !','ok');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1996,14 +2071,14 @@ function initRadarSourceToggles(){
   const gemInp=document.getElementById('src-gemini');
   const gemLbl=document.getElementById('src-gemini-lbl');
   if(gemInp){
-    if(S.geminiKey){
+    if(_activeAiKey()){
       gemInp.checked=true;
     } else {
       gemInp.checked=false;
       gemInp.disabled=true;
       if(gemLbl){
         gemLbl.classList.add('src-disabled');
-        gemLbl.title='Clique pour configurer ta clé Gemini gratuite';
+        gemLbl.title='Clique pour configurer ta clé IA';
         gemLbl.addEventListener('click',e=>{
           e.preventDefault();
           goTab('demarrer');
@@ -2570,20 +2645,20 @@ Catégories souhaitées : ${activeCatLabels}.
 Pour chaque structure, retourne un objet JSON. Réponds UNIQUEMENT avec un tableau JSON valide (sans markdown, sans texte avant/après) :
 [{"n":"Nom exact","t":"ESN|Public|Education|Lycées|Santé|Banque|Industrie|Garage|BTP|Restauration|Asso|Logistique|Coworking|PME|Médias","d":"Adresse complète","web":"https://site.com ou vide","v":"Ville"}]`;
 
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+_geminiModel()+':generateContent?key='+geminiKey,{
-    method:'POST',
-    headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-      tools:[{google_search:{}}],
-      contents:[{parts:[{text:prompt}]}]
-    })
-  });
-  if(!r.ok){
-    const err=await r.json().catch(()=>({}));
-    throw new Error('Gemini '+(err.error?.status||r.status)+': '+(err.error?.message||'Erreur inconnue'));
+  let text;
+  if((S.aiProvider||'gemini')==='gemini'){
+    // Gemini with search grounding for better local results
+    const key=geminiKey||_activeAiKey();
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+_activeAiModel()+':generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({tools:[{google_search:{}}],contents:[{parts:[{text:prompt}]}]})
+    });
+    if(!r.ok){const err=await r.json().catch(()=>({}));throw new Error('Gemini '+(err.error?.status||r.status)+': '+(err.error?.message||'Erreur inconnue'));}
+    const data=await r.json();
+    text=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
+  } else {
+    text=await callAI(prompt);
   }
-  const data=await r.json();
-  const text=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
   const m=text.match(/\[[\s\S]*?\]/);
   if(!m)throw new Error('Gemini: réponse non parseable');
   const items=JSON.parse(m[0]);
@@ -2592,7 +2667,7 @@ Pour chaque structure, retourne un objet JSON. Réponds UNIQUEMENT avec un table
     n:e.n,t:e.t||'PME',
     d:e.d||'',web:e.web||'',v:e.v||'',
     lat,lng,
-    src:'Gemini AI'
+    src:(AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA')
   }));
 }
 
@@ -2624,7 +2699,7 @@ async function launchRadar(){
   const _formationNaf=(_fc&&_fc.nafCodes)||[];
   const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf||[]),..._formationNaf,...extraNaf])];
 
-  const useGemini=document.getElementById('src-gemini')?.checked&&!!S.geminiKey;
+  const useGemini=document.getElementById('src-gemini')?.checked&&!!_activeAiKey();
   const useSIRENE=document.getElementById('src-sirene')?.checked!==false;
   const useLBB=document.getElementById('src-lbb')?.checked!==false;
   const useFT=document.getElementById('src-ft')?.checked!==false;
@@ -2633,8 +2708,8 @@ async function launchRadar(){
 
   const tasks=[];
   if(useGemini){
-    msg('🤖 Gemini AI — recherche intelligente…');
-    tasks.push(fetchGemini(coords.lat,coords.lng,rKm,S.geminiKey));
+    msg('🤖 '+(AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA')+' — recherche intelligente…');
+    tasks.push(fetchGemini(coords.lat,coords.lng,rKm,_activeAiKey()));
   }
   if(useSIRENE&&allNaf.length){
     msg('🔍 Annuaire Entreprises…');
@@ -3405,8 +3480,11 @@ async function saveProfile(){
     formationDiploma:_fid==='Custom'?(_customFName||''):_fc.diploma,
     formationEmoji:_fc.emoji||'✏️',
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
-    geminiKey:document.getElementById('p_gemini_key')?.value.trim()||S.geminiKey||'',
+    geminiKey:(()=>{const k=document.getElementById('p_gemini_key')?.value.trim()||_activeAiKey()||'';const p=k?detectAiProvider(k):'gemini';if(!S.aiKeys)S.aiKeys={};S.aiKeys[p]=k;S.aiProvider=p;return p==='gemini'?k:S.geminiKey||'';})(),
     geminiModel:document.getElementById('p_gemini_model')?.value||S.geminiModel||_geminiModel(),
+    aiProvider:S.aiProvider||'gemini',
+    aiKeys:S.aiKeys||{},
+    aiModels:S.aiModels||{},
     mode:getMode(),
     extraNafCodes:f('p_naf_codes'),
     extraRomeCodes:f('p_rome_codes'),
@@ -3488,7 +3566,8 @@ function fillProfileForm(){
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
-  if(S.geminiKey){const _gEl=document.getElementById('p_gemini_key');if(_gEl)_gEl.value=S.geminiKey;}
+  const _fKey=_activeAiKey()||S.geminiKey||'';
+  if(_fKey){const _gEl=document.getElementById('p_gemini_key');if(_gEl){_gEl.value=_fKey;onProfKeyInput(_fKey);}}
   if(S.geminiModel){const _gmEl=document.getElementById('p_gemini_model');if(_gmEl)_gmEl.value=S.geminiModel;}
   updateHdrIA();
   if(S.addr){const _adEl=document.getElementById('p_addr');if(_adEl)_adEl.value=S.addr;}
@@ -3508,13 +3587,13 @@ function fillProfileForm(){
   restore();
   initFirstBanner();
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
-  if(S.geminiKey)loadGeminiModels(S.geminiKey);
+  if(_activeAiKey()&&(S.aiProvider||'gemini')==='gemini')loadGeminiModels(_activeAiKey());
   updateFTStatus(null);
   updateCoordsWarning();
   initRadarSourceToggles();
   renderDemarrer();
   // Si clé et profil déjà configurés, démarrer sur le Radar
-  if(S.geminiKey&&S.prenom){goTab('radar');}
+  if(_activeAiKey()&&S.prenom){goTab('radar');}
   // Enter key advances stepper (not on textareas or last step)
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter')return;
