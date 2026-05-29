@@ -440,11 +440,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <div style="margin-top:.55rem;display:flex;align-items:center;gap:.6rem;font-size:.78rem">
         <label for="dm_model" style="font-weight:600;color:var(--t3);flex-shrink:0;white-space:nowrap">Modèle :</label>
         <select id="dm_model" style="flex:1;padding:5px 9px;font-size:.76rem">
-          <option value="gemini-2.5-flash">gemini-2.5-flash (recommandé)</option>
-          <option value="gemini-2.5-pro">gemini-2.5-pro (meilleur)</option>
-          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-          <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-          <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+          <option value="" disabled selected>Saisis ta clé pour voir les modèles disponibles</option>
         </select>
       </div>
       <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
@@ -688,11 +684,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <div style="margin-top:.6rem">
           <label style="font-size:.71rem;font-weight:600;color:var(--t4);letter-spacing:.05em;text-transform:uppercase;font-family:var(--ff-h);display:block;margin-bottom:4px">Modèle Gemini</label>
           <select id="p_gemini_model" style="font-size:.82rem">
-            <option value="gemini-2.5-flash">gemini-2.5-flash (recommandé)</option>
-            <option value="gemini-2.5-pro">gemini-2.5-pro (meilleur)</option>
-            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
-            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
+            <option value="" disabled selected>Saisis ta clé pour voir les modèles disponibles</option>
           </select>
         </div>
       </div>
@@ -1662,9 +1654,15 @@ function _saveAiKey(key,provider){provider=provider||S.aiProvider||'gemini';if(!
 function _saveAiModel(model,provider){provider=provider||S.aiProvider||'gemini';if(!S.aiModels)S.aiModels={};S.aiModels[provider]=model;if(provider==='gemini')S.geminiModel=model;}
 function populateModelSelect(selId,provider){
   const sel=document.getElementById(selId);if(!sel)return;
-  const models=AI_PROVIDERS[provider]?.models||['gemini-2.5-flash'];
-  const current=_activeAiModel();
-  sel.innerHTML=models.map(m=>'<option value="'+escH(m)+'"'+(m===current?' selected':'')+'>'+escH(m)+'</option>').join('');
+  if(provider==='anthropic'){
+    // Anthropic n'a pas d'endpoint public de listing — on affiche les modèles connus
+    const models=AI_PROVIDERS.anthropic.models;
+    const current=_activeAiModel();
+    sel.innerHTML=models.map(m=>'<option value="'+escH(m)+'"'+(m===current?' selected':'')+'>'+escH(m)+'</option>').join('');
+  } else {
+    // Pour les autres : placeholder, l'API remplacera dans 700ms
+    sel.innerHTML='<option value="" disabled selected>⏳ Chargement des modèles…</option>';
+  }
 }
 function _showAiProvBadge(badgeId,key){
   const badge=document.getElementById(badgeId);if(!badge)return;
@@ -1755,11 +1753,11 @@ async function loadProviderModels(key,provider,selIds){
     } else {
       return; // Anthropic: pas d'endpoint public de listing
     }
-    if(!modelIds.length)return;
+    if(!modelIds.length){selIds.forEach(selId=>{const sel=document.getElementById(selId);if(sel)sel.innerHTML='<option value="" disabled selected>Aucun modèle trouvé pour cette clé</option>';});return;}
     const current=_activeAiModel();
     const html=modelIds.map(id=>'<option value="'+escH(id)+'"'+(id===current?' selected':'')+'>'+escH(id)+'</option>').join('');
     selIds.forEach(selId=>{const sel=document.getElementById(selId);if(sel)sel.innerHTML=html;});
-  }catch(e){/* offline ou erreur auth — on garde la liste statique */}
+  }catch(e){selIds.forEach(selId=>{const sel=document.getElementById(selId);if(sel&&sel.options[0]?.disabled)sel.innerHTML='<option value="" disabled selected>⚠️ Erreur — vérifie ta clé</option>';});}
 }
 async function loadGeminiModels(key){
   if((S.aiProvider||'gemini')!=='gemini')return;
@@ -1794,7 +1792,7 @@ function saveDemarreurKey(){
   var profEl=document.getElementById('p_gemini_key');if(profEl){profEl.value=key;onProfKeyInput(key);}
   var profMod=document.getElementById('p_gemini_model');if(profMod)profMod.value=modelVal;
   initRadarSourceToggles();
-  if(provider==='gemini')loadGeminiModels(key);
+  loadProviderModels(key,provider,['dm_model','p_gemini_model']);
   updateHdrIA();
   renderDemarrer();
   toast('🤖 '+(AI_PROVIDERS[provider]?.label||'IA')+' activé — charge ton CV !','ok');
@@ -1809,7 +1807,7 @@ function saveGeminiKeyFromIA(){
   persist();
   var profEl=document.getElementById('p_gemini_key');if(profEl){profEl.value=key;onProfKeyInput(key);}
   initRadarSourceToggles();
-  if(provider==='gemini')loadGeminiModels(key);
+  loadProviderModels(key,provider,['dm_model','p_gemini_model']);
   updateHdrIA();
   renderDemarrer();
   toast('🤖 '+(AI_PROVIDERS[provider]?.label||'IA')+' activé — charge ton CV !','ok');
@@ -3606,7 +3604,7 @@ function fillProfileForm(){
   restore();
   initFirstBanner();
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
-  if(_activeAiKey()&&(S.aiProvider||'gemini')==='gemini')loadGeminiModels(_activeAiKey());
+  if(_activeAiKey())loadProviderModels(_activeAiKey(),S.aiProvider||'gemini',['dm_model','p_gemini_model']);
   updateFTStatus(null);
   updateCoordsWarning();
   initRadarSourceToggles();
