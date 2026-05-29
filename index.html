@@ -474,6 +474,13 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <span id="cv_status" style="font-size:.76rem;color:var(--blue)">Aucun CV chargé</span>
     </div>
     <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--bg2);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6;margin-top:8px"></div>
+    <div id="cv_profile_box" style="display:none;margin-top:10px;border:1px solid rgba(139,92,246,.25);border-radius:10px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(139,92,246,.09);font-size:.74rem;font-weight:600;color:var(--primary)">
+        <span>🤖 Profil IA — lu une fois, réutilisé à chaque email</span>
+        <button class="btn btn-ghost btn-sm" style="padding:1px 8px;font-size:.68rem" onclick="S.cvProfile='';persist();renderCvProfile()">✕ Effacer</button>
+      </div>
+      <pre id="cv_profile_text" style="margin:0;padding:10px 12px;font-family:inherit;font-size:.73rem;color:var(--t2);line-height:1.6;white-space:pre-wrap;background:var(--bg2);max-height:160px;overflow-y:auto"></pre>
+    </div>
   </div>
 
   <!-- ── 2. Identité ── -->
@@ -1178,7 +1185,8 @@ Format attendu (null si absent) :
   "comp":"compétence1, compétence2, compétence3",
   "motiv":"phrase d'accroche ou objectif professionnel si mentionné",
   "experiences":["Stage technicien chez Entreprise X","Mission développeur web chez Y"],
-  "certifs":["CACES R489","PSC1","TOEIC 850"]
+  "certifs":["CACES R489","PSC1","TOEIC 850"],
+  "profile_md":"Résumé structuré du candidat en 120 mots maximum, rédigé à la 1ère personne, optimisé pour personnaliser des lettres de candidature. Mettre en avant : formation, compétences clés, expériences notables, certifications et motivation. Ce texte sera réutilisé tel quel dans les futurs prompts de génération d'email — il doit être factuel, précis et directement exploitable."
 }
 
 CV :
@@ -1217,7 +1225,16 @@ function applyAiCvData(d){
   }
   if(d.experiences&&d.experiences.length){S.cvParsed=S.cvParsed||{};S.cvParsed.experiences=d.experiences;}
   if(d.certifs&&d.certifs.length){S.cvParsed=S.cvParsed||{};S.cvParsed.certifs=d.certifs;}
+  if(d.profile_md){S.cvProfile=d.profile_md;renderCvProfile();}
   return filled;
+}
+
+function renderCvProfile(){
+  const box=document.getElementById('cv_profile_box');
+  const pre=document.getElementById('cv_profile_text');
+  if(!box||!pre)return;
+  if(S.cvProfile){box.style.display='block';pre.textContent=S.cvProfile;}
+  else{box.style.display='none';}
 }
 
 async function geminiGenerateEmail(){
@@ -1243,7 +1260,7 @@ Profil candidat :
 - École : ${S.etab||'non précisée'}
 - Compétences : ${S.comp||fc.skills||'voir CV'}
 - Période : ${periode||'à définir'}
-- Type de recherche : ${modeL[mode]||mode}${S.motiv?'\n- Motivation : '+S.motiv:''}${S.cvText?'\n- Extrait CV : '+S.cvText.substring(0,1200):''}
+- Type de recherche : ${modeL[mode]||mode}${S.motiv?'\n- Motivation : '+S.motiv:''}${S.cvProfile?'\n\nProfil candidat (pré-analysé depuis le CV) :\n'+S.cvProfile:S.cvText?'\n- Extrait CV brut : '+S.cvText.substring(0,600):''}
 
 Entreprise ciblée :
 - Nom : ${c.n}
@@ -3015,6 +3032,7 @@ async function saveProfile(){
   const _oldCvText=S.cvText||'';
   const _oldCvFileName=S.cvFileName||'';
   const _oldCvParsed=S.cvParsed||null;
+  const _oldCvProfile=S.cvProfile||null;
   S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab')||'mon organisme de formation',
     formation:_fid,
     formationLabel:_fid==='Custom'?(_customFName||'Formation personnalisée'):_fc.label,
@@ -3031,6 +3049,7 @@ async function saveProfile(){
      fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
     cvParsed:_oldCvParsed,
+    cvProfile:_oldCvProfile,
     addr:f('p_addr'),debutRaw:d1||'2026-06-05',finRaw:d2||'2026-07-31'};
   persist();
   updateBranding();
@@ -3094,8 +3113,9 @@ function fillProfileForm(){
   }
   if(S.cvFileName){
     const st=document.getElementById('cv_status');
-    if(st)st.textContent='✅ CV chargé : '+S.cvFileName;
+    if(st)st.textContent='✅ CV chargé : '+S.cvFileName+(S.cvProfile?' · 🤖 Profil IA actif':'');
   }
+  renderCvProfile();
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
