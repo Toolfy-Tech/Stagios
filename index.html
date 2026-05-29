@@ -421,14 +421,14 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <li><span class="sn">1</span><span>Clique sur le bouton violet ci-dessous — <strong>Google AI Studio</strong> s'ouvre dans un nouvel onglet</span></li>
         <li><span class="sn">2</span><span>Connecte-toi avec ton compte <strong>Google</strong> habituel (Gmail, YouTube… c'est le même)</span></li>
         <li><span class="sn">3</span><span>Clique sur le bouton bleu <strong>"Create API key"</strong>, puis <strong>"Create API key in new project"</strong></span></li>
-        <li><span class="sn">4</span><span>Une clé apparaît — copie-la <em>(elle commence par <code>AIza</code>)</em></span></li>
+        <li><span class="sn">4</span><span>Une clé apparaît — copie-la (elle commence généralement par <code>AIza</code>)</span></li>
         <li><span class="sn">5</span><span>Colle-la dans le champ ci-dessous et clique <strong>"Activer Gemini"</strong></span></li>
       </ol>
       <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="gemini-cta" style="margin-bottom:.8rem">
         🔑 Ouvrir Google AI Studio →
       </a>
       <div class="ia-key-row">
-        <input id="dm_key" type="password" placeholder="Colle ta clé ici (AIza…)" autocomplete="off"
+        <input id="dm_key" type="password" placeholder="Colle ta clé Gemini ici…" autocomplete="off"
           title="Clé Gemini API — stockée uniquement sur cet appareil"
           onkeydown="if(event.key==='Enter')saveDemarreurKey()">
         <button class="btn btn-primary" onclick="saveDemarreurKey()">✅ Activer Gemini</button>
@@ -662,7 +662,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     <div class="fg" style="margin-top:.875rem">
       <div class="fi">
         <label>🤖 Clé Gemini API <span style="font-size:.7rem;color:var(--t4)">(Google AI Studio — gratuite)</span></label>
-        <input id="p_gemini_key" type="password" placeholder="AIza…" autocomplete="off"
+        <input id="p_gemini_key" type="password" placeholder="Clé Gemini API…" autocomplete="off"
           title="Clé Gemini API — jamais envoyée à un serveur tiers, uniquement à l'API Google AI">
         <div class="gemini-tuto">
           <div class="gemini-free-badge">✅ Gratuit &nbsp;·&nbsp; Sans carte bancaire &nbsp;·&nbsp; 15 requêtes / min</div>
@@ -671,7 +671,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
             <li><span class="sn">1</span><span>Clique sur le bouton violet ci-dessous — <strong>Google AI Studio</strong> s'ouvre dans un nouvel onglet</span></li>
             <li><span class="sn">2</span><span>Connecte-toi avec ton compte <strong>Google</strong> habituel (Gmail, YouTube… c'est le même)</span></li>
             <li><span class="sn">3</span><span>Clique sur le bouton bleu <strong>"Create API key"</strong>, puis <strong>"Create API key in new project"</strong></span></li>
-            <li><span class="sn">4</span><span>Une clé apparaît — copie-la (elle commence par <code>AIza</code>)</span></li>
+            <li><span class="sn">4</span><span>Une clé apparaît — copie-la entièrement</span></li>
             <li><span class="sn">5</span><span>Reviens ici, colle-la dans le champ ci-dessus, puis clique <strong>"Enregistrer le profil"</strong></span></li>
           </ol>
           <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="gemini-cta">
@@ -1694,8 +1694,7 @@ function goToIASettings(){
 function saveDemarreurKey(){
   var inp=document.getElementById('dm_key');
   var key=(inp?.value||'').trim();
-  if(!key){toast('Colle ta clé Gemini (elle commence par AIza…)','warn');return;}
-  if(!key.startsWith('AIza')){toast('La clé doit commencer par "AIza"','warn');return;}
+  if(!key||key.length<10){toast('Colle ta clé Gemini API (minimum 10 caractères)','warn');return;}
   S.geminiKey=key;
   var modelVal=(document.getElementById('dm_model')?.value||_geminiModel());
   S.geminiModel=modelVal;
@@ -1711,8 +1710,7 @@ function saveDemarreurKey(){
 function saveGeminiKeyFromIA(){
   var inp=document.getElementById('dm_key')||document.getElementById('ia_key');
   var key=(inp?.value||'').trim();
-  if(!key){toast('Colle ta clé Gemini (elle commence par AIza…)','warn');return;}
-  if(!key.startsWith('AIza')){toast('La clé doit commencer par "AIza"','warn');return;}
+  if(!key||key.length<10){toast('Colle ta clé Gemini API (minimum 10 caractères)','warn');return;}
   S.geminiKey=key;
   persist();
   var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
