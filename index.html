@@ -275,6 +275,29 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .gemini-cta{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;border:none;border-radius:10px;padding:.65rem 1.2rem;font-size:.82rem;font-weight:600;cursor:pointer;width:100%;margin-top:.2rem;text-decoration:none;transition:opacity .15s,transform .1s}
 .gemini-cta:hover{opacity:.88;transform:translateY(-1px)}
 .gemini-privacy{font-size:.67rem;color:var(--t4);text-align:center;margin-top:.45rem;line-height:1.4}
+/* ── PAGE IA ──────────────────────────────────────── */
+.ia-hero{text-align:center;padding:1.4rem 0 .9rem}
+.ia-hero-glyph{font-size:2.8rem;line-height:1;margin-bottom:.65rem}
+.ia-hero-title{font-size:1.35rem;font-weight:800;margin:0 0 .55rem;background:linear-gradient(135deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ia-hero-sub{font-size:.84rem;color:var(--t3);line-height:1.65;max-width:460px;margin:0 auto}
+.ia-cmp{display:grid;grid-template-columns:1fr 1fr;gap:.7rem;margin-top:.8rem}
+.ia-cmp-col{border-radius:10px;padding:.8rem .9rem}
+.ia-cmp-col.bad{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.17)}
+.ia-cmp-col.good{background:rgba(139,92,246,.08);border:1px solid rgba(139,92,246,.22)}
+.ia-cmp-hdr{font-size:.76rem;font-weight:700;color:var(--t1);margin-bottom:.5rem}
+.ia-cmp-col ul{list-style:none;padding:0;margin:0;font-size:.73rem;color:var(--t2);display:flex;flex-direction:column;gap:.32rem}
+.ia-cmp-col ul li{padding-left:1rem;position:relative}
+.ia-cmp-col ul li::before{content:'•';position:absolute;left:0;color:var(--t4)}
+.ia-ok-card{display:flex;align-items:center;gap:1rem;background:rgba(139,92,246,.08);border:1.5px solid rgba(139,92,246,.32);border-radius:var(--rl);padding:1rem 1.2rem;margin-top:.9rem}
+.ia-ok-icon{font-size:2.2rem;flex-shrink:0}
+.ia-ok-body{flex:1;min-width:0}
+.ia-ok-title{font-size:.9rem;font-weight:700;color:var(--t1);margin-bottom:.18rem}
+.ia-ok-sub{font-size:.74rem;color:var(--t3);line-height:1.45}
+.ia-key-row{display:flex;gap:.5rem;margin-top:.75rem;align-items:stretch}
+.ia-key-row input{flex:1;min-width:0}
+.ia-change-link{font-size:.72rem;color:var(--primary);cursor:pointer;text-align:center;margin-top:.5rem;opacity:.7}
+.ia-change-link:hover{opacity:1;text-decoration:underline}
+@media(max-width:520px){.ia-cmp{grid-template-columns:1fr}.ia-key-row{flex-direction:column}}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
 @media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}.btn{min-height:44px}.btn-sm{min-height:40px;padding:8px 12px}.step-lbl{display:none}}
 @media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(130px,1fr))}.tab{padding:7px 10px;font-size:.68rem;gap:4px}.step-lbl{display:none}}
@@ -345,7 +368,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 
 <!-- TABS -->
 <nav class="tabnav" id="tabnav">
-  <div class="tab on" onclick="goTab('profil')" id="tab-profil">👤 Profil</div>
+  <div class="tab on" onclick="goTab('ia')" id="tab-ia">🤖 IA</div>
+  <div class="tab" onclick="goTab('profil')" id="tab-profil">👤 Profil</div>
   <div class="tab" onclick="goTab('radar')" id="tab-radar">🎯 Radar <span class="tab-badge" id="badge-radar">0</span></div>
   <div class="tab" onclick="goTab('suivi')" id="tab-suivi">📋 Suivi <span class="tab-badge" id="badge-suivi" style="background:var(--amber-l);color:var(--amber)">0</span></div>
   <div class="tab" onclick="goTab('email')" id="tab-email">✉️ Email</div>
@@ -353,8 +377,79 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 
 <div class="main">
 
+<!-- ══ IA ══════════════════════════════════════════════ -->
+<div class="page on" id="page-ia">
+
+  <!-- Hero -->
+  <div class="ia-hero">
+    <div class="ia-hero-glyph">🤖</div>
+    <h1 class="ia-hero-title">Trouve ton stage avec l'IA</h1>
+    <p class="ia-hero-sub">L'intelligence artificielle trouve des entreprises <strong>vraiment adaptées à ta formation</strong> — là où les APIs officielles sont lentes, buggées ou pleines d'entreprises fantômes.</p>
+  </div>
+
+  <!-- Comparatif -->
+  <div class="card" style="margin-bottom:.9rem">
+    <div style="font-size:.88rem;font-weight:700;color:var(--t1);margin-bottom:.75rem">💡 Pourquoi l'IA change tout ?</div>
+    <div class="ia-cmp">
+      <div class="ia-cmp-col bad">
+        <div class="ia-cmp-hdr">❌ APIs officielles seules</div>
+        <ul>
+          <li>Tombent en panne régulièrement</li>
+          <li>Entreprises fermées ou déménagées</li>
+          <li>Ne connaissent pas ta formation</li>
+          <li>Résultats génériques, peu ciblés</li>
+        </ul>
+      </div>
+      <div class="ia-cmp-col good">
+        <div class="ia-cmp-hdr">✅ Gemini AI (recommandé)</div>
+        <ul>
+          <li>Cherche sur le web en temps réel</li>
+          <li>Connaît ta formation, ta ville, tes secteurs</li>
+          <li>Résultats pertinents et récents</li>
+          <li>Gratuit · sans carte bancaire</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- État : configuré -->
+  <div class="ia-ok-card" id="ia-ok" style="display:none">
+    <div class="ia-ok-icon">✅</div>
+    <div class="ia-ok-body">
+      <div class="ia-ok-title">Gemini AI activé</div>
+      <div class="ia-ok-sub" id="ia-ok-sub">Le radar IA est prêt — il va chercher des entreprises adaptées à ta formation.</div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="goTab('radar')">Lancer le Radar →</button>
+  </div>
+  <div class="ia-change-link" id="ia-change-link" style="display:none" onclick="iaShowSetup()">🔄 Changer de clé API</div>
+
+  <!-- État : à configurer -->
+  <div class="card" id="ia-setup-card">
+    <div class="gemini-free-badge" style="margin-bottom:.7rem">✅ Gratuit &nbsp;·&nbsp; Sans carte bancaire &nbsp;·&nbsp; 15 requêtes / min</div>
+    <div style="font-size:.88rem;font-weight:700;color:var(--t1);margin-bottom:.6rem">🔑 Configure ta clé Gemini en 2 minutes</div>
+    <ol class="gemini-steps">
+      <li><span class="sn">1</span><span>Clique sur le bouton violet ci-dessous — <strong>Google AI Studio</strong> s'ouvre dans un nouvel onglet</span></li>
+      <li><span class="sn">2</span><span>Connecte-toi avec ton compte <strong>Google</strong> habituel (Gmail, YouTube… c'est le même)</span></li>
+      <li><span class="sn">3</span><span>Clique sur le bouton bleu <strong>"Create API key"</strong>, puis <strong>"Create API key in new project"</strong></span></li>
+      <li><span class="sn">4</span><span>Une clé apparaît — copie-la <em>(elle commence par <code>AIza</code>)</em></span></li>
+      <li><span class="sn">5</span><span>Colle-la dans le champ ci-dessous et clique <strong>"Activer Gemini"</strong></span></li>
+    </ol>
+    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="gemini-cta" style="margin-bottom:.8rem">
+      🔑 Ouvrir Google AI Studio →
+    </a>
+    <div class="ia-key-row">
+      <input id="ia_key" type="password" placeholder="Colle ta clé ici (AIza…)" autocomplete="off"
+        title="Clé Gemini API — stockée uniquement sur cet appareil"
+        onkeydown="if(event.key==='Enter')saveGeminiKeyFromIA()">
+      <button class="btn btn-primary" onclick="saveGeminiKeyFromIA()">✅ Activer Gemini</button>
+    </div>
+    <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
+  </div>
+
+</div>
+
 <!-- ══ PROFIL ══════════════════════════════════════════ -->
-<div class="page on" id="page-profil">
+<div class="page" id="page-profil">
   <div id="first-banner" class="first-banner" style="display:none">
     <span>💡 <strong>Tes données restent dans ce navigateur.</strong> Exporte-les régulièrement via le bouton "Exporter" en haut pour ne rien perdre si tu changes d'appareil.</span>
     <button class="first-banner-close" onclick="dismissFirstBanner()" aria-label="Fermer ce message">OK</button>
@@ -1141,6 +1236,38 @@ function goTab(id){
   if(id==='suivi')renderKanban();
   if(id==='email')refreshEmailList();
   if(id==='radar')renderRadar();
+  if(id==='ia')renderIAPage();
+}
+function renderIAPage(){
+  const hasKey=!!S.geminiKey;
+  const okCard=document.getElementById('ia-ok');
+  const changeLink=document.getElementById('ia-change-link');
+  const setupCard=document.getElementById('ia-setup-card');
+  if(okCard)okCard.style.display=hasKey?'flex':'none';
+  if(changeLink)changeLink.style.display=hasKey?'block':'none';
+  if(setupCard)setupCard.style.display=hasKey?'none':'block';
+}
+function iaShowSetup(){
+  const setupCard=document.getElementById('ia-setup-card');
+  const okCard=document.getElementById('ia-ok');
+  const changeLink=document.getElementById('ia-change-link');
+  if(setupCard)setupCard.style.display='block';
+  if(okCard)okCard.style.display='none';
+  if(changeLink)changeLink.style.display='none';
+  setTimeout(()=>{const inp=document.getElementById('ia_key');if(inp){inp.value='';inp.focus();}},50);
+}
+function saveGeminiKeyFromIA(){
+  const inp=document.getElementById('ia_key');
+  const key=(inp?.value||'').trim();
+  if(!key){toast('Colle ta clé Gemini (elle commence par AIza…)','warn');return;}
+  if(!key.startsWith('AIza')){toast('La clé Gemini doit commencer par "AIza"','warn');return;}
+  S.geminiKey=key;
+  persist();
+  const profEl=document.getElementById('p_gemini_key');
+  if(profEl)profEl.value=key;
+  initRadarSourceToggles();
+  renderIAPage();
+  toast('🤖 Gemini AI activé — le radar est prêt !','ok');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -2826,6 +2953,7 @@ function fillProfileForm(){
   if(S.finRaw){const _dfEl=document.getElementById('p_fin');if(_dfEl)_dfEl.value=S.finRaw;}
   updateBranding();
   showPbar();
+  renderIAPage();
 }
 
 // INIT
@@ -2840,6 +2968,9 @@ function fillProfileForm(){
   updateFTStatus(null);
   updateCoordsWarning();
   initRadarSourceToggles();
+  renderIAPage();
+  // Si clé déjà configurée, démarrer sur le Radar plutôt que la page IA
+  if(S.geminiKey&&S.prenom){goTab('radar');}
   // Enter key advances stepper (not on textareas or last step)
   document.addEventListener('keydown',function(e){
     if(e.key!=='Enter')return;
