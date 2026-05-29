@@ -3139,20 +3139,42 @@ function exportCSV(){
 }
 function exportJSON(){
   var _fname='stagios-'+(S.prenom||'etudiant').toLowerCase().replace(/\s+/g,'-')+'-'+(S.nom||'').toLowerCase().replace(/\s+/g,'-')+'.json';
-  dl(JSON.stringify({version:VERSION,date:new Date().toISOString(),profil:S,coords,radarResults,crmData},null,2),_fname,'application/json');
+  dl(JSON.stringify({
+    version:VERSION,
+    date:new Date().toISOString(),
+    profil:S,
+    coords,
+    radarResults,
+    crmData,
+    blacklist:[..._blacklist],
+    theme:localStorage.getItem('tip_theme')||'dark'
+  },null,2),_fname,'application/json');
 }
 function importJSON(ev){
   const f=ev.target.files[0];if(!f)return;
-  const r=new FileReader();r.onload=e=>{
+  const r=new FileReader();
+  r.onload=e=>{
     try{
       const d=JSON.parse(e.target.result);
-      if(d.profil)S=d.profil;if(d.coords)coords=d.coords;
-      if(d.radarResults)radarResults=d.radarResults;if(d.crmData)crmData=d.crmData;
-    if(d.blacklist)_blacklist=new Set(d.blacklist);
-      persist();fillProfileForm();updateBadges();
-      toast('Sauvegarde restaurée — '+Object.keys(crmData).length+' entreprises en suivi','ok');
-    }catch(err){toast('Fichier JSON invalide','err');}
-  };r.readAsText(f);
+      if(d.profil)S=d.profil;
+      if(d.coords)coords=d.coords;
+      if(d.radarResults)radarResults=d.radarResults;
+      if(d.crmData)crmData=d.crmData;
+      if(d.blacklist)_blacklist=new Set(d.blacklist);
+      if(d.theme)applyTheme(d.theme);
+      persist();
+      fillProfileForm();
+      updateBadges();
+      renderDemarrer();
+      initRadarSourceToggles();
+      goTab('demarrer');
+      const suivi=Object.keys(crmData).length;
+      const radar=radarResults.length;
+      toast('✅ Sauvegarde restaurée'+(S.prenom?' pour '+S.prenom:'')+' — '+suivi+' candidature'+(suivi>1?'s':'')+(radar?' · '+radar+' entreprise'+(radar>1?'s':'')+' en radar':''),'ok');
+    }catch(err){toast('Fichier JSON invalide : '+err.message,'error');}
+  };
+  r.readAsText(f);
+  ev.target.value='';
 }
 function dl(data,name,type){
   const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;a.click();
