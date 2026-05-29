@@ -183,6 +183,8 @@ html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
 .kb-meta{font-size:.71rem;color:var(--t3);display:flex;gap:5px;flex-wrap:wrap;align-items:center}
 .kb-j7{font-size:.68rem;font-weight:700;color:var(--amber);background:var(--amber-l);padding:2px 7px;border-radius:20px}
 .kb-actions{margin-top:8px;display:flex;gap:4px;flex-wrap:wrap}
+.kb-note-input{width:100%;margin-top:5px;padding:4px 7px;font-size:.72rem;border:1px solid var(--brd);border-radius:6px;background:var(--bg2);color:var(--t2);outline:none;font-family:var(--ff)}
+.kb-note-input:focus{border-color:var(--primary)}
 .col-todo .kb-title{color:var(--t4)} .col-todo .kb-count{background:var(--bg3);color:var(--t4)}
 .col-sent .kb-title{color:var(--purple)} .col-sent .kb-count{background:var(--primary-l);color:var(--purple)}
 .col-follow .kb-title{color:var(--amber)} .col-follow .kb-count{background:var(--amber-l);color:var(--amber)}
@@ -434,6 +436,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
           title="Clé API — stockée uniquement sur cet appareil"
           oninput="onDmKeyInput(this.value)"
           onkeydown="if(event.key==='Enter')saveDemarreurKey()">
+        <button class="btn btn-ghost btn-sm" type="button" onclick="togglePwd('dm_key',this)" title="Afficher/masquer la clé" style="padding:0 11px;font-size:1.1rem;flex-shrink:0">👁</button>
         <button class="btn btn-primary" onclick="saveDemarreurKey()">✅ Activer l'IA</button>
       </div>
       <div id="dm-prov-badge" class="ai-prov-badge free" style="display:none"></div>
@@ -662,9 +665,12 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     <div class="fg" style="margin-top:.875rem">
       <div class="fi">
         <label>🤖 Clé IA <span style="font-size:.7rem;color:var(--t4)">(Gemini, ChatGPT, Claude, Groq, Mistral…)</span></label>
-        <input id="p_gemini_key" type="password" placeholder="Clé API (sk-…, gsk_…, AIza…)" autocomplete="off"
-          title="Clé API — jamais envoyée à un serveur tiers, stockée uniquement sur cet appareil"
-          oninput="onProfKeyInput(this.value)">
+        <div style="display:flex;gap:6px;align-items:stretch">
+          <input id="p_gemini_key" type="password" placeholder="Clé API (sk-…, gsk_…, AIza…)" autocomplete="off"
+            title="Clé API — jamais envoyée à un serveur tiers, stockée uniquement sur cet appareil"
+            oninput="onProfKeyInput(this.value)" style="flex:1;min-width:0">
+          <button class="btn btn-ghost btn-sm" type="button" onclick="togglePwd('p_gemini_key',this)" title="Afficher/masquer la clé" style="padding:0 11px;font-size:1.1rem;flex-shrink:0">👁</button>
+        </div>
         <div id="p-prov-badge" class="ai-prov-badge free" style="display:none"></div>
         <div class="gemini-tuto">
           <div class="gemini-free-badge">✅ Gratuit &nbsp;·&nbsp; Sans carte bancaire &nbsp;·&nbsp; 15 requêtes / min</div>
@@ -1513,6 +1519,9 @@ function parseCvForEmail(text){
 }
 
 function persist(){try{localStorage.setItem('tip_v4',JSON.stringify({S,crmData,coords}));}catch(e){}}
+function togglePwd(id,btn){var inp=document.getElementById(id);if(!inp)return;inp.type=inp.type==='password'?'text':'password';btn.textContent=inp.type==='password'?'👁':'🙈';}
+function saveCrmField(id,field,value){if(!crmData[id])return;crmData[id][field]=value;persist();}
+function removeFromSuivi(id){if(!confirm('Retirer cette entreprise du suivi ?'))return;delete crmData[id];persist();updateBadges();renderKanban();}
 function restore(){
   try{
     const d=JSON.parse(localStorage.getItem('tip_v4')||'{}');
@@ -3171,8 +3180,11 @@ function renderKanban(){
         '</div>'+
         '<div class="kb-actions">'+
           '<select class="btn btn-ghost btn-sm status-sel" data-cid="'+cid+'" onchange="setStatus(this.dataset.cid,this.value)">'+opts+'</select>'+
-          '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)">✉</button>'+
+          '<button class="btn btn-teal btn-sm" data-cid="'+cid+'" onclick="openEmailFor(this.dataset.cid)" title="Rédiger un email">✉</button>'+
+          '<button class="btn btn-ghost btn-sm" data-cid="'+cid+'" onclick="removeFromSuivi(this.dataset.cid)" title="Retirer du suivi" style="color:var(--t4)">🗑</button>'+
         '</div>'+
+        '<input class="kb-note-input" placeholder="Contact (nom, email…)" value="'+escA(crm.contact||'')+'" onblur="saveCrmField(\''+cid+'\',\'contact\',this.value)" onclick="event.stopPropagation()">'+
+        '<input class="kb-note-input" placeholder="Notes…" value="'+escA(crm.notes||'')+'" onblur="saveCrmField(\''+cid+'\',\'notes\',this.value)" onclick="event.stopPropagation()">'+
       '</div>';
     });
 
@@ -3541,8 +3553,8 @@ async function saveProfile(){
     extraRomeCodes:f('p_rome_codes'),
     cvText:_oldCvText,
     cvFileName:_oldCvFileName,
-     debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):'5 juin 2026',
-     fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):'31 juillet 2026',
+     debut:d1?new Date(d1).toLocaleDateString('fr-FR',fmt):(function(){var t=new Date();t.setDate(t.getDate()+14);return t.toLocaleDateString('fr-FR',fmt);})(),
+     fin:d2?new Date(d2).toLocaleDateString('fr-FR',fmt):(function(){var t=new Date();t.setDate(t.getDate()+70);return t.toLocaleDateString('fr-FR',fmt);})(),
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
     cvParsed:_oldCvParsed,
     cvProfile:_oldCvProfile,
@@ -3620,6 +3632,8 @@ function fillProfileForm(){
   });
   const _fKey=_activeAiKey()||S.geminiKey||'';
   if(_fKey){const _gEl=document.getElementById('p_gemini_key');if(_gEl){_gEl.value=_fKey;onProfKeyInput(_fKey);}}
+  const _tuto=document.querySelector('.gemini-tuto');
+  if(_tuto)_tuto.style.display=_fKey?'none':'block';
   if(S.geminiModel){const _gmEl=document.getElementById('p_gemini_model');if(_gmEl)_gmEl.value=S.geminiModel;}
   updateHdrIA();
   if(S.addr){const _adEl=document.getElementById('p_addr');if(_adEl)_adEl.value=S.addr;}
