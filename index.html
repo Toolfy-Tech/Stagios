@@ -57,6 +57,10 @@ html[data-theme=light] .hdr{background:rgba(240,239,255,.92)}
 .hdr-r{display:flex;align-items:center;gap:6px}
 .tbtn{background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.35);color:var(--t2);padding:5px 11px;border-radius:20px;cursor:pointer;font-size:.75rem;font-family:var(--ff-h);font-weight:600;transition:all .15s}
 .tbtn:hover{background:rgba(108,99,255,.25);color:var(--t1)}
+.hdr-ia-btn{position:relative;padding-right:18px}
+.hdr-ia-dot{position:absolute;top:4px;right:5px;width:7px;height:7px;border-radius:50%;border:1.5px solid var(--bg)}
+.hdr-ia-dot.on{background:#16a34a}
+.hdr-ia-dot.off{background:var(--t4)}
 
 /* ── BOTTOM PILL NAV ────────────────────────────────── */
 .tabnav{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:4px;padding:8px;background:linear-gradient(135deg,rgba(30,41,59,.90) 0%,rgba(15,23,42,.95) 45%,rgba(11,16,32,.97) 100%);border:1.5px solid rgba(108,99,255,.40);border-radius:40px;backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 10px 28px rgba(108,99,255,.28),0 14px 24px rgba(0,0,0,.55);z-index:200;white-space:nowrap}
@@ -382,6 +386,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 <header class="hdr">
   <div class="logo"><div class="logo-sq" id="logo-sq">🎯</div><span id="logo-text">Stagios – Radar & CRM</span></div>
   <div class="hdr-r">
+    <button class="tbtn hdr-ia-btn" id="hdr-ia-btn" onclick="goTab('demarrer')" title="Paramètres Gemini AI" aria-label="Paramètres Gemini AI">🤖 IA<span class="hdr-ia-dot off" id="hdr-ia-dot"></span></button>
     <button class="tbtn" onclick="exportJSON()" title="Exporter mes données" aria-label="Exporter mes données en JSON">💾 Exporter</button>
     <label class="tbtn" title="Importer une sauvegarde" style="cursor:pointer" aria-label="Importer une sauvegarde JSON">📂 Importer<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
     <button class="tbtn" onclick="toggleTheme()" id="tbtn" aria-label="Basculer le thème clair/sombre">🌙</button>
@@ -427,6 +432,16 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
           title="Clé Gemini API — stockée uniquement sur cet appareil"
           onkeydown="if(event.key==='Enter')saveDemarreurKey()">
         <button class="btn btn-primary" onclick="saveDemarreurKey()">✅ Activer Gemini</button>
+      </div>
+      <div style="margin-top:.55rem;display:flex;align-items:center;gap:.6rem;font-size:.78rem">
+        <label for="dm_model" style="font-weight:600;color:var(--t3);flex-shrink:0;white-space:nowrap">Modèle Gemini :</label>
+        <select id="dm_model" style="flex:1;padding:5px 9px;font-size:.76rem">
+          <option value="gemini-2.0-flash">gemini-2.0-flash (recommandé)</option>
+          <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite (plus rapide)</option>
+          <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+          <option value="gemini-1.5-flash-8b">gemini-1.5-flash-8b (léger)</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro (meilleur)</option>
+        </select>
       </div>
       <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
     </div>
@@ -645,6 +660,16 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
             🔑 Ouvrir Google AI Studio →
           </a>
           <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
+        </div>
+        <div style="margin-top:.6rem">
+          <label style="font-size:.71rem;font-weight:600;color:var(--t4);letter-spacing:.05em;text-transform:uppercase;font-family:var(--ff-h);display:block;margin-bottom:4px">Modèle Gemini</label>
+          <select id="p_gemini_model" style="font-size:.82rem">
+            <option value="gemini-2.0-flash">gemini-2.0-flash (recommandé)</option>
+            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite (plus rapide)</option>
+            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+            <option value="gemini-1.5-flash-8b">gemini-1.5-flash-8b (léger)</option>
+            <option value="gemini-1.5-pro">gemini-1.5-pro (meilleur)</option>
+          </select>
         </div>
       </div>
       <div class="fi">
@@ -1265,7 +1290,7 @@ Format attendu (null si absent) :
 
 CV :
 ${text.substring(0,8000)}`;
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+S.geminiKey,{
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+_geminiModel()+':generateContent?key='+S.geminiKey,{
     method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
   });
@@ -1400,7 +1425,7 @@ ${((S.prenom||'')+' '+(S.nom||'')).trim()}
 ${S.tel||''}${S.email?' · '+S.email:''}`;
 
   try{
-    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+S.geminiKey,{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+_geminiModel()+':generateContent?key='+S.geminiKey,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
     });
@@ -1536,6 +1561,11 @@ function renderDemarrer(){
   const el=document.getElementById('dm-'+state);
   if(el)el.classList.add('on');
   if(state==='ready')_populateDmReady();
+  updateHdrIA();
+  if(state==='setup'){
+    const dm=document.getElementById('dm_model');
+    if(dm&&S.geminiModel)dm.value=S.geminiModel;
+  }
 }
 function _populateDmReady(){
   const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
@@ -1583,15 +1613,25 @@ function _populateDmReady(){
   }
 }
 function renderIAPage(){renderDemarrer();}
+function _geminiModel(){return S.geminiModel||'gemini-2.0-flash';}
+function updateHdrIA(){
+  const dot=document.getElementById('hdr-ia-dot');
+  if(!dot)return;
+  if(S.geminiKey){dot.className='hdr-ia-dot on';}else{dot.className='hdr-ia-dot off';}
+}
 function saveDemarreurKey(){
   var inp=document.getElementById('dm_key');
   var key=(inp?.value||'').trim();
   if(!key){toast('Colle ta clé Gemini (elle commence par AIza…)','warn');return;}
   if(!key.startsWith('AIza')){toast('La clé doit commencer par "AIza"','warn');return;}
   S.geminiKey=key;
+  var modelVal=(document.getElementById('dm_model')?.value||'gemini-2.0-flash');
+  S.geminiModel=modelVal;
   persist();
   var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
+  var profMod=document.getElementById('p_gemini_model');if(profMod)profMod.value=modelVal;
   initRadarSourceToggles();
+  updateHdrIA();
   renderDemarrer();
   toast('🤖 Gemini activé — charge ton CV pour créer ton profil !','ok');
 }
@@ -1604,6 +1644,7 @@ function saveGeminiKeyFromIA(){
   persist();
   var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
   initRadarSourceToggles();
+  updateHdrIA();
   renderDemarrer();
   toast('🤖 Gemini activé — charge ton CV pour créer ton profil !','ok');
 }
@@ -2387,7 +2428,7 @@ Catégories souhaitées : ${activeCatLabels}.
 Pour chaque structure, retourne un objet JSON. Réponds UNIQUEMENT avec un tableau JSON valide (sans markdown, sans texte avant/après) :
 [{"n":"Nom exact","t":"ESN|Public|Education|Lycées|Santé|Banque|Industrie|Garage|BTP|Restauration|Asso|Logistique|Coworking|PME|Médias","d":"Adresse complète","web":"https://site.com ou vide","v":"Ville"}]`;
 
-  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+geminiKey,{
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+_geminiModel()+':generateContent?key='+geminiKey,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
@@ -3223,6 +3264,7 @@ async function saveProfile(){
     formationEmoji:_fc.emoji||'✏️',
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
     geminiKey:document.getElementById('p_gemini_key')?.value.trim()||S.geminiKey||'',
+    geminiModel:document.getElementById('p_gemini_model')?.value||S.geminiModel||'gemini-2.0-flash',
     mode:getMode(),
     extraNafCodes:f('p_naf_codes'),
     extraRomeCodes:f('p_rome_codes'),
@@ -3305,6 +3347,8 @@ function fillProfileForm(){
     const el=document.getElementById('p_'+k);if(el&&S[k])el.value=S[k];
   });
   if(S.geminiKey){const _gEl=document.getElementById('p_gemini_key');if(_gEl)_gEl.value=S.geminiKey;}
+  if(S.geminiModel){const _gmEl=document.getElementById('p_gemini_model');if(_gmEl)_gmEl.value=S.geminiModel;}
+  updateHdrIA();
   if(S.addr){const _adEl=document.getElementById('p_addr');if(_adEl)_adEl.value=S.addr;}
   if(S.debutRaw){const _dbEl=document.getElementById('p_debut');if(_dbEl)_dbEl.value=S.debutRaw;}
   if(S.finRaw){const _dfEl=document.getElementById('p_fin');if(_dfEl)_dfEl.value=S.finRaw;}
