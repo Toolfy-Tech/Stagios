@@ -461,7 +461,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <label class="dm-upload-zone" for="dm_cv_input"
         ondragover="event.preventDefault();this.classList.add('dm-dz-over')"
         ondragleave="this.classList.remove('dm-dz-over')"
-        ondrop="event.preventDefault();this.classList.remove('dm-dz-over');if(event.dataTransfer.files.length)handleCvUpload({target:{files:event.dataTransfer.files}},true)"
+        ondrop="event.preventDefault();this.classList.remove('dm-dz-over');if(event.dataTransfer.files.length)handleCvUpload({target:{files:event.dataTransfer.files}},true)">
         <div class="dm-upload-icon">📄</div>
         <div class="dm-upload-title">Glisse ton CV ici ou clique pour choisir</div>
         <div class="dm-upload-sub">PDF ou TXT — analysé instantanément par Gemini</div>
@@ -611,8 +611,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         </div>
         <div id="mode_hint" class="mode-hint"></div>
       </div>
-      <div class="fi"><label>Début</label><input id="p_debut" type="date" value="2026-06-05" /></div>
-      <div class="fi"><label>Fin</label><input id="p_fin" type="date" value="2026-07-31" /></div>
+      <div class="fi"><label>Début</label><input id="p_debut" type="date" /></div>
+      <div class="fi"><label>Fin</label><input id="p_fin" type="date" /></div>
     </div>
   </div>
 
@@ -1085,7 +1085,7 @@ function showBlacklistedModal(){
   var blItems=radarResults.filter(function(c){return _blacklist.has(c.id);});
   if(!blItems.length)return;
   var content='<div style="position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;display:flex;align-items:center;justify-content:center;padding:1rem" id="bl-overlay" onclick="if(event.target.id===\'bl-overlay\')this.remove()">' +
-    '<div style="background:var(--card);border-radius:var(--rl);padding:1.25rem;max-width:500px;width:100%;max-height:70vh;overflow-y:auto;box-shadow:var(--sh2)">' +
+    '<div style="background:var(--card);border-radius:var(--rl);padding:1.25rem;max-width:500px;width:100%;max-height:70vh;overflow-y:auto;box-shadow:var(--shadow2)">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.875rem">' +
         '<strong style="font-size:.9rem;color:var(--t1)">🚫 Structures masquées</strong>' +
         '<button onclick="document.getElementById(\'bl-overlay\').remove()" style="background:none;border:none;cursor:pointer;font-size:1.1rem;color:var(--t3)">×</button>' +
@@ -2780,9 +2780,9 @@ async function launchRadar(){
     _diag+='<strong>Découvertes via APIs :</strong> '+_newCount+'<br>';
     if(_newCount===0){
       _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
-      _diag+='Si tu restes dans un rayon de '+rKm+' km de Montpellier, les mêmes entreprises pré-chargées apparaissent.<br>';
-      _diag+='Pour voir des résultats propres à une autre ville, augmente le rayon ou essaie une ville plus éloignée de Montpellier.<br>';
-      _diag+="Les APIs externes (Annuaire Entreprises, Gemini AI) cherchent autour de ta position — si elles échouent, seules les entreprises pré-chargées s'affichent.";
+      _diag+='Seules les entreprises pré-chargées pour ta zone s\'affichent — les APIs externes n\'ont pas renvoyé de résultats.<br>';
+      _diag+='💡 Essaie d\'augmenter le rayon de recherche ou vérifie ta connexion internet.<br>';
+      _diag+="Les APIs externes cherchent autour de ta position GPS — si elles échouent, seules les entreprises pré-chargées s'affichent.";
     }
     _diagEl.innerHTML=_diag;_diagEl.style.display='block';
   }
@@ -3247,9 +3247,35 @@ Social:[
 (n,fl)=>`${n} m'attire pour l'engagement humain qui caractérise votre structure. Dans ce secteur, la rigueur professionnelle et l'écoute active sont au cœur de chaque intervention. C'est exactement le type d'environnement dans lequel je souhaite progresser en ${fl}.`,
 ],
 };
-_CTX.Education=_CTX.ESN;_CTX.Coworking=_CTX.ESN;_CTX.PME=_CTX.ESN;_CTX.Médias=_CTX.ESN;
-_CTX.Banque=_CTX.Public;_CTX.Industrie=_CTX.ESN;_CTX.Logistique=_CTX.ESN;_CTX.BTP=_CTX.ESN;
-_CTX.Hôtellerie=_CTX.Restauration;_CTX.Collectivité=_CTX.Public;
+_CTX.Education=[
+(n,fl)=>`Un établissement d'enseignement est un environnement à part : il combine des contraintes organisationnelles réelles avec une mission humaine et pédagogique. C'est dans ce cadre que je souhaite effectuer ma période au sein de ${n}, en mettant mes compétences en ${fl} au service d'une structure dont l'activité a un impact direct sur les apprenants.`,
+(n,fl)=>`${n} m'intéresse pour la diversité des profils que représente un environnement éducatif : élèves, enseignants, personnel administratif — chacun avec ses propres besoins. C'est précisément ce contexte, à la fois humain et organisé, que je recherche pour consolider ma formation en ${fl}.`,
+];
+_CTX.PME=[
+(n,fl)=>`${n} m'intéresse pour la polyvalence que ce type de structure implique : dans une PME, les responsabilités sont concrètes, les missions variées, et chaque collaborateur compte. C'est exactement le cadre dans lequel je souhaite mettre ma formation en ${fl} à l'épreuve.`,
+(n,fl)=>`Ce qui m'attire dans ${n}, c'est la réalité du travail en PME : des projets menés de bout en bout, une proximité avec les équipes et les décisions. Je recherche cet environnement concret pour développer mes compétences en ${fl}.`,
+];
+_CTX.Industrie=[
+(n,fl)=>`Le secteur industriel impose des standards élevés de rigueur et de précision. C'est dans cet environnement exigeant que je souhaite consolider mes compétences en ${fl} au sein de ${n}, en contribuant à des process où la fiabilité fait vraiment la différence.`,
+(n,fl)=>`${n} m'attire pour l'environnement de production qu'il représente : des contraintes techniques réelles, des équipes spécialisées, des enjeux de qualité et de sécurité concrets. C'est le type de terrain sur lequel ma formation en ${fl} peut prendre tout son sens.`,
+];
+_CTX.Logistique=[
+(n,fl)=>`La logistique, c'est coordonner les flux pour que tout arrive au bon endroit, au bon moment. Chez ${n}, je souhaite comprendre comment cette organisation se construit au quotidien, et mettre mes compétences en ${fl} au service d'une chaîne où chaque maillon compte.`,
+(n,fl)=>`${n} m'intéresse pour la dimension opérationnelle que représente la logistique. Coordonner, anticiper, optimiser — c'est un environnement concret où les compétences en ${fl} ont un impact mesurable et direct sur l'activité.`,
+];
+_CTX.BTP=[
+(n,fl)=>`Le BTP est un secteur où les projets se voient et laissent une trace concrète. C'est cette dimension réelle qui m'attire dans l'environnement de ${n}, et c'est dans ce cadre que je souhaite développer mes compétences en ${fl} sur des chantiers concrets.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est la réalité du secteur : des projets d'envergure, des équipes de terrain, des exigences de sécurité et de qualité. C'est exactement le type d'environnement dans lequel une formation en ${fl} prend toute sa valeur.`,
+];
+_CTX.Médias=[
+(n,fl)=>`${n} m'attire pour l'environnement créatif et exigeant que représente le secteur des médias : des projets qui touchent un public réel, des contenus qui ont un impact concret. C'est dans ce cadre que je souhaite mettre mes compétences en ${fl} au service de productions qui comptent.`,
+(n,fl)=>`Ce qui m'a conduit(e) vers ${n}, c'est votre activité au carrefour de la création et de la communication. Contribuer à des projets médias — qu'il s'agisse de contenus, de production ou de diffusion — c'est exactement le terrain sur lequel je souhaite progresser en ${fl}.`,
+];
+_CTX.Coworking=[
+(n,fl)=>`Un espace de coworking, c'est un environnement dynamique : diversité des profils, culture de l'autonomie, contacts avec des équipes et des projets variés. C'est cette effervescence qui m'attire dans ${n}, et c'est dans ce cadre que je souhaite mettre mes compétences en ${fl} en contact avec des réalités professionnelles multiples.`,
+(n,fl)=>`${n} m'intéresse pour la dynamique qui caractérise les espaces de coworking : agilité, diversité des usagers, sens du service. C'est un environnement stimulant dans lequel je souhaite développer mes compétences en ${fl}.`,
+];
+_CTX.Banque=_CTX.Public;_CTX.Hôtellerie=_CTX.Restauration;_CTX.Collectivité=_CTX.Public;
 
 function refreshEmailList(){
   var sel=document.getElementById('e_company');
@@ -3518,7 +3544,7 @@ async function saveProfile(){
     cvParsed:_oldCvParsed,
     cvProfile:_oldCvProfile,
     cvScore:_oldCvScore,cvStrengths:_oldCvStrengths,cvImprovements:_oldCvImprovements,cvVerdict:_oldCvVerdict,
-    addr:f('p_addr'),debutRaw:d1||'2026-06-05',finRaw:d2||'2026-07-31'};
+    addr:f('p_addr'),debutRaw:(function(){if(d1)return d1;var t=new Date();t.setDate(t.getDate()+14);return t.toISOString().slice(0,10);})(),finRaw:(function(){if(d2)return d2;var t=new Date();t.setDate(t.getDate()+70);return t.toISOString().slice(0,10);})()};
   persist();
   updateBranding();
   showPbar();
