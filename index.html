@@ -279,7 +279,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .dm-state{display:none}
 .dm-state.on{display:block}
 .dm-upload-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;padding:2.5rem 1rem;background:linear-gradient(135deg,rgba(139,92,246,.06),rgba(99,102,241,.04));border:2px dashed rgba(139,92,246,.35);border-radius:16px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s;margin-bottom:.6rem;width:100%;box-sizing:border-box}
-.dm-upload-zone:hover{border-color:rgba(139,92,246,.65);background:rgba(139,92,246,.1)}
+.dm-upload-zone:hover,.dm-upload-zone.dm-dz-over{border-color:rgba(139,92,246,.75);background:rgba(139,92,246,.13);transform:scale(1.01)}
 .dm-upload-icon{font-size:2.8rem;line-height:1}
 .dm-upload-title{font-size:.96rem;font-weight:700;color:var(--t1)}
 .dm-upload-sub{font-size:.76rem;color:var(--t3)}
@@ -443,7 +443,10 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <p class="ia-hero-sub">Gemini analyse ton CV et remplit automatiquement toutes tes informations.</p>
     </div>
     <div class="card">
-      <label class="dm-upload-zone" for="dm_cv_input">
+      <label class="dm-upload-zone" for="dm_cv_input"
+        ondragover="event.preventDefault();this.classList.add('dm-dz-over')"
+        ondragleave="this.classList.remove('dm-dz-over')"
+        ondrop="event.preventDefault();this.classList.remove('dm-dz-over');if(event.dataTransfer.files.length)handleCvUpload({target:{files:event.dataTransfer.files}},true)">
         <div class="dm-upload-icon">📄</div>
         <div class="dm-upload-title">Glisse ton CV ici ou clique pour choisir</div>
         <div class="dm-upload-sub">PDF ou TXT — analysé instantanément par Gemini</div>
@@ -1113,7 +1116,13 @@ async function handleCvUpload(event, fromDemarrer){
       }catch(e){
         console.warn('Gemini CV parse failed:',e);
         filled=autofillFromCv(text);
-        if(!fromDemarrer&&status)status.textContent='✅ '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')+' (IA indisponible)';
+        const is429=e.message.includes('429');
+        const errMsg=is429
+          ?'⏳ Quota Gemini dépassé (15 req/min) — attends 1 min et réessaie. Analyse basique appliquée.'
+          :'⚠️ Gemini indisponible ('+e.message+') — analyse basique appliquée.';
+        if(fromDemarrer){const lm=document.getElementById('dm-loading-msg');if(lm)lm.textContent=errMsg;}
+        else if(status)status.textContent='✅ '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')+' · '+errMsg;
+        if(is429)toast('Quota Gemini atteint — réessaie dans 1 minute','warn');
       }
     }else{
       filled=autofillFromCv(text);
