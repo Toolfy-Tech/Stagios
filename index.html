@@ -1674,6 +1674,7 @@ function _showAiProvBadge(badgeId,key){
   badge.className='ai-prov-badge'+(pc.free?' free':'');
   badge.style.display='';
 }
+let _dmModelT=null,_profModelT=null;
 function onDmKeyInput(val){
   val=val.trim();
   _showAiProvBadge('dm-prov-badge',val);
@@ -1681,12 +1682,14 @@ function onDmKeyInput(val){
   populateModelSelect('dm_model',p);
   const link=document.getElementById('dm-key-link');
   if(link){const pc=AI_PROVIDERS[p];link.href=pc.helpUrl;link.textContent='🔑 '+pc.helpLabel+' →';}
+  if(val.length>=20){clearTimeout(_dmModelT);_dmModelT=setTimeout(()=>loadProviderModels(val,p,['dm_model']),700);}
 }
 function onProfKeyInput(val){
   val=val.trim();
   _showAiProvBadge('p-prov-badge',val);
   const p=detectAiProvider(val);
   populateModelSelect('p_gemini_model',p);
+  if(val.length>=20){clearTimeout(_profModelT);_profModelT=setTimeout(()=>loadProviderModels(val,p,['p_gemini_model']),700);}
 }
 async function callAI(prompt){
   const p=S.aiProvider||'gemini';const key=_activeAiKey();const model=_activeAiModel();
@@ -1721,30 +1724,46 @@ async function callAI(prompt){
 
 function renderIAPage(){renderDemarrer();}
 function _geminiModel(){return _activeAiModel();}
-async function loadGeminiModels(key){
+async function loadProviderModels(key,provider,selIds){
+  if(typeof selIds==='string')selIds=[selIds];
+  if(!selIds||!selIds.length)selIds=['dm_model','p_gemini_model'];
   try{
-    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key));
-    if(!r.ok)return;
-    const data=await r.json();
-    const models=(data.models||[])
-      .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')&&(m.name||'').includes('gemini'))
-      .map(m=>({id:m.name.replace('models/',''),label:m.displayName||m.name.replace('models/','')}))
-      .sort((a,b)=>{
-        const score=id=>{
-          const v=parseFloat(id.match(/(\d+\.\d+)/)?.[1]||'0');
-          return v*10-(id.includes('pro')?1:0)-(id.includes('lite')||id.includes('8b')?0.5:0);
-        };
-        return score(b.id)-score(a.id);
-      });
-    if(!models.length)return;
-    const current=S.geminiModel||models[0].id;
-    const html=models.map(m=>'<option value="'+escH(m.id)+'"'+(m.id===current?' selected':'')+'>'+escH(m.id)+'</option>').join('');
-    ['dm_model','p_gemini_model'].forEach(selId=>{
-      const sel=document.getElementById(selId);
-      if(sel)sel.innerHTML=html;
-    });
-    if(!S.geminiModel){S.geminiModel=models[0].id;persist();}
-  }catch(e){/* offline — on garde la liste statique */}
+    let modelIds=[];
+    if(provider==='gemini'){
+      const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key));
+      if(!r.ok)return;
+      const d=await r.json();
+      modelIds=(d.models||[])
+        .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')&&(m.name||'').includes('gemini'))
+        .map(m=>m.name.replace('models/',''))
+        .sort((a,b)=>{const sc=id=>{const v=parseFloat(id.match(/(\d+\.\d+)/)?.[1]||'0');return v*10-(id.includes('pro')?1:0)-(id.includes('lite')||id.includes('8b')?0.5:0);};return sc(b)-sc(a);});
+    } else if(provider==='openai'){
+      const r=await fetch('https://api.openai.com/v1/models',{headers:{'Authorization':'Bearer '+key}});
+      if(!r.ok)return;
+      const d=await r.json();
+      modelIds=(d.data||[]).filter(m=>m.id&&/^(gpt-|o\d)/.test(m.id)).map(m=>m.id).sort((a,b)=>b.localeCompare(a));
+    } else if(provider==='groq'){
+      const r=await fetch('https://api.groq.com/openai/v1/models',{headers:{'Authorization':'Bearer '+key}});
+      if(!r.ok)return;
+      const d=await r.json();
+      modelIds=(d.data||[]).filter(m=>m.id&&m.active!==false).map(m=>m.id).sort((a,b)=>b.localeCompare(a));
+    } else if(provider==='mistral'){
+      const r=await fetch('https://api.mistral.ai/v1/models',{headers:{'Authorization':'Bearer '+key}});
+      if(!r.ok)return;
+      const d=await r.json();
+      modelIds=(d.data||[]).filter(m=>m.id).map(m=>m.id).sort((a,b)=>b.localeCompare(a));
+    } else {
+      return; // Anthropic: pas d'endpoint public de listing
+    }
+    if(!modelIds.length)return;
+    const current=_activeAiModel();
+    const html=modelIds.map(id=>'<option value="'+escH(id)+'"'+(id===current?' selected':'')+'>'+escH(id)+'</option>').join('');
+    selIds.forEach(selId=>{const sel=document.getElementById(selId);if(sel)sel.innerHTML=html;});
+  }catch(e){/* offline ou erreur auth — on garde la liste statique */}
+}
+async function loadGeminiModels(key){
+  if((S.aiProvider||'gemini')!=='gemini')return;
+  await loadProviderModels(key,'gemini',['dm_model','p_gemini_model']);
 }
 function updateHdrIA(){
   const dot=document.getElementById('hdr-ia-dot');
