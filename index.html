@@ -1186,7 +1186,11 @@ Format attendu (null si absent) :
   "motiv":"phrase d'accroche ou objectif professionnel si mentionné",
   "experiences":["Stage technicien chez Entreprise X","Mission développeur web chez Y"],
   "certifs":["CACES R489","PSC1","TOEIC 850"],
-  "profile_md":"Résumé structuré du candidat en 120 mots maximum, rédigé à la 1ère personne, optimisé pour personnaliser des lettres de candidature. Mettre en avant : formation, compétences clés, expériences notables, certifications et motivation. Ce texte sera réutilisé tel quel dans les futurs prompts de génération d'email — il doit être factuel, précis et directement exploitable."
+  "profile_md":"Résumé structuré du candidat en 120 mots maximum, rédigé à la 1ère personne, optimisé pour personnaliser des lettres de candidature. Mettre en avant : formation, compétences clés, expériences notables, certifications et motivation. Ce texte sera réutilisé tel quel dans les futurs prompts de génération d'email — il doit être factuel, précis et directement exploitable.",
+  "cv_score":7,
+  "cv_strengths":["Point positif 1 concret","Point positif 2 concret"],
+  "cv_improvements":["Amélioration prioritaire 1","Amélioration prioritaire 2","Amélioration prioritaire 3"],
+  "cv_verdict":"Phrase de synthèse bienveillante et honnête sur la qualité globale du CV (1-2 phrases)."
 }
 
 CV :
@@ -1225,16 +1229,55 @@ function applyAiCvData(d){
   }
   if(d.experiences&&d.experiences.length){S.cvParsed=S.cvParsed||{};S.cvParsed.experiences=d.experiences;}
   if(d.certifs&&d.certifs.length){S.cvParsed=S.cvParsed||{};S.cvParsed.certifs=d.certifs;}
-  if(d.profile_md){S.cvProfile=d.profile_md;renderCvProfile();}
+  if(d.profile_md){S.cvProfile=d.profile_md;}
+  if(d.cv_score!=null){
+    S.cvScore=d.cv_score;
+    S.cvStrengths=d.cv_strengths||[];
+    S.cvImprovements=d.cv_improvements||[];
+    S.cvVerdict=d.cv_verdict||'';
+  }
+  renderCvProfile();
   return filled;
 }
 
 function renderCvProfile(){
   const box=document.getElementById('cv_profile_box');
-  const pre=document.getElementById('cv_profile_text');
-  if(!box||!pre)return;
-  if(S.cvProfile){box.style.display='block';pre.textContent=S.cvProfile;}
-  else{box.style.display='none';}
+  if(!box)return;
+  if(!S.cvProfile&&S.cvScore==null){box.style.display='none';return;}
+  box.style.display='block';
+  // Score display
+  var scoreHtml='';
+  if(S.cvScore!=null){
+    var sc=S.cvScore;
+    var color=sc>=8?'#16a34a':sc>=5?'#d97706':'#dc2626';
+    var bg=sc>=8?'rgba(34,197,94,.1)':sc>=5?'rgba(245,158,11,.1)':'rgba(239,68,68,.1)';
+    var brd=sc>=8?'rgba(34,197,94,.3)':sc>=5?'rgba(245,158,11,.3)':'rgba(239,68,68,.3)';
+    var label=sc>=8?'CV solide 👍':sc>=5?'CV correct ⚠️':'CV à retravailler ❌';
+    var strHtml=(S.cvStrengths||[]).map(s=>'<li style="color:#16a34a">✓ '+escH(s)+'</li>').join('');
+    var impHtml=(S.cvImprovements||[]).map(s=>'<li style="color:#dc2626">✗ '+escH(s)+'</li>').join('');
+    scoreHtml=
+      '<div style="padding:10px 12px;background:'+bg+';border-bottom:1px solid '+brd+'">'+
+        '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'+
+          '<span style="font-size:1.6rem;font-weight:800;color:'+color+';line-height:1">'+sc+'/10</span>'+
+          '<span style="font-size:.78rem;font-weight:700;color:'+color+'">'+label+'</span>'+
+        '</div>'+
+        (S.cvVerdict?'<div style="font-size:.74rem;color:var(--t2);margin-bottom:7px;font-style:italic">'+escH(S.cvVerdict)+'</div>':'')+
+        '<ul style="list-style:none;padding:0;margin:0;font-size:.72rem;display:flex;flex-direction:column;gap:3px">'+
+          strHtml+impHtml+
+        '</ul>'+
+      '</div>';
+  }
+  // Profile summary
+  var profileHtml='';
+  if(S.cvProfile){
+    profileHtml='<pre id="cv_profile_text" style="margin:0;padding:10px 12px;font-family:inherit;font-size:.73rem;color:var(--t2);line-height:1.6;white-space:pre-wrap;background:var(--bg2);max-height:130px;overflow-y:auto">'+escH(S.cvProfile)+'</pre>';
+  }
+  box.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(139,92,246,.09);font-size:.74rem;font-weight:600;color:var(--primary)">'+
+      '<span>🤖 Analyse IA du CV</span>'+
+      '<button class="btn btn-ghost btn-sm" style="padding:1px 8px;font-size:.68rem" onclick="S.cvProfile=\'\';S.cvScore=null;S.cvStrengths=[];S.cvImprovements=[];S.cvVerdict=\'\';persist();renderCvProfile()">✕ Effacer</button>'+
+    '</div>'+
+    scoreHtml+profileHtml;
 }
 
 async function geminiGenerateEmail(){
@@ -3033,6 +3076,10 @@ async function saveProfile(){
   const _oldCvFileName=S.cvFileName||'';
   const _oldCvParsed=S.cvParsed||null;
   const _oldCvProfile=S.cvProfile||null;
+  const _oldCvScore=S.cvScore??null;
+  const _oldCvStrengths=S.cvStrengths||[];
+  const _oldCvImprovements=S.cvImprovements||[];
+  const _oldCvVerdict=S.cvVerdict||'';
   S={prenom:f('p_prenom'),nom:f('p_nom'),tel:f('p_tel'),email:f('p_email'),etab:f('p_etab')||'mon organisme de formation',
     formation:_fid,
     formationLabel:_fid==='Custom'?(_customFName||'Formation personnalisée'):_fc.label,
@@ -3050,6 +3097,7 @@ async function saveProfile(){
      comp:f('p_comp'),motiv:f('p_motiv'),ini:(f('p_prenom')[0]+(f('p_nom')[0]||'')).toUpperCase(),
     cvParsed:_oldCvParsed,
     cvProfile:_oldCvProfile,
+    cvScore:_oldCvScore,cvStrengths:_oldCvStrengths,cvImprovements:_oldCvImprovements,cvVerdict:_oldCvVerdict,
     addr:f('p_addr'),debutRaw:d1||'2026-06-05',finRaw:d2||'2026-07-31'};
   persist();
   updateBranding();
@@ -3113,7 +3161,8 @@ function fillProfileForm(){
   }
   if(S.cvFileName){
     const st=document.getElementById('cv_status');
-    if(st)st.textContent='✅ CV chargé : '+S.cvFileName+(S.cvProfile?' · 🤖 Profil IA actif':'');
+    var scoreLabel=S.cvScore!=null?' · Note '+S.cvScore+'/10':'';
+    if(st)st.textContent='✅ CV chargé : '+S.cvFileName+(S.cvProfile?' · 🤖 Profil IA actif':'')+scoreLabel;
   }
   renderCvProfile();
   ['prenom','nom','tel','email','etab','comp','motiv'].forEach(k=>{
