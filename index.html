@@ -507,6 +507,20 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <span style="font-size:.73rem;color:var(--t4);cursor:pointer;text-decoration:underline" onclick="goToIASettings()">⚙️ Modifier la clé / modèle IA</span>
       </div>
     </div>
+    <!-- ── Adresse ── -->
+    <div class="card" id="dm-addr-card" style="margin-bottom:.9rem">
+      <div class="ct">📍 Où cherches-tu ?</div>
+      <div class="cs">Adresse de départ pour calculer les distances dans le Radar</div>
+      <div style="display:flex;gap:8px;align-items:flex-start">
+        <div class="addr-wrap" style="flex:1">
+          <input id="dm_addr" placeholder="Tape ton adresse ou code postal…" autocomplete="off"
+            oninput="onDmAddrInput(this.value)" onkeydown="onDmAddrKey(event)" />
+          <div id="dm_addr_dd" class="addr-dd"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="dmGpsLocate()" style="flex-shrink:0">📡 GPS</button>
+      </div>
+      <div id="dm_geo_st" style="font-size:.76rem;color:var(--t3);margin-top:6px"></div>
+    </div>
     <div id="dm-cv-analysis"></div>
   </div>
 
@@ -1588,7 +1602,7 @@ function _populateDmReady(){
     const ms=modeL[S.mode]||S.mode||'Stage';
     const ds=(S.debut&&S.fin)?' · '+S.debut+' → '+S.fin:'';
     const addr=S.addr?' · 📍 '+S.addr.split(',')[0]:'';
-    period.innerHTML='📅 '+ms+ds+addr+(S.addr?'':' <span class="dm-addr-nudge" onclick="goTab(\'profil\')">+ Ajouter une adresse</span>');
+    period.innerHTML='📅 '+ms+ds+addr;
   }
   const cvBox=document.getElementById('dm-cv-analysis');
   if(cvBox){
@@ -1614,6 +1628,20 @@ function _populateDmReady(){
         '📎 <span style="cursor:pointer;text-decoration:underline" onclick="goTab(\'profil\');setTimeout(()=>document.getElementById(\'cv_input\')?.click(),350)">Importe ton CV pour obtenir une note et améliorer les emails générés</span>'+
         '</div>';
     }
+  }
+  // Adresse widget
+  const dmAddrInp=document.getElementById('dm_addr');
+  if(dmAddrInp)dmAddrInp.value=S.addr||'';
+  const dmGeoSt=document.getElementById('dm_geo_st');
+  if(dmGeoSt){
+    if(coords&&S.addr)dmGeoSt.textContent='✅ Position confirmée — '+(S.addr.split(',').slice(0,2).join(','));
+    else if(!S.addr)dmGeoSt.textContent='';
+  }
+  // Mettre en évidence la carte adresse si pas encore renseignée
+  const dmAddrCard=document.getElementById('dm-addr-card');
+  if(dmAddrCard){
+    if(!coords){dmAddrCard.style.border='1.5px solid rgba(245,158,11,.6)';dmAddrCard.style.background='rgba(245,158,11,.04)';}
+    else{dmAddrCard.style.border='';dmAddrCard.style.background='';}
   }
 }
 function renderIAPage(){renderDemarrer();}
@@ -1767,6 +1795,76 @@ async function gpsLocate(){
     st.textContent='✅ Position GPS détectée';
     updateCoordsWarning();
   },()=>st.textContent='⚠️ GPS refusé — saisis ton adresse');
+}
+
+// ── Adresse widget pour dm-ready ─────────────────────────
+let _dmAddrT=null,_dmAddrItems=[],_dmAddrFocus=-1;
+function onDmAddrInput(v){
+  _dmAddrFocus=-1;clearTimeout(_dmAddrT);
+  const st=document.getElementById('dm_geo_st');
+  if(v.length<3){const dd=document.getElementById('dm_addr_dd');if(dd)dd.style.display='none';return;}
+  if(st)st.textContent='🔍 Recherche…';
+  _dmAddrT=setTimeout(()=>fetchDmSugg(v),350);
+}
+async function fetchDmSugg(q){
+  const st=document.getElementById('dm_geo_st');
+  try{
+    const r=await fetch('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(q)+'&limit=7');
+    const d=await r.json();
+    _dmAddrItems=d.features||[];renderDmDD();
+    if(st)st.textContent=_dmAddrItems.length?_dmAddrItems.length+' suggestion(s) — clique la bonne':'Aucun résultat';
+  }catch(e){
+    try{
+      const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(q)+'&countrycodes=fr&limit=5',{headers:{'User-Agent':'StageTIP/4.0'}});
+      const d=await r.json();
+      _dmAddrItems=d.map(x=>({properties:{label:x.display_name.split(', ').slice(0,2).join(', '),context:x.display_name.split(', ').slice(2,4).join(', ')},_lat:parseFloat(x.lat),_lon:parseFloat(x.lon)}));
+      renderDmDD();
+    }catch(e2){if(st)st.textContent='⚠️ Erreur réseau';}
+  }
+}
+function renderDmDD(){
+  const dd=document.getElementById('dm_addr_dd');if(!dd)return;
+  if(!_dmAddrItems.length){dd.style.display='none';return;}
+  dd.innerHTML=_dmAddrItems.map((it,i)=>{
+    const p=it.properties||{};
+    return'<div class="addr-item" data-idx="'+i+'" onmousedown="selectDmAddr('+i+')">'+escH(p.label||'')+'<span class="addr-tag">'+escH(p.context||'')+'</span></div>';
+  }).join('');
+  dd.style.display='block';
+}
+function selectDmAddr(i){
+  const it=_dmAddrItems[i];if(!it)return;
+  const p=it.properties||{};
+  const geo=it.geometry?.coordinates||[it._lon,it._lat];
+  coords={lat:parseFloat(geo[1]||it._lat),lng:parseFloat(geo[0]||it._lon)};
+  const label=p.label||'';
+  const inp=document.getElementById('dm_addr');if(inp)inp.value=label;
+  S.addr=label;_lastAddrForCoords=label;
+  const pa=document.getElementById('p_addr');if(pa)pa.value=label;
+  const dd=document.getElementById('dm_addr_dd');if(dd)dd.style.display='none';
+  _dmAddrFocus=-1;
+  const st=document.getElementById('dm_geo_st');
+  if(st)st.textContent='✅ Position confirmée — '+label.split(',').slice(0,2).join(',');
+  persist();updateCoordsWarning();_populateDmReady();
+}
+function onDmAddrKey(e){
+  const items=document.querySelectorAll('#dm_addr_dd .addr-item');if(!items.length)return;
+  if(e.key==='ArrowDown'){e.preventDefault();_dmAddrFocus=Math.min(_dmAddrFocus+1,items.length-1);items.forEach((el,i)=>el.classList.toggle('focused',i===_dmAddrFocus));if(items[_dmAddrFocus])items[_dmAddrFocus].scrollIntoView({block:'nearest'});}
+  else if(e.key==='ArrowUp'){e.preventDefault();_dmAddrFocus=Math.max(_dmAddrFocus-1,0);items.forEach((el,i)=>el.classList.toggle('focused',i===_dmAddrFocus));if(items[_dmAddrFocus])items[_dmAddrFocus].scrollIntoView({block:'nearest'});}
+  else if(e.key==='Enter'&&_dmAddrFocus>=0){e.preventDefault();selectDmAddr(_dmAddrFocus);}
+  else if(e.key==='Escape'){const dd=document.getElementById('dm_addr_dd');if(dd)dd.style.display='none';}
+}
+async function dmGpsLocate(){
+  const st=document.getElementById('dm_geo_st');if(st)st.textContent='📡 Localisation…';
+  if(!navigator.geolocation){if(st)st.textContent='⚠️ GPS non supporté';return;}
+  navigator.geolocation.getCurrentPosition(pos=>{
+    coords={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    const gpsLabel='GPS ('+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+')';
+    const inp=document.getElementById('dm_addr');if(inp)inp.value=gpsLabel;
+    S.addr=gpsLabel;_lastAddrForCoords=gpsLabel;
+    const pa=document.getElementById('p_addr');if(pa)pa.value=gpsLabel;
+    if(st)st.textContent='✅ Position GPS détectée';
+    persist();updateCoordsWarning();_populateDmReady();
+  },()=>{if(st)st.textContent='⚠️ GPS refusé — saisis ton adresse';});
 }
 
 function haversine(a,b,c,d){
