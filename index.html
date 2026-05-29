@@ -436,11 +436,11 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <div style="margin-top:.55rem;display:flex;align-items:center;gap:.6rem;font-size:.78rem">
         <label for="dm_model" style="font-weight:600;color:var(--t3);flex-shrink:0;white-space:nowrap">Modèle Gemini :</label>
         <select id="dm_model" style="flex:1;padding:5px 9px;font-size:.76rem">
-          <option value="gemini-2.0-flash">gemini-2.0-flash (recommandé)</option>
-          <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite (plus rapide)</option>
+          <option value="gemini-2.5-flash">gemini-2.5-flash (recommandé)</option>
+          <option value="gemini-2.5-pro">gemini-2.5-pro (meilleur)</option>
+          <option value="gemini-2.0-flash">gemini-2.0-flash</option>
           <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-          <option value="gemini-1.5-flash-8b">gemini-1.5-flash-8b (léger)</option>
-          <option value="gemini-1.5-pro">gemini-1.5-pro (meilleur)</option>
+          <option value="gemini-1.5-pro">gemini-1.5-pro</option>
         </select>
       </div>
       <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
@@ -664,11 +664,11 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <div style="margin-top:.6rem">
           <label style="font-size:.71rem;font-weight:600;color:var(--t4);letter-spacing:.05em;text-transform:uppercase;font-family:var(--ff-h);display:block;margin-bottom:4px">Modèle Gemini</label>
           <select id="p_gemini_model" style="font-size:.82rem">
-            <option value="gemini-2.0-flash">gemini-2.0-flash (recommandé)</option>
-            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite (plus rapide)</option>
+            <option value="gemini-2.5-flash">gemini-2.5-flash (recommandé)</option>
+            <option value="gemini-2.5-pro">gemini-2.5-pro (meilleur)</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
             <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-            <option value="gemini-1.5-flash-8b">gemini-1.5-flash-8b (léger)</option>
-            <option value="gemini-1.5-pro">gemini-1.5-pro (meilleur)</option>
+            <option value="gemini-1.5-pro">gemini-1.5-pro</option>
           </select>
         </div>
       </div>
@@ -1613,7 +1613,37 @@ function _populateDmReady(){
   }
 }
 function renderIAPage(){renderDemarrer();}
-function _geminiModel(){return S.geminiModel||'gemini-2.0-flash';}
+function _geminiModel(){
+  if(S.geminiModel)return S.geminiModel;
+  const sel=document.getElementById('dm_model')||document.getElementById('p_gemini_model');
+  if(sel&&sel.options.length)return sel.options[0].value;
+  return'gemini-2.5-flash';
+}
+async function loadGeminiModels(key){
+  try{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models?key='+encodeURIComponent(key));
+    if(!r.ok)return;
+    const data=await r.json();
+    const models=(data.models||[])
+      .filter(m=>(m.supportedGenerationMethods||[]).includes('generateContent')&&(m.name||'').includes('gemini'))
+      .map(m=>({id:m.name.replace('models/',''),label:m.displayName||m.name.replace('models/','')}))
+      .sort((a,b)=>{
+        const score=id=>{
+          const v=parseFloat(id.match(/(\d+\.\d+)/)?.[1]||'0');
+          return v*10-(id.includes('pro')?1:0)-(id.includes('lite')||id.includes('8b')?0.5:0);
+        };
+        return score(b.id)-score(a.id);
+      });
+    if(!models.length)return;
+    const current=S.geminiModel||models[0].id;
+    const html=models.map(m=>'<option value="'+escH(m.id)+'"'+(m.id===current?' selected':'')+'>'+escH(m.id)+'</option>').join('');
+    ['dm_model','p_gemini_model'].forEach(selId=>{
+      const sel=document.getElementById(selId);
+      if(sel)sel.innerHTML=html;
+    });
+    if(!S.geminiModel){S.geminiModel=models[0].id;persist();}
+  }catch(e){/* offline — on garde la liste statique */}
+}
 function updateHdrIA(){
   const dot=document.getElementById('hdr-ia-dot');
   if(!dot)return;
@@ -1625,12 +1655,13 @@ function saveDemarreurKey(){
   if(!key){toast('Colle ta clé Gemini (elle commence par AIza…)','warn');return;}
   if(!key.startsWith('AIza')){toast('La clé doit commencer par "AIza"','warn');return;}
   S.geminiKey=key;
-  var modelVal=(document.getElementById('dm_model')?.value||'gemini-2.0-flash');
+  var modelVal=(document.getElementById('dm_model')?.value||_geminiModel());
   S.geminiModel=modelVal;
   persist();
   var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
   var profMod=document.getElementById('p_gemini_model');if(profMod)profMod.value=modelVal;
   initRadarSourceToggles();
+  loadGeminiModels(key);
   updateHdrIA();
   renderDemarrer();
   toast('🤖 Gemini activé — charge ton CV pour créer ton profil !','ok');
@@ -1644,6 +1675,7 @@ function saveGeminiKeyFromIA(){
   persist();
   var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
   initRadarSourceToggles();
+  loadGeminiModels(key);
   updateHdrIA();
   renderDemarrer();
   toast('🤖 Gemini activé — charge ton CV pour créer ton profil !','ok');
@@ -3264,7 +3296,7 @@ async function saveProfile(){
     formationEmoji:_fc.emoji||'✏️',
     searchEngine:document.getElementById('p_search_engine')?.value||'google',
     geminiKey:document.getElementById('p_gemini_key')?.value.trim()||S.geminiKey||'',
-    geminiModel:document.getElementById('p_gemini_model')?.value||S.geminiModel||'gemini-2.0-flash',
+    geminiModel:document.getElementById('p_gemini_model')?.value||S.geminiModel||_geminiModel(),
     mode:getMode(),
     extraNafCodes:f('p_naf_codes'),
     extraRomeCodes:f('p_rome_codes'),
@@ -3366,6 +3398,7 @@ function fillProfileForm(){
   restore();
   initFirstBanner();
   if(S.prenom){fillProfileForm();if(!radarResults.length)radarResults=[];if(coords)radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).sort((a,b)=>(a._dist??999)-(b._dist??999));updateBadges();}
+  if(S.geminiKey)loadGeminiModels(S.geminiKey);
   updateFTStatus(null);
   updateCoordsWarning();
   initRadarSourceToggles();
