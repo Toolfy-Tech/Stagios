@@ -398,7 +398,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 <!-- TABS -->
 <nav class="tabnav" id="tabnav">
   <div class="tab on" onclick="goTab('demarrer')" id="tab-demarrer">🚀 Démarrer</div>
-  <div class="tab" onclick="goTab('profil')" id="tab-profil" style="display:none">👤 Profil</div>
+  <div class="tab" onclick="goTab('profil')" id="tab-profil">👤 Profil</div>
   <div class="tab" onclick="goTab('radar')" id="tab-radar">🎯 Radar <span class="tab-badge" id="badge-radar">0</span></div>
   <div class="tab" onclick="goTab('suivi')" id="tab-suivi">📋 Suivi <span class="tab-badge" id="badge-suivi" style="background:var(--amber-l);color:var(--amber)">0</span></div>
   <div class="tab" onclick="goTab('email')" id="tab-email">✉️ Email</div>
@@ -446,7 +446,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
     </div>
     <div style="text-align:center;padding:.5rem 0">
-      <span style="font-size:.78rem;color:var(--t4);cursor:pointer;text-decoration:underline" onclick="goTab('profil')">Continuer sans IA (saisie manuelle) →</span>
+      <button class="btn btn-ghost" style="width:100%" onclick="goTab('profil')">Continuer sans IA (saisie manuelle) →</button>
     </div>
   </div>
 
@@ -498,8 +498,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       </div>
       <div class="dm-chips" id="dm-chips"></div>
       <div class="dm-period" id="dm-period"></div>
-      <button class="btn btn-primary btn-lg" style="width:100%;margin-bottom:.6rem" onclick="goTab('radar')">🎯 Lancer le Radar →</button>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;margin-top:.6rem">
         <button class="btn btn-ghost" style="flex:1" onclick="goTab('email')">✉️ Écrire des emails</button>
         <button class="btn btn-ghost" style="flex:1" onclick="goTab('profil')">✏️ Modifier le profil</button>
       </div>
@@ -521,6 +520,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       </div>
       <div id="dm_geo_st" style="font-size:.76rem;color:var(--t3);margin-top:6px"></div>
     </div>
+    <button class="btn btn-primary btn-lg" style="width:100%;margin-bottom:.9rem" onclick="goTab('radar')">🎯 Lancer le Radar →</button>
     <div id="dm-cv-analysis"></div>
   </div>
 
@@ -717,7 +717,10 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   </details>
 
   <!-- ── Sauvegarder ── -->
-  <button class="btn btn-primary btn-lg prof-save-btn" onclick="saveProfile()" id="btn-save-profile">💾 Sauvegarder & Lancer le Radar →</button>
+  <div style="display:flex;gap:8px">
+    <button class="btn btn-ghost btn-lg" style="flex:1" onclick="saveProfile()" id="btn-save-profile">💾 Sauvegarder</button>
+    <button class="btn btn-primary btn-lg" style="flex:1" onclick="saveAndGoRadar()">🎯 Lancer le Radar →</button>
+  </div>
 
 </div>
 
@@ -3506,11 +3509,11 @@ function dl(data,name,type){
 async function saveProfile(){
   const f=id=>document.getElementById(id)?.value.trim()||'';
   if(!f('p_prenom')||!f('p_nom')||!f('p_tel')||!f('p_email')){
-    toast('Merci de remplir les champs obligatoires : prénom, nom, téléphone et email.','warn');return;
+    toast('Merci de remplir les champs obligatoires : prénom, nom, téléphone et email.','warn');return false;
   }
   const fmt={day:'numeric',month:'long',year:'numeric'};
   const d1=document.getElementById('p_debut').value,d2=document.getElementById('p_fin').value;
-  if(d1&&d2&&new Date(d1)>=new Date(d2)){toast('La date de fin doit être après la date de début.','warn');return;}
+  if(d1&&d2&&new Date(d1)>=new Date(d2)){toast('La date de fin doit être après la date de début.','warn');return false;}
   const _fid=document.getElementById('p_formation')?.value||'Custom';
   const _fc=FORMATION_CONFIG[_fid]||FORMATION_CONFIG.Custom;
   const _customFName=f('p_custom_formation');
@@ -3548,7 +3551,7 @@ async function saveProfile(){
   persist();
   updateBranding();
   showPbar();
-  goTab('radar');
+  toast('Profil sauvegardé ✅','ok');
   // Géocoder l'adresse si elle a changé ou n'est pas encore géocodée
   const _currentAddr=f('p_addr');
   if(_currentAddr && _currentAddr!==_lastAddrForCoords && !_currentAddr.startsWith('GPS')){
@@ -3569,11 +3572,12 @@ async function saveProfile(){
       document.getElementById('geo_st').textContent='⚠️ Géocodage échoué. Sélectionne une suggestion dans la liste ou utilise le GPS.';
     }
   }
-  if(coords)launchRadar();else{
-    document.getElementById('radar-banner').style.display='flex';
-    document.getElementById('radar-msg').textContent='💡 Saisis ton adresse et sélectionne une suggestion dans la liste déroulante, ou clique sur 📡 GPS.';
-    setTimeout(()=>document.getElementById('radar-banner').style.display='none',8000);
-  }
+  return true;
+}
+
+async function saveAndGoRadar(){
+  const ok=await saveProfile();
+  if(ok)goTab('radar');
 }
 
 function showPbar(){
