@@ -386,7 +386,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 <header class="hdr">
   <div class="logo"><div class="logo-sq" id="logo-sq">🎯</div><span id="logo-text">Stagios – Radar & CRM</span></div>
   <div class="hdr-r">
-    <button class="tbtn hdr-ia-btn" id="hdr-ia-btn" onclick="goTab('demarrer')" title="Paramètres Gemini AI" aria-label="Paramètres Gemini AI">🤖 IA<span class="hdr-ia-dot off" id="hdr-ia-dot"></span></button>
+    <button class="tbtn hdr-ia-btn" id="hdr-ia-btn" onclick="goToIASettings()" title="Paramètres Gemini AI" aria-label="Paramètres Gemini AI">🤖 IA<span class="hdr-ia-dot off" id="hdr-ia-dot"></span></button>
     <button class="tbtn" onclick="exportJSON()" title="Exporter mes données" aria-label="Exporter mes données en JSON">💾 Exporter</button>
     <label class="tbtn" title="Importer une sauvegarde" style="cursor:pointer" aria-label="Importer une sauvegarde JSON">📂 Importer<input type="file" accept=".json" onchange="importJSON(event)" style="display:none"></label>
     <button class="tbtn" onclick="toggleTheme()" id="tbtn" aria-label="Basculer le thème clair/sombre">🌙</button>
@@ -470,8 +470,9 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <input type="file" id="dm_cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event, true)">
       <div id="dm-upload-status" class="dm-upload-status" style="display:none"></div>
     </div>
-    <div style="text-align:center;padding:.75rem 0">
+    <div style="text-align:center;padding:.75rem 0;display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap">
       <span style="font-size:.78rem;color:var(--t4);cursor:pointer;text-decoration:underline" onclick="goTab('profil')">Créer mon profil manuellement sans CV →</span>
+      <span style="font-size:.78rem;color:var(--t4);cursor:pointer;text-decoration:underline" onclick="goToIASettings()">⚙️ Modifier la clé / modèle IA →</span>
     </div>
   </div>
 
@@ -501,6 +502,9 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <div style="display:flex;gap:8px">
         <button class="btn btn-ghost" style="flex:1" onclick="goTab('email')">✉️ Écrire des emails</button>
         <button class="btn btn-ghost" style="flex:1" onclick="goTab('profil')">✏️ Modifier le profil</button>
+      </div>
+      <div style="text-align:center;margin-top:.6rem">
+        <span style="font-size:.73rem;color:var(--t4);cursor:pointer;text-decoration:underline" onclick="goToIASettings()">⚙️ Modifier la clé / modèle IA</span>
       </div>
     </div>
     <div id="dm-cv-analysis"></div>
@@ -1648,6 +1652,16 @@ function updateHdrIA(){
   const dot=document.getElementById('hdr-ia-dot');
   if(!dot)return;
   if(S.geminiKey){dot.className='hdr-ia-dot on';}else{dot.className='hdr-ia-dot off';}
+}
+function goToIASettings(){
+  goTab('demarrer');
+  document.querySelectorAll('.dm-state').forEach(el=>el.classList.remove('on'));
+  const el=document.getElementById('dm-setup');
+  if(el)el.classList.add('on');
+  const ki=document.getElementById('dm_key');
+  if(ki&&S.geminiKey)ki.value=S.geminiKey;
+  const mi=document.getElementById('dm_model');
+  if(mi&&S.geminiModel)mi.value=S.geminiModel;
 }
 function saveDemarreurKey(){
   var inp=document.getElementById('dm_key');
