@@ -740,9 +740,11 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   </div>
   <div id="e_notice" style="display:none" class="notice n-info"></div>
   <div class="ep" id="ep" style="min-height:200px"></div>
-  <div style="display:flex;gap:8px;margin-top:.875rem;flex-wrap:wrap">
+  <div style="display:flex;gap:8px;margin-top:.875rem;flex-wrap:wrap;align-items:center">
     <button class="btn btn-teal" onclick="copyEmail()" id="copy-btn">📋 Copier</button>
-    <button class="btn btn-ghost btn-sm" id="e_li_btn" style="display:none" onclick="openLinkedIn()" aria-label="Chercher le contact sur LinkedIn">🔍 Trouver le contact LinkedIn</button>
+    <button class="btn btn-primary btn-sm" id="btn-ai-email" onclick="geminiGenerateEmail()" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);border-color:#8b5cf6" title="Générer un email unique et personnalisé avec Gemini AI">🤖 Gemini IA</button>
+    <button class="btn btn-ghost btn-sm" id="btn-tpl-email" style="display:none" onclick="exitAiEmailMode()">← Template</button>
+    <button class="btn btn-ghost btn-sm" id="e_li_btn" style="display:none" onclick="openLinkedIn()" aria-label="Chercher le contact sur LinkedIn">🔍 Contact LinkedIn</button>
     <button class="btn btn-green btn-sm" onclick="markEmailSent()" id="mark-sent-btn">✅ Marquer envoyé</button>
     <button class="btn btn-ghost btn-sm" onclick="window.print()" aria-label="Imprimer l'email">🖨</button>
   </div>
@@ -888,6 +890,7 @@ let crmData={};        // {id: {status, sentDate, notes, contact}}
 let activeCats=new Set(CATS.map(c=>c.id));
 let emailVariant=0;
 let emailCompanyId=null;
+let _emailAiMode=false;
 // FT token lives in sessionStorage (cleared on tab close); no in-memory copy needed
 
 // ── MODE DE RECHERCHE ─────────────────────────────────────────
@@ -1039,8 +1042,22 @@ async function handleCvUpload(event){
     S.cvText=text;
     S.cvFileName=file.name;
     S.cvParsed=parseCvForEmail(text);
-    var filled=autofillFromCv(text);
-    if(status)status.textContent='✅ CV chargé : '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
+    var filled=0;
+    if(S.geminiKey){
+      if(status)status.textContent='🤖 Analyse IA du CV en cours…';
+      try{
+        const aiData=await geminiParseCv(text);
+        filled=applyAiCvData(aiData);
+        if(status)status.textContent='✅ '+file.name+' — 🤖 IA : '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
+      }catch(e){
+        console.warn('Gemini CV parse failed:',e);
+        filled=autofillFromCv(text);
+        if(status)status.textContent='✅ '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')+' (IA indisponible)';
+      }
+    }else{
+      filled=autofillFromCv(text);
+      if(status)status.textContent='✅ CV chargé : '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')+(filled===0?' · Active Gemini pour une analyse complète':'');
+    }
     if(preview){preview.style.display='block';preview.textContent=text.substring(0,350)+(text.length>350?'…':'');}
     persist();
   }catch(e){
@@ -1146,6 +1163,140 @@ function setField(id,val){
   var el=document.getElementById(id);
   if(el&&!el.value&&val){el.value=String(val).trim();return 1;}
   return 0;
+}
+
+async function geminiParseCv(text){
+  const prompt=`Analyse ce CV et extrais les informations en JSON strict. Réponds UNIQUEMENT avec le JSON, sans markdown ni explication.
+Format attendu (null si absent) :
+{
+  "prenom":"prénom",
+  "nom":"NOM",
+  "email":"email@exemple.com",
+  "tel":"0612345678",
+  "etab":"Nom de l'école ou centre de formation",
+  "formation":"Intitulé exact du diplôme ou titre professionnel le plus récent",
+  "comp":"compétence1, compétence2, compétence3",
+  "motiv":"phrase d'accroche ou objectif professionnel si mentionné",
+  "experiences":["Stage technicien chez Entreprise X","Mission développeur web chez Y"],
+  "certifs":["CACES R489","PSC1","TOEIC 850"]
+}
+
+CV :
+${text.substring(0,8000)}`;
+  const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+S.geminiKey,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+  });
+  if(!r.ok)throw new Error('Gemini '+r.status);
+  const data=await r.json();
+  const raw=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
+  const match=raw.match(/\{[\s\S]*\}/);
+  if(!match)throw new Error('JSON introuvable dans la réponse');
+  return JSON.parse(match[0]);
+}
+
+function applyAiCvData(d){
+  if(!d)return 0;
+  var filled=0;
+  ['prenom','nom','email','tel','etab','comp','motiv'].forEach(k=>{
+    if(d[k])filled+=setField('p_'+k,d[k]);
+  });
+  if(d.formation){
+    var low=d.formation.toLowerCase();
+    var bestKey=null,bestScore=0;
+    Object.entries(FORMATION_CONFIG).forEach(([key,cfg])=>{
+      var words=low.split(/\s+/).filter(w=>w.length>3);
+      var haystack=(cfg.label+' '+cfg.diploma).toLowerCase();
+      var score=words.filter(w=>haystack.includes(w)).length;
+      if(score>bestScore){bestScore=score;bestKey=key;}
+    });
+    if(bestKey&&bestScore>=1){
+      const sel=document.getElementById('p_formation');
+      if(sel){sel.value=bestKey;onFormationChange();filled++;}
+    }
+  }
+  if(d.experiences&&d.experiences.length){S.cvParsed=S.cvParsed||{};S.cvParsed.experiences=d.experiences;}
+  if(d.certifs&&d.certifs.length){S.cvParsed=S.cvParsed||{};S.cvParsed.certifs=d.certifs;}
+  return filled;
+}
+
+async function geminiGenerateEmail(){
+  if(!S.geminiKey){
+    toast('Configure ta clé Gemini dans l\'onglet 🤖 IA d\'abord','warn');
+    goTab('ia');return;
+  }
+  const c=radarResults.find(x=>x.id===emailCompanyId);
+  if(!c){toast('Sélectionne d\'abord une entreprise dans le Suivi','warn');return;}
+  const btn=document.getElementById('btn-ai-email');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Génération…';}
+  const fc=FORMATION_CONFIG[S.formation]||{};
+  const modeL={stage_nr:'stage non rémunéré',stage_r:'stage rémunéré',alternance:'alternance',emploi:'emploi CDI/CDD'};
+  const mode=S.mode||getMode();
+  const ct=(document.getElementById('e_contact')?.value||'').trim();
+  const periode=(S.debut&&S.fin)?' du '+S.debut+' au '+S.fin:'';
+  const prompt=`Tu es expert en candidatures professionnelles françaises. Rédige un email de candidature spontanée, formel mais chaleureux, percutant et personnalisé.
+
+Profil candidat :
+- Prénom Nom : ${((S.prenom||'')+' '+(S.nom||'')).trim()||'non précisé'}
+- Formation : ${fc.label||S.formationLabel||S.formation||'non précisée'}
+- Diplôme : ${fc.diploma||S.formationLabel||'non précisé'}
+- École : ${S.etab||'non précisée'}
+- Compétences : ${S.comp||fc.skills||'voir CV'}
+- Période : ${periode||'à définir'}
+- Type de recherche : ${modeL[mode]||mode}${S.motiv?'\n- Motivation : '+S.motiv:''}${S.cvText?'\n- Extrait CV : '+S.cvText.substring(0,1200):''}
+
+Entreprise ciblée :
+- Nom : ${c.n}
+- Secteur : ${c.t||'non précisé'}
+- Ville : ${c.v||''}${c.d?'\n- Description : '+c.d:''}
+
+${ct?'Contact : '+ct+' (utilise ce nom dans la salutation)':'Salutation : Madame, Monsieur,'}
+
+Format OBLIGATOIRE :
+Objet : [objet court et accrocheur]
+
+[corps de l'email — 150-180 mots max, 3-4 paragraphes]
+
+[formule de politesse]
+${((S.prenom||'')+' '+(S.nom||'')).trim()}
+${S.tel||''}${S.email?' · '+S.email:''}`;
+
+  try{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+S.geminiKey,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+    });
+    if(!r.ok)throw new Error('Gemini API '+r.status);
+    const data=await r.json();
+    const txt=data?.candidates?.[0]?.content?.parts?.[0]?.text||'';
+    if(!txt)throw new Error('Réponse vide');
+    window._email=txt;
+    _emailAiMode=true;
+    const lines=txt.split('\n');
+    const obj=lines[0].startsWith('Objet :')?lines[0].replace('Objet :','').trim():'';
+    const body=lines.slice(obj?1:0).join('\n').trim();
+    document.getElementById('ep').innerHTML=
+      '<div class="eh" style="border-bottom:2px solid rgba(139,92,246,.35)">'+
+      '<div class="ef"><span class="efl">De</span><span>'+esc((S.prenom||'?')+' '+(S.nom||'?'))+' &lt;'+(S.email||'?')+'&gt;</span></div>'+
+      '<div class="ef"><span class="efl">À</span><span style="color:var(--blue)">'+(c.e||'email: voir site officiel')+'</span></div>'+
+      (obj?'<div class="ef"><span class="efl">Objet</span><strong class="efl2">'+esc(obj)+'</strong></div>':'')+
+      '<div class="ef"><span class="efl">Mode</span><span style="font-size:.75rem;color:#8b5cf6;font-weight:600">🤖 Gemini AI — email unique</span></div>'+
+      '</div><div class="ebody">'+esc(body)+'</div>';
+    document.getElementById('e_var_lbl').textContent='✨ Email IA';
+    const tb=document.getElementById('btn-tpl-email');if(tb)tb.style.display='inline-flex';
+    toast('🤖 Email personnalisé généré !','ok');
+  }catch(e){
+    toast('Gemini : '+e.message,'error');
+    console.error(e);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🤖 Gemini IA';}
+  }
+}
+
+function exitAiEmailMode(){
+  _emailAiMode=false;
+  const tb=document.getElementById('btn-tpl-email');if(tb)tb.style.display='none';
+  renderEmail();
 }
 
 function parseCvForEmail(text){
@@ -2669,7 +2820,7 @@ function openEmailFor(id){
   goTab('email');
   setTimeout(()=>{document.getElementById('e_company').value=id;renderEmail();},50);
 }
-function pickEmailCompany(){emailCompanyId=document.getElementById('e_company').value;emailVariant=0;renderEmail();}
+function pickEmailCompany(){_emailAiMode=false;const tb=document.getElementById('btn-tpl-email');if(tb)tb.style.display='none';emailCompanyId=document.getElementById('e_company').value;emailVariant=0;renderEmail();}
 
 
 function generateEmail(s,c,ct,v){
@@ -2768,6 +2919,7 @@ function generateEmail(s,c,ct,v){
 }
 
 function renderEmail(){
+  if(_emailAiMode)return;
   const c=radarResults.find(x=>x.id===emailCompanyId);
   if(!c){document.getElementById('ep').innerHTML='<div style="padding:2rem;text-align:center;color:var(--t4)">Sélectionne une entreprise</div>';return;}
   const crm=crmData[c.id]||{};
@@ -2793,8 +2945,8 @@ function renderEmail(){
   else{nb.className='notice n-info';nb.style.display='flex';nb.textContent='📧 Email : '+c.e;}
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-function nextVar(){emailVariant=(emailVariant+1)%EMAIL_VARIANTS;renderEmail();}
-function prevVar(){emailVariant=(EMAIL_VARIANTS+emailVariant-1)%EMAIL_VARIANTS;renderEmail();}
+function nextVar(){_emailAiMode=false;const tb=document.getElementById('btn-tpl-email');if(tb)tb.style.display='none';emailVariant=(emailVariant+1)%EMAIL_VARIANTS;renderEmail();}
+function prevVar(){_emailAiMode=false;const tb=document.getElementById('btn-tpl-email');if(tb)tb.style.display='none';emailVariant=(EMAIL_VARIANTS+emailVariant-1)%EMAIL_VARIANTS;renderEmail();}
 function copyEmail(){navigator.clipboard.writeText(window._email||'').then(()=>{const b=document.getElementById('copy-btn');b.textContent='✅ Copié !';b.style.background='var(--green)';setTimeout(()=>{b.textContent='📋 Copier';b.style.background='';},2500);});}
 
 function markEmailSent(){
