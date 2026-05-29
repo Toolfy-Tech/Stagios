@@ -275,6 +275,28 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .gemini-cta{display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;border:none;border-radius:10px;padding:.65rem 1.2rem;font-size:.82rem;font-weight:600;cursor:pointer;width:100%;margin-top:.2rem;text-decoration:none;transition:opacity .15s,transform .1s}
 .gemini-cta:hover{opacity:.88;transform:translateY(-1px)}
 .gemini-privacy{font-size:.67rem;color:var(--t4);text-align:center;margin-top:.45rem;line-height:1.4}
+/* ── DÉMARRER PAGE ─────────────────────────────────── */
+.dm-state{display:none}
+.dm-state.on{display:block}
+.dm-upload-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;padding:2.5rem 1rem;background:linear-gradient(135deg,rgba(139,92,246,.06),rgba(99,102,241,.04));border:2px dashed rgba(139,92,246,.35);border-radius:16px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s;margin-bottom:.6rem;width:100%;box-sizing:border-box}
+.dm-upload-zone:hover{border-color:rgba(139,92,246,.65);background:rgba(139,92,246,.1)}
+.dm-upload-icon{font-size:2.8rem;line-height:1}
+.dm-upload-title{font-size:.96rem;font-weight:700;color:var(--t1)}
+.dm-upload-sub{font-size:.76rem;color:var(--t3)}
+.dm-recommended{display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.13);color:#b45309;border:1px solid rgba(245,158,11,.3);border-radius:20px;font-size:.69rem;font-weight:700;padding:2px 10px;margin-top:.25rem}
+.dm-upload-status{padding:.65rem 1rem;border-radius:10px;font-size:.78rem;font-weight:600;text-align:center;background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:var(--primary);margin-bottom:.5rem}
+@keyframes dm-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.15);opacity:.7}}
+.dm-profile-card{padding:1.25rem}
+.dm-pc-top{display:flex;align-items:center;gap:.9rem;margin-bottom:.85rem}
+.dm-avatar-lg{width:54px;height:54px;border-radius:50%;background:linear-gradient(135deg,#8b5cf6,#6366f1);color:#fff;font-size:1.25rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dm-pc-meta{flex:1;min-width:0}
+.dm-pc-name{font-size:1.05rem;font-weight:800;color:var(--t1);line-height:1.2}
+.dm-pc-formation{font-size:.78rem;color:var(--primary);font-weight:600;margin-top:2px}
+.dm-pc-school{font-size:.73rem;color:var(--t3);margin-top:1px}
+.dm-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:.8rem;min-height:1px}
+.dm-chip{background:var(--bg2);border:1px solid var(--brd);border-radius:20px;font-size:.69rem;color:var(--t2);padding:2px 9px}
+.dm-period{font-size:.75rem;color:var(--t3);margin-bottom:.9rem;line-height:1.4}
+.dm-addr-nudge{display:inline-flex;align-items:center;gap:5px;margin-top:.35rem;font-size:.72rem;color:var(--amber);cursor:pointer;text-decoration:underline}
 /* ── PAGE IA ──────────────────────────────────────── */
 .ia-hero{text-align:center;padding:1.4rem 0 .9rem}
 .ia-hero-glyph{font-size:2.8rem;line-height:1;margin-bottom:.65rem}
@@ -368,8 +390,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 
 <!-- TABS -->
 <nav class="tabnav" id="tabnav">
-  <div class="tab on" onclick="goTab('ia')" id="tab-ia">🤖 IA</div>
-  <div class="tab" onclick="goTab('profil')" id="tab-profil">👤 Profil</div>
+  <div class="tab on" onclick="goTab('demarrer')" id="tab-demarrer">🚀 Démarrer</div>
+  <div class="tab" onclick="goTab('profil')" id="tab-profil" style="display:none">👤 Profil</div>
   <div class="tab" onclick="goTab('radar')" id="tab-radar">🎯 Radar <span class="tab-badge" id="badge-radar">0</span></div>
   <div class="tab" onclick="goTab('suivi')" id="tab-suivi">📋 Suivi <span class="tab-badge" id="badge-suivi" style="background:var(--amber-l);color:var(--amber)">0</span></div>
   <div class="tab" onclick="goTab('email')" id="tab-email">✉️ Email</div>
@@ -377,79 +399,100 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 
 <div class="main">
 
-<!-- ══ IA ══════════════════════════════════════════════ -->
-<div class="page on" id="page-ia">
+<!-- ══ DÉMARRER ══════════════════════════════════════════ -->
+<div class="page on" id="page-demarrer">
 
-  <!-- Hero -->
-  <div class="ia-hero">
-    <div class="ia-hero-glyph">🤖</div>
-    <h1 class="ia-hero-title">Trouve ton stage avec l'IA</h1>
-    <p class="ia-hero-sub">L'intelligence artificielle trouve des entreprises <strong>vraiment adaptées à ta formation</strong> — là où les APIs officielles sont lentes, buggées ou pleines d'entreprises fantômes.</p>
-  </div>
-
-  <!-- Comparatif -->
-  <div class="card" style="margin-bottom:.9rem">
-    <div style="font-size:.88rem;font-weight:700;color:var(--t1);margin-bottom:.75rem">💡 Pourquoi l'IA change tout ?</div>
-    <div class="ia-cmp">
-      <div class="ia-cmp-col bad">
-        <div class="ia-cmp-hdr">❌ APIs officielles seules</div>
-        <ul>
-          <li>Tombent en panne régulièrement</li>
-          <li>Entreprises fermées ou déménagées</li>
-          <li>Ne connaissent pas ta formation</li>
-          <li>Résultats génériques, peu ciblés</li>
-        </ul>
+  <!-- ── STATE: dm-setup ── -->
+  <div class="dm-state" id="dm-setup">
+    <div class="ia-hero">
+      <div class="ia-hero-glyph">🚀</div>
+      <h1 class="ia-hero-title">Bienvenue sur Stagios</h1>
+      <p class="ia-hero-sub">Configure Gemini AI gratuitement — il analysera ton CV et créera ton profil en quelques secondes.</p>
+    </div>
+    <div class="card" style="margin-bottom:.9rem">
+      <div class="gemini-free-badge" style="margin-bottom:.7rem">✅ Gratuit &nbsp;·&nbsp; Sans carte bancaire &nbsp;·&nbsp; 15 requêtes / min</div>
+      <div style="font-size:.88rem;font-weight:700;color:var(--t1);margin-bottom:.6rem">🔑 Configure ta clé Gemini en 2 minutes</div>
+      <ol class="gemini-steps">
+        <li><span class="sn">1</span><span>Clique sur le bouton violet ci-dessous — <strong>Google AI Studio</strong> s'ouvre dans un nouvel onglet</span></li>
+        <li><span class="sn">2</span><span>Connecte-toi avec ton compte <strong>Google</strong> habituel (Gmail, YouTube… c'est le même)</span></li>
+        <li><span class="sn">3</span><span>Clique sur le bouton bleu <strong>"Create API key"</strong>, puis <strong>"Create API key in new project"</strong></span></li>
+        <li><span class="sn">4</span><span>Une clé apparaît — copie-la <em>(elle commence par <code>AIza</code>)</em></span></li>
+        <li><span class="sn">5</span><span>Colle-la dans le champ ci-dessous et clique <strong>"Activer Gemini"</strong></span></li>
+      </ol>
+      <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="gemini-cta" style="margin-bottom:.8rem">
+        🔑 Ouvrir Google AI Studio →
+      </a>
+      <div class="ia-key-row">
+        <input id="dm_key" type="password" placeholder="Colle ta clé ici (AIza…)" autocomplete="off"
+          title="Clé Gemini API — stockée uniquement sur cet appareil"
+          onkeydown="if(event.key==='Enter')saveDemarreurKey()">
+        <button class="btn btn-primary" onclick="saveDemarreurKey()">✅ Activer Gemini</button>
       </div>
-      <div class="ia-cmp-col good">
-        <div class="ia-cmp-hdr">✅ Gemini AI (recommandé)</div>
-        <ul>
-          <li>Cherche sur le web en temps réel</li>
-          <li>Connaît ta formation, ta ville, tes secteurs</li>
-          <li>Résultats pertinents et récents</li>
-          <li>Gratuit · sans carte bancaire</li>
-        </ul>
+      <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
+    </div>
+    <div style="text-align:center;padding:.5rem 0">
+      <span style="font-size:.78rem;color:var(--t4);cursor:pointer;text-decoration:underline" onclick="goTab('profil')">Continuer sans IA (saisie manuelle) →</span>
+    </div>
+  </div>
+
+  <!-- ── STATE: dm-upload ── -->
+  <div class="dm-state" id="dm-upload">
+    <div class="ia-hero">
+      <div class="ia-hero-glyph">📄</div>
+      <h1 class="ia-hero-title">Charge ton CV, l'IA crée ton profil</h1>
+      <p class="ia-hero-sub">Gemini analyse ton CV et remplit automatiquement toutes tes informations.</p>
+    </div>
+    <div class="card">
+      <label class="dm-upload-zone" for="dm_cv_input">
+        <div class="dm-upload-icon">📄</div>
+        <div class="dm-upload-title">Glisse ton CV ici ou clique pour choisir</div>
+        <div class="dm-upload-sub">PDF ou TXT — analysé instantanément par Gemini</div>
+        <span class="dm-recommended">⭐ Fortement conseillé</span>
+      </label>
+      <input type="file" id="dm_cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event, true)">
+      <div id="dm-upload-status" class="dm-upload-status" style="display:none"></div>
+    </div>
+    <div style="text-align:center;padding:.75rem 0">
+      <span style="font-size:.78rem;color:var(--t4);cursor:pointer;text-decoration:underline" onclick="goTab('profil')">Créer mon profil manuellement sans CV →</span>
+    </div>
+  </div>
+
+  <!-- ── STATE: dm-loading ── -->
+  <div class="dm-state" id="dm-loading">
+    <div style="text-align:center;padding:3rem 1rem">
+      <div style="font-size:4rem;line-height:1;margin-bottom:1.25rem;display:inline-block;animation:dm-pulse 1.5s ease-in-out infinite">🤖</div>
+      <div style="font-size:1.1rem;font-weight:700;color:var(--t1);margin-bottom:.6rem">Gemini analyse ton CV…</div>
+      <div id="dm-loading-msg" style="font-size:.82rem;color:var(--t3)">Lecture du fichier…</div>
+    </div>
+  </div>
+
+  <!-- ── STATE: dm-ready ── -->
+  <div class="dm-state" id="dm-ready">
+    <div class="card dm-profile-card" style="margin-bottom:.9rem">
+      <div class="dm-pc-top">
+        <div class="dm-avatar-lg" id="dm-avatar-lg">?</div>
+        <div class="dm-pc-meta">
+          <div class="dm-pc-name" id="dm-pc-name">Profil incomplet</div>
+          <div class="dm-pc-formation" id="dm-pc-formation"></div>
+          <div class="dm-pc-school" id="dm-pc-school"></div>
+        </div>
+      </div>
+      <div class="dm-chips" id="dm-chips"></div>
+      <div class="dm-period" id="dm-period"></div>
+      <button class="btn btn-primary btn-lg" style="width:100%;margin-bottom:.6rem" onclick="goTab('radar')">🎯 Lancer le Radar →</button>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" style="flex:1" onclick="goTab('email')">✉️ Écrire des emails</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="goTab('profil')">✏️ Modifier le profil</button>
       </div>
     </div>
-  </div>
-
-  <!-- État : configuré -->
-  <div class="ia-ok-card" id="ia-ok" style="display:none">
-    <div class="ia-ok-icon">✅</div>
-    <div class="ia-ok-body">
-      <div class="ia-ok-title">Gemini AI activé</div>
-      <div class="ia-ok-sub" id="ia-ok-sub">Le radar IA est prêt — il va chercher des entreprises adaptées à ta formation.</div>
-    </div>
-    <button class="btn btn-primary btn-sm" onclick="goTab('radar')">Lancer le Radar →</button>
-  </div>
-  <div class="ia-change-link" id="ia-change-link" style="display:none" onclick="iaShowSetup()">🔄 Changer de clé API</div>
-
-  <!-- État : à configurer -->
-  <div class="card" id="ia-setup-card">
-    <div class="gemini-free-badge" style="margin-bottom:.7rem">✅ Gratuit &nbsp;·&nbsp; Sans carte bancaire &nbsp;·&nbsp; 15 requêtes / min</div>
-    <div style="font-size:.88rem;font-weight:700;color:var(--t1);margin-bottom:.6rem">🔑 Configure ta clé Gemini en 2 minutes</div>
-    <ol class="gemini-steps">
-      <li><span class="sn">1</span><span>Clique sur le bouton violet ci-dessous — <strong>Google AI Studio</strong> s'ouvre dans un nouvel onglet</span></li>
-      <li><span class="sn">2</span><span>Connecte-toi avec ton compte <strong>Google</strong> habituel (Gmail, YouTube… c'est le même)</span></li>
-      <li><span class="sn">3</span><span>Clique sur le bouton bleu <strong>"Create API key"</strong>, puis <strong>"Create API key in new project"</strong></span></li>
-      <li><span class="sn">4</span><span>Une clé apparaît — copie-la <em>(elle commence par <code>AIza</code>)</em></span></li>
-      <li><span class="sn">5</span><span>Colle-la dans le champ ci-dessous et clique <strong>"Activer Gemini"</strong></span></li>
-    </ol>
-    <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener" class="gemini-cta" style="margin-bottom:.8rem">
-      🔑 Ouvrir Google AI Studio →
-    </a>
-    <div class="ia-key-row">
-      <input id="ia_key" type="password" placeholder="Colle ta clé ici (AIza…)" autocomplete="off"
-        title="Clé Gemini API — stockée uniquement sur cet appareil"
-        onkeydown="if(event.key==='Enter')saveGeminiKeyFromIA()">
-      <button class="btn btn-primary" onclick="saveGeminiKeyFromIA()">✅ Activer Gemini</button>
-    </div>
-    <p class="gemini-privacy">🔒 Ta clé reste uniquement sur ton appareil — elle n'est jamais envoyée à nos serveurs.</p>
+    <div id="dm-cv-analysis"></div>
   </div>
 
 </div>
 
 <!-- ══ PROFIL ══════════════════════════════════════════ -->
 <div class="page" id="page-profil">
+  <button class="btn btn-ghost btn-sm" onclick="goTab('demarrer')" style="margin-bottom:.75rem;font-size:.76rem">← Retour à Démarrer</button>
   <div id="first-banner" class="first-banner" style="display:none">
     <span>💡 <strong>Tes données restent dans ce navigateur.</strong> Exporte-les régulièrement via le bouton "Exporter" en haut pour ne rien perdre si tu changes d'appareil.</span>
     <button class="first-banner-close" onclick="dismissFirstBanner()" aria-label="Fermer ce message">OK</button>
@@ -1026,12 +1069,18 @@ function toggleShowBlacklisted(){
 
 
 // ── SCAN CV — extraction + préremplissage ─────────────────────────
-async function handleCvUpload(event){
+async function handleCvUpload(event, fromDemarrer){
   var file=event.target.files[0];
   if(!file)return;
   var status=document.getElementById('cv_status');
   var preview=document.getElementById('cv_preview');
-  if(status)status.textContent='⏳ Lecture du CV…';
+  if(fromDemarrer){
+    document.querySelectorAll('.dm-state').forEach(el=>el.classList.remove('on'));
+    var loadEl=document.getElementById('dm-loading');if(loadEl)loadEl.classList.add('on');
+    var msgEl=document.getElementById('dm-loading-msg');if(msgEl)msgEl.textContent='Lecture du fichier…';
+  } else {
+    if(status)status.textContent='⏳ Lecture du CV…';
+  }
   try{
     var text='';
     if(file.type==='application/pdf'||file.name.toLowerCase().endsWith('.pdf')){
@@ -1045,30 +1094,37 @@ async function handleCvUpload(event){
       });
     }
     text=(text||'').replace(/\s+/g,' ').trim();
-    if(!text||text.length<30){if(status)status.textContent='⚠️ CV vide ou illisible — essaie en .txt';return;}
+    if(!text||text.length<30){
+      if(fromDemarrer){var m2=document.getElementById('dm-loading-msg');if(m2)m2.textContent='⚠️ CV vide ou illisible — essaie en .txt';renderDemarrer();}
+      else if(status)status.textContent='⚠️ CV vide ou illisible — essaie en .txt';
+      return;
+    }
     S.cvText=text;
     S.cvFileName=file.name;
     S.cvParsed=parseCvForEmail(text);
     var filled=0;
     if(S.geminiKey){
-      if(status)status.textContent='🤖 Analyse IA du CV en cours…';
+      if(fromDemarrer){var m3=document.getElementById('dm-loading-msg');if(m3)m3.textContent='Gemini analyse ton CV…';}
+      else if(status)status.textContent='🤖 Analyse IA du CV en cours…';
       try{
         const aiData=await geminiParseCv(text);
         filled=applyAiCvData(aiData);
-        if(status)status.textContent='✅ '+file.name+' — 🤖 IA : '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
+        if(!fromDemarrer&&status)status.textContent='✅ '+file.name+' — 🤖 IA : '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
       }catch(e){
         console.warn('Gemini CV parse failed:',e);
         filled=autofillFromCv(text);
-        if(status)status.textContent='✅ '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')+' (IA indisponible)';
+        if(!fromDemarrer&&status)status.textContent='✅ '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')+' (IA indisponible)';
       }
     }else{
       filled=autofillFromCv(text);
-      if(status)status.textContent='✅ CV chargé : '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')+(filled===0?' · Active Gemini pour une analyse complète':'');
+      if(!fromDemarrer&&status)status.textContent='✅ CV chargé : '+file.name+' — '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'')+(filled===0?' · Active Gemini pour une analyse complète':'');
     }
-    if(preview){preview.style.display='block';preview.textContent=text.substring(0,350)+(text.length>350?'…':'');}
+    if(!fromDemarrer&&preview){preview.style.display='block';preview.textContent=text.substring(0,350)+(text.length>350?'…':'');}
     persist();
+    if(fromDemarrer){renderDemarrer();}
   }catch(e){
-    if(status)status.textContent='⚠️ Erreur lecture : '+e.message;
+    if(fromDemarrer){var m4=document.getElementById('dm-loading-msg');if(m4)m4.textContent='⚠️ Erreur : '+e.message;renderDemarrer();}
+    else if(status)status.textContent='⚠️ Erreur lecture : '+e.message;
     console.error(e);
   }
 }
@@ -1213,6 +1269,10 @@ function applyAiCvData(d){
   ['prenom','nom','email','tel','etab','comp','motiv'].forEach(k=>{
     if(d[k])filled+=setField('p_'+k,d[k]);
   });
+  // Direct S update for demarrer auto-save
+  var fields2=['prenom','nom','email','tel','etab','comp','motiv'];
+  fields2.forEach(k=>{if(d[k])S[k]=d[k];});
+  if(S.prenom&&S.nom)S.ini=(S.prenom[0]+(S.nom[0]||'')).toUpperCase();
   if(d.formation){
     var low=d.formation.toLowerCase();
     var bestKey=null,bestScore=0;
@@ -1225,6 +1285,10 @@ function applyAiCvData(d){
     if(bestKey&&bestScore>=1){
       const sel=document.getElementById('p_formation');
       if(sel){sel.value=bestKey;onFormationChange();filled++;}
+      S.formation=bestKey;
+      S.formationLabel=FORMATION_CONFIG[bestKey]?.label||bestKey;
+      S.formationDiploma=FORMATION_CONFIG[bestKey]?.diploma||bestKey;
+      S.formationEmoji=FORMATION_CONFIG[bestKey]?.emoji||'✏️';
     }
   }
   if(d.experiences&&d.experiences.length){S.cvParsed=S.cvParsed||{};S.cvParsed.experiences=d.experiences;}
@@ -1282,8 +1346,8 @@ function renderCvProfile(){
 
 async function geminiGenerateEmail(){
   if(!S.geminiKey){
-    toast('Configure ta clé Gemini dans l\'onglet 🤖 IA d\'abord','warn');
-    goTab('ia');return;
+    toast('Configure ta clé Gemini dans Démarrer d\'abord','warn');
+    goTab('demarrer');return;
   }
   const c=radarResults.find(x=>x.id===emailCompanyId);
   if(!c){toast('Sélectionne d\'abord une entreprise dans le Suivi','warn');return;}
@@ -1442,43 +1506,92 @@ function goTab(id){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   document.getElementById('page-'+id).classList.add('on');
-  document.getElementById('tab-'+id).classList.add('on');
+  var tabEl=document.getElementById('tab-'+id);
+  if(tabEl)tabEl.classList.add('on');
   window.scrollTo(0,0);
   if(id==='suivi')renderKanban();
   if(id==='email')refreshEmailList();
   if(id==='radar')renderRadar();
-  if(id==='ia')renderIAPage();
+  if(id==='demarrer')renderDemarrer();
 }
-function renderIAPage(){
+function renderDemarrer(){
   const hasKey=!!S.geminiKey;
-  const okCard=document.getElementById('ia-ok');
-  const changeLink=document.getElementById('ia-change-link');
-  const setupCard=document.getElementById('ia-setup-card');
-  if(okCard)okCard.style.display=hasKey?'flex':'none';
-  if(changeLink)changeLink.style.display=hasKey?'block':'none';
-  if(setupCard)setupCard.style.display=hasKey?'none':'block';
+  const hasProfile=!!S.prenom;
+  const state=!hasKey?'setup':!hasProfile?'upload':'ready';
+  document.querySelectorAll('.dm-state').forEach(el=>el.classList.remove('on'));
+  const el=document.getElementById('dm-'+state);
+  if(el)el.classList.add('on');
+  if(state==='ready')_populateDmReady();
 }
-function iaShowSetup(){
-  const setupCard=document.getElementById('ia-setup-card');
-  const okCard=document.getElementById('ia-ok');
-  const changeLink=document.getElementById('ia-change-link');
-  if(setupCard)setupCard.style.display='block';
-  if(okCard)okCard.style.display='none';
-  if(changeLink)changeLink.style.display='none';
-  setTimeout(()=>{const inp=document.getElementById('ia_key');if(inp){inp.value='';inp.focus();}},50);
+function _populateDmReady(){
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  set('dm-avatar-lg',S.ini||((S.prenom?.[0]||'')+(S.nom?.[0]||'')).toUpperCase()||'?');
+  set('dm-pc-name',((S.prenom||'')+' '+(S.nom||'')).trim()||'Profil incomplet');
+  set('dm-pc-formation',S.formationLabel||S.formation||'Formation non précisée');
+  set('dm-pc-school',S.etab||'');
+  const chips=document.getElementById('dm-chips');
+  if(chips){
+    const skills=(S.comp||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,6);
+    chips.innerHTML=skills.map(s=>'<span class="dm-chip">'+escH(s)+'</span>').join('')||'<span style="font-size:.73rem;color:var(--t4)">Aucune compétence renseignée — <span style="cursor:pointer;text-decoration:underline" onclick="goTab(\'profil\')">Modifier le profil</span></span>';
+  }
+  const period=document.getElementById('dm-period');
+  if(period){
+    const modeL={stage_nr:'Stage non rémunéré',stage_r:'Stage rémunéré',alternance:'Alternance',emploi:'Emploi'};
+    const ms=modeL[S.mode]||S.mode||'Stage';
+    const ds=(S.debut&&S.fin)?' · '+S.debut+' → '+S.fin:'';
+    const addr=S.addr?' · 📍 '+S.addr.split(',')[0]:'';
+    period.innerHTML='📅 '+ms+ds+addr+(S.addr?'':' <span class="dm-addr-nudge" onclick="goTab(\'profil\')">+ Ajouter une adresse</span>');
+  }
+  const cvBox=document.getElementById('dm-cv-analysis');
+  if(cvBox){
+    if(S.cvScore!=null){
+      const sc=S.cvScore;
+      const col=sc>=8?'#16a34a':sc>=5?'#d97706':'#dc2626';
+      const bg=sc>=8?'rgba(34,197,94,.07)':sc>=5?'rgba(245,158,11,.07)':'rgba(239,68,68,.07)';
+      const brd=sc>=8?'rgba(34,197,94,.22)':sc>=5?'rgba(245,158,11,.22)':'rgba(239,68,68,.22)';
+      const lbl=sc>=8?'CV solide 👍':sc>=5?'CV correct ⚠️':'CV à retravailler ❌';
+      const sHtml=(S.cvStrengths||[]).map(s=>'<li style="color:#16a34a">✓ '+escH(s)+'</li>').join('');
+      const iHtml=(S.cvImprovements||[]).map(s=>'<li style="color:#dc2626">✗ '+escH(s)+'</li>').join('');
+      cvBox.innerHTML='<div style="background:'+bg+';border:1px solid '+brd+';border-radius:var(--rl);padding:.9rem 1rem">'+
+        '<div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.45rem">'+
+          '<span style="font-size:1.5rem;font-weight:800;color:'+col+'">'+sc+'/10</span>'+
+          '<span style="font-size:.78rem;font-weight:700;color:'+col+'">'+lbl+'</span>'+
+          '<span style="font-size:.68rem;color:var(--t4);margin-left:auto">Note de ton CV</span>'+
+        '</div>'+
+        (S.cvVerdict?'<div style="font-size:.73rem;color:var(--t2);margin-bottom:.5rem;font-style:italic">'+escH(S.cvVerdict)+'</div>':'')+
+        '<ul style="list-style:none;padding:0;margin:0;font-size:.71rem;display:flex;flex-direction:column;gap:.28rem">'+sHtml+iHtml+'</ul>'+
+      '</div>';
+    } else {
+      cvBox.innerHTML='<div style="text-align:center;font-size:.75rem;color:var(--t4);padding:.4rem">'+
+        '📎 <span style="cursor:pointer;text-decoration:underline" onclick="goTab(\'profil\');setTimeout(()=>document.getElementById(\'cv_input\')?.click(),350)">Importe ton CV pour obtenir une note et améliorer les emails générés</span>'+
+        '</div>';
+    }
+  }
 }
-function saveGeminiKeyFromIA(){
-  const inp=document.getElementById('ia_key');
-  const key=(inp?.value||'').trim();
+function renderIAPage(){renderDemarrer();}
+function saveDemarreurKey(){
+  var inp=document.getElementById('dm_key');
+  var key=(inp?.value||'').trim();
   if(!key){toast('Colle ta clé Gemini (elle commence par AIza…)','warn');return;}
-  if(!key.startsWith('AIza')){toast('La clé Gemini doit commencer par "AIza"','warn');return;}
+  if(!key.startsWith('AIza')){toast('La clé doit commencer par "AIza"','warn');return;}
   S.geminiKey=key;
   persist();
-  const profEl=document.getElementById('p_gemini_key');
-  if(profEl)profEl.value=key;
+  var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
   initRadarSourceToggles();
-  renderIAPage();
-  toast('🤖 Gemini AI activé — le radar est prêt !','ok');
+  renderDemarrer();
+  toast('🤖 Gemini activé — charge ton CV pour créer ton profil !','ok');
+}
+function saveGeminiKeyFromIA(){
+  var inp=document.getElementById('dm_key')||document.getElementById('ia_key');
+  var key=(inp?.value||'').trim();
+  if(!key){toast('Colle ta clé Gemini (elle commence par AIza…)','warn');return;}
+  if(!key.startsWith('AIza')){toast('La clé doit commencer par "AIza"','warn');return;}
+  S.geminiKey=key;
+  persist();
+  var profEl=document.getElementById('p_gemini_key');if(profEl)profEl.value=key;
+  initRadarSourceToggles();
+  renderDemarrer();
+  toast('🤖 Gemini activé — charge ton CV pour créer ton profil !','ok');
 }
 
 // ════════════════════════════════════════════════════════════
@@ -1696,20 +1809,7 @@ function initRadarSourceToggles(){
         gemLbl.title='Clique pour configurer ta clé Gemini gratuite';
         gemLbl.addEventListener('click',e=>{
           e.preventDefault();
-          // Aller à l'onglet Profil
-          const profilTab=document.querySelector('.tab[data-tab="profil"]')||[...document.querySelectorAll('.tab')].find(t=>t.textContent.includes('Profil'));
-          if(profilTab)profilTab.click();
-          setTimeout(()=>{
-            const advDetails=document.querySelector('.pcard-advanced');
-            if(advDetails)advDetails.open=true;
-            const keyEl=document.getElementById('p_gemini_key');
-            if(keyEl){
-              keyEl.scrollIntoView({behavior:'smooth',block:'center'});
-              keyEl.focus();
-              const tuto=keyEl.closest('.fi')?.querySelector('.gemini-tuto');
-              if(tuto){tuto.style.transition='box-shadow .3s';tuto.style.boxShadow='0 0 0 3px rgba(139,92,246,.45)';setTimeout(()=>{tuto.style.boxShadow='';},1800);}
-            }
-          },250);
+          goTab('demarrer');
         });
       }
     }
@@ -3174,7 +3274,7 @@ function fillProfileForm(){
   if(S.finRaw){const _dfEl=document.getElementById('p_fin');if(_dfEl)_dfEl.value=S.finRaw;}
   updateBranding();
   showPbar();
-  renderIAPage();
+  renderDemarrer();
 }
 
 // INIT
@@ -3189,8 +3289,8 @@ function fillProfileForm(){
   updateFTStatus(null);
   updateCoordsWarning();
   initRadarSourceToggles();
-  renderIAPage();
-  // Si clé déjà configurée, démarrer sur le Radar plutôt que la page IA
+  renderDemarrer();
+  // Si clé et profil déjà configurés, démarrer sur le Radar
   if(S.geminiKey&&S.prenom){goTab('radar');}
   // Enter key advances stepper (not on textareas or last step)
   document.addEventListener('keydown',function(e){
