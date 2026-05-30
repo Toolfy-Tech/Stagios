@@ -898,57 +898,17 @@ const FT_PROXY_URL     = '__FT_PROXY_URL__';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FORMATION_CONFIG={
-  TIP:{label:'Technicien Informatique de Proximité (TIP)',emoji:'💻',
-    diploma:'Titre Professionnel TIP',
-    sectors:['ESN','Public','Education','Lycées','Santé','Industrie','Banque','Asso'],
-    romeCodes:[],
-    skills:'support utilisateur N1/N2, helpdesk, déploiement Windows 10/11, Active Directory, GLPI, réseau TCP/IP/DNS/DHCP'},
-  Compta:{label:'Comptabilité / Gestion',emoji:'📊',
-    diploma:'Titre Professionnel / BTS Comptabilité-Gestion',
-    sectors:['PME','Banque','Public','Industrie','Asso'],
-    romeCodes:[],
-    skills:'comptabilité générale et analytique, saisie et lettrage, TVA, rapprochement bancaire, Excel, logiciels comptables (Sage, Ciel, EBP)'},
-  Mecanique:{label:'Mécanique automobile',emoji:'🔧',
-    diploma:'CAP / Bac Pro Mécanique automobile',
-    sectors:['Garage','Industrie','Logistique','PME'],
-    romeCodes:[],
-    skills:'diagnostic électronique, entretien courant, pneumatiques, freinage, distribution, vidange, mécanique générale'},
-  Secretariat:{label:'Secrétariat / Assistanat',emoji:'📝',
-    diploma:'Titre Professionnel / BTS Assistant de Manager',
-    sectors:['PME','Public','Santé','Banque','Industrie','Asso'],
-    romeCodes:[],
-    skills:'gestion du courrier et des agendas, accueil, frappe et mise en forme de documents, Pack Office, outils collaboratifs'},
-  Commerce:{label:'Commerce / Vente',emoji:'🛍️',
-    diploma:'Titre Professionnel / BTS MCO / NDRC',
-    sectors:['PME','Industrie','Banque'],
-    romeCodes:[],
-    skills:'relation client, techniques de vente, merchandising, gestion de caisse, outils CRM, prospection commerciale'},
-  Electro:{label:'Électrotechnique / Électricité',emoji:'⚡',
-    diploma:'CAP / Bac Pro Électrotechnique',
-    sectors:['Industrie','Public','BTP'],
-    romeCodes:[],
-    skills:'câblage et raccordement électrique, lecture de plans, habilitation électrique, dépannage, automatismes'},
-  BTP:{label:'Bâtiment / BTP',emoji:'🏗️',
-    diploma:'CAP / Bac Pro Bâtiment',
-    sectors:['BTP','Industrie','Public'],
-    romeCodes:[],
-    skills:'lecture de plans, maçonnerie, coffrage, enduits, sécurité chantier, outils et matériaux de construction'},
-  Restauration:{label:'Restauration / Hôtellerie',emoji:'🍽️',
-    diploma:'CAP / Bac Pro Restauration',
-    sectors:['Restauration','Hôtellerie','Collectivité'],
-    romeCodes:[],
-    skills:'préparation culinaire, dressage, hygiène HACCP, service en salle, gestion des stocks, encaissement'},
-  Social:{label:'Aide à la personne / Social',emoji:'❤️',
-    diploma:'CAP AEPE / ADVF / BTS SP3S',
-    sectors:['Santé','Asso','Public'],
-    romeCodes:[],
-    skills:'accompagnement de la personne, aide aux gestes de la vie quotidienne, écoute active, premiers secours, travail en équipe pluridisciplinaire'},
-  Logistique:{label:'Logistique / Transport',emoji:'📦',
-    diploma:'CAP / Bac Pro Logistique',
-    sectors:['Logistique','Industrie','Commerce','PME'],
-    romeCodes:[],
-    skills:'gestion des stocks, préparation de commandes, utilisation WMS/ERP, CACES (ou en cours), expéditions et réceptions'},
-  Custom:{label:'Autre formation (personnalisée)',emoji:'✏️',diploma:'',sectors:[],romeCodes:[],skills:''},
+  TIP:       {label:'Technicien Informatique de Proximité (TIP)',    emoji:'💻', diploma:'Titre Professionnel TIP'},
+  Compta:    {label:'Comptabilité / Gestion',                        emoji:'📊', diploma:'Titre Professionnel / BTS Comptabilité-Gestion'},
+  Mecanique: {label:'Mécanique automobile',                          emoji:'🔧', diploma:'CAP / Bac Pro Mécanique automobile'},
+  Secretariat:{label:'Secrétariat / Assistanat',                     emoji:'📝', diploma:'Titre Professionnel / BTS Assistant de Manager'},
+  Commerce:  {label:'Commerce / Vente',                              emoji:'🛍️', diploma:'Titre Professionnel / BTS MCO / NDRC'},
+  Electro:   {label:'Électrotechnique / Électricité',                emoji:'⚡', diploma:'CAP / Bac Pro Électrotechnique'},
+  BTP:       {label:'Bâtiment / BTP',                                emoji:'🏗️', diploma:'CAP / Bac Pro Bâtiment'},
+  Restauration:{label:'Restauration / Hôtellerie',                   emoji:'🍽️', diploma:'CAP / Bac Pro Restauration'},
+  Social:    {label:'Aide à la personne / Social',                   emoji:'❤️', diploma:'CAP AEPE / ADVF / BTS SP3S'},
+  Logistique:{label:'Logistique / Transport',                        emoji:'📦', diploma:'CAP / Bac Pro Logistique'},
+  Custom:    {label:'Autre formation (personnalisée)',                emoji:'✏️', diploma:''},
 };
 
 
@@ -1063,11 +1023,7 @@ function onFormationChange(){
         '<div><div style="font-weight:700;font-size:.85rem;color:var(--t1)">'+escH(fc.label)+'</div>'+
         '<div style="font-size:.74rem;color:var(--t3)">'+escH(fc.diploma)+'</div></div>'+
       '</div>'+
-      '<div style="font-size:.73rem;color:var(--t3);margin-bottom:5px">Secteurs ciblés :</div>'+
-      '<div style="display:flex;gap:4px;flex-wrap:wrap">'+
-        fc.sectors.map(function(s){return'<span style="padding:2px 8px;border-radius:20px;font-size:.69rem;font-weight:600;background:var(--blue-l);color:var(--blue)">'+escH(s)+'</span>';}).join('')+
-      '</div>'+
-      (fc.skills?'<div style="font-size:.72rem;color:var(--t4);margin-top:6px;font-style:italic">Compétences type : '+escH(fc.skills)+'</div>':'');
+      (fc.diploma?'<div style="font-size:.72rem;color:var(--t4);margin-top:4px;font-style:italic">'+escH(fc.diploma)+'</div>':'');
   }else{badge.style.display='none';}
 }
 
@@ -1611,13 +1567,25 @@ async function doSectorAiSearch(){
   const q=queryEl.value.trim()||(S.formationLabel||S.formation||'');
   if(!q){_renderSectorCatalog();return;}
   resultsEl.innerHTML='<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem"><div style="font-size:1.8rem;margin-bottom:.5rem;display:inline-block;animation:spin .9s linear infinite">⏳</div><div style="font-weight:600;margin-top:.3rem;color:var(--t3)">Analyse IA en cours…</div></div>';
-  const catList=CATS.map(c=>c.id+'|'+c.lbl).join('\n');
-  const romes=S.extraRomeCodes?`, codes ROME: ${S.extraRomeCodes}`:'';
-  const prompt=`Tu es un expert RH français. Métier/profil : "${q}"${romes}.
-Parmi ces 15 types d'employeurs, lesquels sont les PLUS PERTINENTS ?
-${catList}
-Réponds UNIQUEMENT en JSON : {"recommandes":[{"id":"ESN","raison":"courte raison en 5 mots max"},{"id":"Public","raison":"..."}]}
-Liste 4 à 8 secteurs, du plus au moins pertinent.`;
+  const catLines=CATS.map(c=>`${c.id} = ${c.lbl}`).join('\n');
+  const romeCtx=S.extraRomeCodes?`\nCodes ROME du profil : ${S.extraRomeCodes}`:'';
+  const cvCtx=S.cvProfile?`\nProfil CV (extrait) : ${String(S.cvProfile).substring(0,250)}`:'';
+  const prompt=`Tu es un expert en ressources humaines et en analyse du marché de l'emploi français.
+
+Profil candidat : "${q}"${romeCtx}${cvCtx}
+
+Question : Parmi ces ${CATS.length} types d'organisations, lesquels ont un besoin RÉEL et RÉGULIER de recruter ce profil ?
+Raisonne par la demande : "Cette organisation a-t-elle besoin de quelqu'un avec ces compétences ?"
+
+${catLines}
+
+Règles :
+- Sélectionne TOUTES les catégories pertinentes (pas seulement les évidentes)
+- Pense aux besoins transversaux : une école, un hôpital, une mairie ont souvent les mêmes besoins qu'une entreprise privée
+- 5 à 12 secteurs selon le profil
+- Pour chaque recommandation : raison concrète en 6 mots max
+
+Réponds UNIQUEMENT en JSON strict : {"recommandes":[{"id":"ESN","raison":"raison courte"},...]}`;
   try{
     const raw=await callAI(prompt,{maxTokens:400});
     const m=raw.match(/\{[\s\S]*\}/);
@@ -1670,36 +1638,48 @@ async function geminiGenerateEmail(){
   if(!c){toast('Sélectionne d\'abord une entreprise dans le Suivi','warn');return;}
   const btn=document.getElementById('btn-ai-email');
   if(btn){btn.disabled=true;btn.textContent='⏳ Génération…';}
-  const fc=FORMATION_CONFIG[S.formation]||{};
   const modeL={stage_nr:'stage non rémunéré',stage_r:'stage rémunéré',alternance:'alternance',emploi:'emploi CDI/CDD'};
   const mode=S.mode||getMode();
   const ct=(document.getElementById('e_contact')?.value||'').trim();
   const periode=(S.debut&&S.fin)?' du '+S.debut+' au '+S.fin:'';
-  const prompt=`Tu es expert en candidatures professionnelles françaises. Rédige un email de candidature spontanée, formel mais chaleureux, percutant et personnalisé.
+  const candidatName=((S.prenom||'')+' '+(S.nom||'')).trim()||'Le/la candidat(e)';
+  const metierLabel=S.metierPrincipal||S.formationLabel||(FORMATION_CONFIG[S.formation]?.label)||S.formation||'voir profil';
+  const diplomaLabel=S.formationDiploma||(FORMATION_CONFIG[S.formation]?.diploma)||S.formationLabel||'';
+  const prompt=`Tu es un expert en candidatures professionnelles françaises, spécialiste de la rédaction d'emails percutants et personnalisés.
 
-Profil candidat :
-- Prénom Nom : ${((S.prenom||'')+' '+(S.nom||'')).trim()||'non précisé'}
-- Formation : ${fc.label||S.formationLabel||S.formation||'non précisée'}
-- Diplôme : ${fc.diploma||S.formationLabel||'non précisé'}
-- École : ${S.etab||'non précisée'}
-- Compétences : ${S.comp||fc.skills||'voir CV'}
-- Période : ${periode||'à définir'}
-- Type de recherche : ${modeL[mode]||mode}${S.motiv?'\n- Motivation : '+S.motiv:''}${S.cvProfile?'\n\nProfil candidat (pré-analysé depuis le CV) :\n'+S.cvProfile:S.cvText?'\n- Extrait CV brut : '+S.cvText.substring(0,600):''}
+Ta mission : rédiger un email de candidature spontanée qui donne VRAIMENT envie de rappeler ce candidat. L'email doit sembler écrit à la main spécifiquement pour cette entreprise, pas généré.
 
-Entreprise ciblée :
-- Nom : ${c.n}
-- Secteur : ${c.t||'non précisé'}
-- Ville : ${c.v||''}${c.d?'\n- Description : '+c.d:''}
+━━━ PROFIL CANDIDAT ━━━
+Identité : ${candidatName}
+Métier/formation visé : ${metierLabel}${diplomaLabel?' ('+diplomaLabel+')':''}
+École/centre : ${S.etab||'non précisé'}
+Recherche : ${modeL[mode]||mode}${periode?' — période : '+periode:''}${S.comp?'\nCompétences : '+S.comp:''}${S.motiv?'\nMotivation : '+S.motiv:''}
+${S.cvProfile?'\nProfil analysé depuis le CV :\n'+S.cvProfile:S.cvText?'\nExtrait CV : '+S.cvText.substring(0,500):''}
 
-${ct?'Contact : '+ct+' (utilise ce nom dans la salutation)':'Salutation : Madame, Monsieur,'}
+━━━ ENTREPRISE CIBLÉE ━━━
+Nom : ${c.n}
+Secteur : ${c.t||'non précisé'}
+Ville : ${c.v||'non précisée'}${c.d?'\nDescription : '+c.d:''}
+
+${ct?'Destinataire : '+ct+' (utilise ce nom en salutation — ex: "Madame '+ct+'" ou "Monsieur '+ct+'" selon le prénom)':'Salutation : Madame, Monsieur,'}
+
+━━━ RÈGLES DE RÉDACTION ━━━
+1. Objet : accrocheur, court (10 mots max), personnalisé à l'entreprise — pas générique
+2. Corps : 160-180 mots, 3 paragraphes clairs :
+   • §1 Accroche personnalisée : pourquoi CETTE entreprise spécifiquement (secteur, réputation, activité)
+   • §2 Valeur ajoutée : ce que le candidat apporte concrètement (compétences + expériences pertinentes)
+   • §3 Appel à l'action : disponibilité, entretien, coordonnées
+3. Ton : professionnel mais humain — pas robotique, pas trop formel
+4. Pas de formules passe-partout ("Je me permets de vous contacter...", "Passionné(e) par votre secteur...")
+5. Personnaliser réellement selon le secteur et le profil — chaque phrase doit faire sens pour cette entreprise
 
 Format OBLIGATOIRE :
-Objet : [objet court et accrocheur]
+Objet : [objet]
 
-[corps de l'email — 150-180 mots max, 3-4 paragraphes]
+[corps]
 
-[formule de politesse]
-${((S.prenom||'')+' '+(S.nom||'')).trim()}
+[formule de politesse],
+${candidatName}
 ${S.tel||''}${S.email?' · '+S.email:''}`;
 
   try{
@@ -2463,159 +2443,18 @@ async function fetchLaBonneBoite(lat,lng,rKm){
   }catch(e){return[];}
 }
 
-// Catalogue exhaustif ROME par formation avec secteurs couverts
-const ROME_CATALOG={
-  TIP:[
-    {code:'M1802',label:'Support et assistance informatique',appel:'Technicien support / Helpdesk',sectors:['ESN/SSII','Santé','Éducation','Industrie','Public','Banque','Assurance']},
-    {code:'M1801',label:'Administration systèmes, réseaux et bases de données',appel:'Administrateur systèmes & réseaux',sectors:['ESN/SSII','Industrie','Télécom','Public','Grandes entreprises']},
-    {code:'I1401',label:'Maintenance informatique des systèmes',appel:'Technicien de maintenance informatique',sectors:['Santé','Éducation','Collectivités','Industrie','Défense']},
-    {code:'M1805',label:'Études et développement informatique',appel:'Développeur / Intégrateur',sectors:['ESN/SSII','Éditeurs logiciels','Startups','Industrie']},
-    {code:'M1810',label:'Production et exploitation de systèmes d\'information',appel:'Opérateur systèmes / Technicien exploitation',sectors:['Finance','Assurance','Industrie','Télécoms','Grands groupes']},
-    {code:'M1806',label:'Conseil en systèmes d\'information et télécommunications',appel:'Consultant SI / MOA',sectors:['Conseil','ESN','Public','Grandes entreprises']},
-    {code:'I1303',label:'Télécommunications',appel:'Technicien télécoms / Réseaux',sectors:['Télécom','Opérateurs','ESN','Collectivités']},
-    {code:'I1302',label:'Installation et maintenance électronique',appel:'Technicien électronicien',sectors:['Industrie','Défense','Aérospatial','Automobile']},
-    {code:'M1810',label:'Production et exploitation de systèmes d\'information',appel:'Technicien d\'exploitation',sectors:['Finance','Assurance','Industrie','Transport']},
-    {code:'K2402',label:'Éducation et surveillance scolaire',appel:'Assistant informatique en établissement scolaire',sectors:['Éducation','Lycées','Collèges','Universités']},
-    {code:'M1203',label:'Vente en informatique et en électronique',appel:'Conseiller vente informatique',sectors:['Commerce','Distribution','GSS','PME']},
-  ],
-  Compta:[
-    {code:'M1203',label:'Comptabilité',appel:'Comptable / Assistant comptable',sectors:['PME','Cabinets comptables','Industrie','Commerce','Associations','Public']},
-    {code:'M1204',label:'Contrôle de gestion',appel:'Contrôleur de gestion',sectors:['Industrie','Services','Grandes entreprises','Public']},
-    {code:'M1205',label:'Direction administrative et financière',appel:'DAF / Responsable administratif',sectors:['PME','Groupes','Holdings']},
-    {code:'M1206',label:'Management de groupe ou de service comptable',appel:'Chef comptable / Responsable comptabilité',sectors:['Grandes entreprises','Groupes','Cabinets']},
-    {code:'M1501',label:'Assistanat en ressources humaines',appel:'Assistant RH / Gestionnaire paie',sectors:['PME','Industrie','Public','Grandes entreprises']},
-    {code:'M1602',label:'Opérations administratives',appel:'Agent administratif / Assistant de gestion',sectors:['PME','Associations','Collectivités','Santé']},
-    {code:'M1607',label:'Secrétariat et assistanat',appel:'Secrétaire / Assistant(e)',sectors:['PME','Professions libérales','Cabinets','Santé']},
-    {code:'M1302',label:'Direction de projet informatique et système d\'information',appel:'Chef de projet ERP / Finance',sectors:['Industrie','Finance','Conseil','Grandes entreprises']},
-    {code:'M1301',label:'Direction des systèmes d\'information',appel:'DSI / Responsable SI',sectors:['Grandes entreprises','Public']},
-    {code:'C1201',label:'Banque, finance, assurance',appel:'Conseiller bancaire / Gestionnaire',sectors:['Banque','Assurance','Finance','Mutuelles']},
-  ],
-  Mecanique:[
-    {code:'I1604',label:'Mécanique automobile et entretien des véhicules',appel:'Mécanicien automobile',sectors:['Garages indépendants','Concessionnaires','SAV constructeurs','Flottes auto']},
-    {code:'I1605',label:'Réparation de carrosserie',appel:'Carrossier-peintre',sectors:['Carrosseries','Assurances','Concessionnaires','PME']},
-    {code:'I1601',label:'Installation et maintenance d\'équipements industriels et d\'exploitation',appel:'Technicien maintenance industrielle',sectors:['Industrie','Agroalimentaire','Logistique']},
-    {code:'I1607',label:'Maintenance d\'engins de chantier, levage, manutention et de machines agricoles',appel:'Technicien engins',sectors:['BTP','Industrie','Agriculture','Location matériels']},
-    {code:'I1603',label:'Maintenance d\'équipements électroniques et informatiques industriels',appel:'Technicien électronique automobile',sectors:['Constructeurs','Équipementiers','SAV']},
-    {code:'I1602',label:'Installation et maintenance d\'équipements réfrigérés et de climatisation',appel:'Technicien climatisation / Froid',sectors:['BTP','Industrie','Immobilier','SAV']},
-    {code:'N4403',label:'Conduite de véhicules utilitaires légers et opérations de livraison',appel:'Chauffeur-livreur / Véhicules légers',sectors:['Transport','Logistique','Commerce','PME']},
-    {code:'I1612',label:'Réparation de cycles et véhicules deux-roues motorisés',appel:'Mécanicien 2 roues',sectors:['Concessions moto','Vélo','Loisirs','PME']},
-  ],
-  Secretariat:[
-    {code:'M1607',label:'Secrétariat et assistanat',appel:'Secrétaire / Assistant(e) de gestion',sectors:['PME','Professions libérales','Cabinets','Associations']},
-    {code:'M1604',label:'Assistanat de direction',appel:'Assistant(e) de direction',sectors:['Grandes entreprises','Directions générales','Public']},
-    {code:'M1602',label:'Opérations administratives',appel:'Agent administratif / Assistant(e)',sectors:['PME','Public','Associations','Collectivités']},
-    {code:'M1601',label:'Accueil et renseignements',appel:'Hôte(sse) d\'accueil / Standardiste',sectors:['Commerce','Santé','Public','Hôtellerie','Cabinets']},
-    {code:'M1605',label:'Assistanat technique et administratif',appel:'Assistant(e) technique',sectors:['BTP','Industrie','Bureau d\'études','PME']},
-    {code:'M1501',label:'Assistanat en ressources humaines',appel:'Assistant(e) RH',sectors:['PME','Industrie','Public','Grandes entreprises']},
-    {code:'M1502',label:'Développement des ressources humaines',appel:'Chargé(e) RH / Formation',sectors:['Grandes entreprises','Cabinets RH','Public']},
-    {code:'M1203',label:'Vente en informatique et en électronique',appel:'Secrétaire commerciale / ADV',sectors:['Commerce','Industrie','Distribution']},
-    {code:'K1302',label:'Assistance auprès d\'adultes',appel:'Secrétaire médicale / Assistante sociale',sectors:['Santé','Social','Associations']},
-    {code:'M1608',label:'Gestion des données et de la documentation',appel:'Documentaliste / Archiviste',sectors:['Public','Grandes entreprises','Édition','Santé']},
-  ],
-  Commerce:[
-    {code:'D1402',label:'Relation commerciale grands comptes et entreprises',appel:'Commercial B2B / Compte-clé',sectors:['Industrie','Services','Édition','Tech','B2B']},
-    {code:'D1403',label:'Relation commerciale auprès de particuliers',appel:'Commercial B2C / Conseiller client',sectors:['Immobilier','Assurance','Énergie','Télécom','Banque']},
-    {code:'D1501',label:'Animation de vente',appel:'Animateur commercial / Chef de rayon',sectors:['Distribution','GSS','Commerce','Grande distribution']},
-    {code:'D1502',label:'Management/gestion de rayon grande distribution',appel:'Manager rayon / Chef de secteur',sectors:['Grande distribution','GSS','Spécialistes']},
-    {code:'D1401',label:'Assistanat commercial',appel:'Assistant(e) commercial(e) / ADV',sectors:['PME','Industrie','Services','Export']},
-    {code:'D1211',label:'Vente en décoration et équipement du foyer',appel:'Vendeur(se) décoration',sectors:['Ameublement','Décoration','Grande distribution','Spécialistes']},
-    {code:'D1214',label:'Vente en habillement et accessoires de la personne',appel:'Vendeur(se) mode / Textile',sectors:['Mode','Distribution','Luxe','Chaînes']},
-    {code:'D1507',label:'Mise en rayon libre-service',appel:'Employé(e) de rayon',sectors:['Grande distribution','GSS','Pharmacies']},
-    {code:'M1701',label:'Application du droit',appel:'Commercial / Négociateur immobilier',sectors:['Immobilier','Notariat','Agences']},
-    {code:'N1110',label:'Management de l\'exploitation commerciale',appel:'Responsable commercial / Directeur de zone',sectors:['Distribution','Franchise','Services','PME']},
-  ],
-  Electro:[
-    {code:'I1308',label:'Installation électrique',appel:'Électricien installateur',sectors:['BTP','Industrie','Collectivités','Tertiaire','Énergie']},
-    {code:'I1306',label:'Installation et maintenance d\'automatismes',appel:'Automaticien / Électrotechnicien',sectors:['Industrie','Agroalimentaire','Automobile','Chimie','Pharmacie']},
-    {code:'I1304',label:'Installation et maintenance en télécommunications',appel:'Technicien télécoms / Fibres optiques',sectors:['Télécom','Opérateurs','BTP','Collectivités']},
-    {code:'I1302',label:'Installation et maintenance électronique',appel:'Technicien électronicien',sectors:['Industrie','Défense','Aérospatial','Automobile']},
-    {code:'I1310',label:'Maintenance électrique',appel:'Électricien de maintenance industrielle',sectors:['Industrie','Énergie','Transport','Chimie']},
-    {code:'I1209',label:'Intervention en grands froids, conditionnement d\'air et réfrigération industrielle',appel:'Technicien CVC / Froid industriel',sectors:['Industrie','BTP','Agroalimentaire','Commerce']},
-    {code:'F1501',label:'Montage de structures et de charpentes métalliques',appel:'Électricien chantier',sectors:['BTP','Industrie','Construction']},
-    {code:'I1202',label:'Entretien et surveillance du tracé ferroviaire',appel:'Électricien réseau ferroviaire',sectors:['Transport','SNCF','Collectivités']},
-    {code:'H2909',label:'Interventions techniques en études et conception',appel:'Technicien BE électrotechnique',sectors:['Industrie','Bureau d\'études','Énergie']},
-  ],
-  BTP:[
-    {code:'F1101',label:'Conduite de travaux du BTP',appel:'Conducteur de travaux',sectors:['BTP','Promoteurs','Collectivités','Industrie']},
-    {code:'F1106',label:'Ingénierie et études du BTP',appel:'Technicien bureau d\'études',sectors:['BTP','Bureaux d\'études','Promoteurs','Public']},
-    {code:'F1201',label:'Maçonnerie',appel:'Maçon / Chef de chantier',sectors:['BTP','Artisans','PME','Collectivités']},
-    {code:'F1202',label:'Carrelage et revêtement',appel:'Carreleur / Poseur de revêtements',sectors:['BTP','Artisans','Immobilier','PME']},
-    {code:'F1203',label:'Charpente',appel:'Charpentier / Couvreur',sectors:['BTP','Artisans','Construction bois']},
-    {code:'F1401',label:'Plomberie et chauffage',appel:'Plombier / Chauffagiste',sectors:['BTP','Artisans','Collectivités','Promoteurs']},
-    {code:'F1402',label:'Serrurerie et métallerie',appel:'Serrurier / Métallier',sectors:['BTP','Artisans','Industrie']},
-    {code:'I1308',label:'Installation électrique',appel:'Électricien bâtiment',sectors:['BTP','Artisans','Collectivités']},
-    {code:'F1501',label:'Montage de structures et de charpentes métalliques',appel:'Monteur structures métalliques',sectors:['BTP','Industrie','Construction']},
-    {code:'F1502',label:'Peinture en bâtiment',appel:'Peintre en bâtiment',sectors:['BTP','Artisans','Immobilier','PME']},
-    {code:'I1209',label:'Froid industriel et climatisation',appel:'Technicien CVC',sectors:['BTP','Tertiaire','Industrie']},
-  ],
-  Restauration:[
-    {code:'G1602',label:'Personnel de cuisine',appel:'Cuisinier / Commis de cuisine',sectors:['Restauration traditionnelle','Restauration collective','Hôtellerie','Traiteurs']},
-    {code:'G1603',label:'Personnel polyvalent en restauration',appel:'Équipier polyvalent / Agent de restauration',sectors:['Restauration rapide','Brasseries','Collectivités','PME']},
-    {code:'G1404',label:'Réception en hôtellerie',appel:'Réceptionniste / Concierge',sectors:['Hôtellerie','Résidences','Tourisme','PME']},
-    {code:'G1401',label:'Assistance de direction d\'hôtel-restaurant',appel:'Assistant directeur de restaurant',sectors:['Hôtellerie-restauration','Chaînes','Indépendants']},
-    {code:'G1802',label:'Boulangerie - viennoiserie',appel:'Boulanger / Pâtissier',sectors:['Artisanat','Grande distribution','Collectivités']},
-    {code:'G1201',label:'Accueil touristique',appel:'Agent d\'accueil touristique / Billetterie',sectors:['Tourisme','Parcs','Offices de tourisme','Hôtellerie']},
-    {code:'G1605',label:'Sommellerie',appel:'Serveur / Chef de rang / Sommelier',sectors:['Restauration gastronomique','Hôtellerie','Événementiel']},
-    {code:'G1703',label:'Service en restauration',appel:'Serveur en restauration',sectors:['Restauration','Traiteurs','Collectivités','Événementiel']},
-    {code:'N4403',label:'Livraison alimentaire',appel:'Livreur en restauration',sectors:['Restauration rapide','Livraison à domicile','PME']},
-  ],
-  Social:[
-    {code:'K1302',label:'Assistance auprès d\'adultes',appel:'Aide à domicile / ADVF',sectors:['Associations','CCAS','Structures d\'aide à domicile','Public']},
-    {code:'K1207',label:'Intervention socioéducative',appel:'Éducateur spécialisé / Moniteur éducateur',sectors:['Associations','MECS','IME','Foyers','Public']},
-    {code:'K1205',label:'Information sociale',appel:'Conseiller / Assistant de service social',sectors:['CCAS','CAF','Hôpitaux','Associations']},
-    {code:'K1301',label:'Accompagnement médicosocial',appel:'AMP / AES / Accompagnant',sectors:['EHPAD','IME','FAM','ESAT','Associations']},
-    {code:'K1304',label:'Services domestiques',appel:'Employé(e) de maison / Garde d\'enfants',sectors:['Particuliers employeurs','Agences','Crèches']},
-    {code:'K1306',label:'Surveillance de nuit',appel:'Veilleur de nuit / Surveillant',sectors:['MECS','Foyers','EHPAD','Hébergement d\'urgence']},
-    {code:'J1501',label:'Soins d\'hygiène, de confort du patient',appel:'Aide-soignant(e) / AS',sectors:['Hôpitaux','EHPAD','Cliniques','HAD','Associations']},
-    {code:'K1201',label:'Action sociale',appel:'Animateur socioculturel / BAFA',sectors:['MJC','Centres sociaux','Associations','Collectivités']},
-    {code:'K1202',label:'Éducation de jeunes enfants',appel:'Auxiliaire petite enfance / AEPE',sectors:['Crèches','Haltes-garderies','RAM','PMI']},
-  ],
-  Logistique:[
-    {code:'N1103',label:'Supervision d\'exploitation logistique',appel:'Responsable logistique / Chef d\'entrepôt',sectors:['Logistique','Industrie','Grande distribution','E-commerce']},
-    {code:'N4101',label:'Conduite de transport de marchandises sur longue distance',appel:'Chauffeur PL / SPL',sectors:['Transport','Logistique','Industrie','Commerce']},
-    {code:'N1301',label:'Gestion et traitement de l\'information logistique',appel:'Gestionnaire de stocks / Agent logistique',sectors:['Logistique','Industrie','Grande distribution','E-commerce']},
-    {code:'N1106',label:'Intervention technique d\'exploitation logistique',appel:'Préparateur de commandes / Cariste',sectors:['Logistique','Industrie','Grande distribution','E-commerce']},
-    {code:'N4403',label:'Conduite de véhicules légers et livraison',appel:'Chauffeur-livreur VL / Coursier',sectors:['Messagerie','Courrier','Restauration','PME']},
-    {code:'N4101',label:'Transport de marchandises',appel:'Conducteur routier',sectors:['Transport','Distribution','Industrie']},
-    {code:'N1104',label:'Gestion d\'entrepôt et stockage industriel',appel:'Agent de quai / Réceptionnaire',sectors:['Logistique','Grande distribution','E-commerce','Industrie']},
-    {code:'N4102',label:'Conduite de transport en commun sur route',appel:'Conducteur bus / Ramassage',sectors:['Transport en commun','Scolaire','Tourisme','Public']},
-    {code:'N2204',label:'Distribution et acheminement de documents et marchandises à pied ou en cycles',appel:'Facteur / Livreur vélo',sectors:['Poste','Messagerie','Presse']},
-    {code:'M1201',label:'Achats',appel:'Acheteur / Approvisionneur',sectors:['Industrie','Grande distribution','Public','PME']},
-  ],
-};
-
-const ROME_SUGGESTIONS={
-  TIP:['support informatique','helpdesk','technicien réseau','administrateur systèmes','déploiement postes','informatique industrielle'],
-  Compta:['comptable','gestionnaire paie','contrôleur de gestion','aide comptable','analyste financier'],
-  Mecanique:['mécanicien automobile','carrossier','technicien VL','technicien PL','mécanicien moto'],
-  Secretariat:['secrétaire','assistant administratif','réceptionniste','assistant de direction','office manager'],
-  Commerce:['commercial','vendeur','chargé de clientèle','account manager','business developer'],
-  Electro:['électrotechnicien','électricien','automaticien','technicien énergie','maintenance électrique'],
-  BTP:['maçon','plombier','plaquiste','électricien bâtiment','conducteur de travaux'],
-  Restauration:['cuisinier','chef de partie','serveur','pâtissier','boulanger','commis de cuisine'],
-  Social:['aide soignant','auxiliaire de vie','éducateur spécialisé','animateur','assistant maternel'],
-  Logistique:['préparateur commandes','cariste','chauffeur livreur','gestionnaire stocks','coordinateur logistique'],
-};
-
+const ROME_CATALOG={/* supprimé — tout est généré par l'IA */};
 let _romeSelected=new Set();
 
 function lookupRomeo(){
-  const fc=FORMATION_CONFIG[S.formation]||{};
-  const defaultQuery=fc.label||(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value?.trim():null)||'';
+  const defaultQuery=S.metierPrincipal||S.formationLabel||(S.formation==='Custom'?document.getElementById('p_custom_formation')?.value?.trim():null)||(FORMATION_CONFIG[S.formation]?.label)||'';
   openRomePicker(defaultQuery);
 }
 
 function openRomePicker(defaultQuery){
   document.getElementById('rome-picker-overlay')?.remove();
   _romeSelected=new Set();
-  const fc=FORMATION_CONFIG[S.formation]||{};
-  const suggests=ROME_SUGGESTIONS[S.formation]||[];
-  const suggestHtml=suggests.length
-    ?`<div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:.55rem;align-items:center">
-        <span style="font-size:.67rem;color:var(--t4);font-weight:700;text-transform:uppercase;letter-spacing:.05em;flex-shrink:0">Connexes :</span>
-        ${suggests.map(s=>`<button class="rome-suggest-chip" onclick="document.getElementById('rome-modal-query').value='${s.replace(/'/g,"\\'").replace(/"/g,'&quot;')}';doRomeoSearch()">${escH(s)}</button>`).join('')}
-      </div>`
-    :'';
+  const profileLabel=S.metierPrincipal||S.formationLabel||(FORMATION_CONFIG[S.formation]?.label)||'';
   const ov=document.createElement('div');
   ov.id='rome-picker-overlay';
   ov.className='modal-overlay';
@@ -2624,7 +2463,7 @@ function openRomePicker(defaultQuery){
       <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:10px">
         <div>
           <div style="font-size:1rem;font-weight:800;color:var(--t1);font-family:var(--ff-h)">🎯 Codes ROME</div>
-          <div style="font-size:.74rem;color:var(--t3);margin-top:3px">${fc.label?escH(fc.label):'Sélectionne les codes correspondant à ton métier'}</div>
+          <div style="font-size:.74rem;color:var(--t3);margin-top:3px">${profileLabel?escH(profileLabel):'Codes métier pour la recherche d\'entreprises'}</div>
         </div>
         <button onclick="document.getElementById('rome-picker-overlay').remove()" style="background:var(--bg3);border:1px solid var(--brd2);color:var(--t3);width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:1.1rem;line-height:1;display:flex;align-items:center;justify-content:center;flex-shrink:0;padding:0">×</button>
       </div>
@@ -2637,7 +2476,6 @@ function openRomePicker(defaultQuery){
         </div>
         <button class="btn btn-ghost btn-sm" onclick="doRomeoSearch()" style="flex-shrink:0;font-weight:700;white-space:nowrap">Rechercher</button>
       </div>
-      ${suggestHtml}
     </div>
     <div id="romeo-modal-results" class="rome-modal-body">
       <div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem">
@@ -2662,12 +2500,12 @@ function openRomePicker(defaultQuery){
   document.body.appendChild(ov);
   ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
   ov.querySelector('#rome-modal-query')?.focus();
-  // Show catalog immediately if available, otherwise auto-search
-  if(ROME_CATALOG[S.formation]?.length){
-    setTimeout(_renderRomeCatalog,60);
-  } else if(defaultQuery){
-    setTimeout(doRomeoSearch,80);
-  }
+  // Show AI-detected codes immediately, then auto-search if query available
+  setTimeout(()=>{
+    _renderRomeCatalog();
+    if(defaultQuery&&!document.getElementById('romeo-modal-results')?.children?.length)
+      setTimeout(doRomeoSearch,80);
+  },60);
 }
 
 async function doRomeoSearch(){
@@ -2677,8 +2515,7 @@ async function doRomeoSearch(){
   const query=queryEl.value.trim();
   if(!query){toast('Tape un métier pour chercher','warn');return;}
   if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__')){
-    resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem"><div style="font-size:1.8rem;margin-bottom:.5rem">⚠️</div><div style="font-weight:600;color:var(--t3)">Proxy non configuré</div><div style="font-size:.76rem;margin-top:.3rem">La recherche IA nécessite l'application déployée.<br>Utilise les codes du catalogue ci-dessous.</div></div>`;
-    _renderRomeCatalog();
+    resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem"><div style="font-size:1.8rem;margin-bottom:.5rem">⚠️</div><div style="font-weight:600;color:var(--t3)">Proxy non configuré</div><div style="font-size:.76rem;margin-top:.3rem">La recherche Romeo nécessite l'application déployée.<br>Utilise les codes détectés par l'IA ci-dessous.</div></div>`;
     return;
   }
   resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem">
@@ -2706,24 +2543,23 @@ async function doRomeoSearch(){
 function _renderRomeCatalog(){
   const resultsEl=document.getElementById('romeo-modal-results');
   if(!resultsEl)return;
-  const catalog=ROME_CATALOG[S.formation]||[];
-  if(!catalog.length){
+  const aiCodes=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+  if(!aiCodes.length){
     resultsEl.innerHTML=`<div style="color:var(--t4);font-size:.82rem;text-align:center;padding:2.5rem 1rem">
-      <div style="font-size:1.8rem;margin-bottom:.5rem">🔍</div>
-      <div style="font-weight:600;color:var(--t3)">Tape un métier pour chercher</div>
-      <div style="font-size:.76rem;margin-top:.3rem">Utilise le champ de recherche ci-dessus.</div>
+      <div style="font-size:1.8rem;margin-bottom:.5rem">🤖</div>
+      <div style="font-weight:600;color:var(--t3)">Aucun code IA détecté</div>
+      <div style="font-size:.76rem;margin-top:.3rem;color:var(--t4)">Scanne ton CV pour obtenir des suggestions automatiques,<br>ou tape un métier dans le champ ci-dessus.</div>
     </div>`;
     return;
   }
   const existing=new Set((document.getElementById('p_rome_codes')?.value||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean));
-  const fc=FORMATION_CONFIG[S.formation]||{};
-  const cards=catalog.map(entry=>{
-    const isDup=existing.has(entry.code.toUpperCase());
-    const isSel=_romeSelected.has(entry.code);
-    return _romeCardHtml(entry.code,entry.label,entry.appel,entry.sectors,-1,isDup,isSel);
+  const cards=aiCodes.map(code=>{
+    const isDup=existing.has(code);
+    const isSel=_romeSelected.has(code);
+    return _romeCardHtml(code,'','',[],-1,isDup,isSel);
   }).join('');
   resultsEl.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:6px">
-    <div style="font-size:.78rem;color:var(--t3)">📋 ${catalog.length} codes ROME pour <strong style="color:var(--t1)">${escH(fc.label||S.formation)}</strong></div>
+    <div style="font-size:.78rem;color:var(--t3)">🤖 <strong style="color:var(--t1)">${aiCodes.length} code${aiCodes.length>1?'s':''} ROME</strong> détectés par l'IA lors du scan CV</div>
     <div style="display:flex;gap:5px">
       <button class="rome-suggest-chip" onclick="_toggleAllRomeCards(true)">✓ Tout cocher</button>
       <button class="rome-suggest-chip" onclick="_toggleAllRomeCards(false)">Tout décocher</button>
@@ -2759,16 +2595,13 @@ function _renderRomeoResults(resultats,query){
   const resultsEl=document.getElementById('romeo-modal-results');
   if(!resultsEl)return;
   const existing=new Set((document.getElementById('p_rome_codes')?.value||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean));
-  const catalogMap=Object.fromEntries((ROME_CATALOG[S.formation]||[]).map(e=>[e.code,e]));
   const cards=resultats.map(r=>{
     const score=Math.round((r.scorePrediction||0)*100);
     const code=r.codeRome||'';
     const isDup=existing.has(code.toUpperCase());
     const isSel=_romeSelected.has(code);
-    const catEntry=catalogMap[code]||{};
-    const sectors=catEntry.sectors||[];
-    const appel=catEntry.appel||r.libelleAppellation||'';
-    return _romeCardHtml(code,r.libelleRome||'',appel,sectors,score,isDup,isSel);
+    const appel=r.libelleAppellation||'';
+    return _romeCardHtml(code,r.libelleRome||'',appel,[],score,isDup,isSel);
   }).join('');
   resultsEl.innerHTML=`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;flex-wrap:wrap;gap:6px">
     <div style="font-size:.78rem;color:var(--t3)">${resultats.length} résultat${resultats.length>1?'s':''} pour <strong style="color:var(--t1)">« ${escH(query)} »</strong></div>
@@ -2855,19 +2688,10 @@ function updateRomePreview(){
   if(!box)return;
   const codes=(inp?.value||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
   if(!codes.length){box.innerHTML='';return;}
-  const allCat={};
-  Object.values(ROME_CATALOG||{}).forEach(arr=>(arr||[]).forEach(e=>{allCat[e.code]=e;}));
-  box.innerHTML=codes.map(code=>{
-    const e=allCat[code];
-    const label=e?escH(e.label):`<span style="color:var(--t4)">Code inconnu</span>`;
-    const sectors=e&&e.sectors?e.sectors.slice(0,4).map(s=>`<span class="rome-sector-tag">${escH(s)}</span>`).join(''):'';
-    return `<div class="rome-preview-item">
-      <span style="font-size:.72rem;font-weight:800;color:var(--primary);font-family:var(--ff-h)">${escH(code)}</span>
-      <span style="font-size:.75rem;font-weight:600;color:var(--t1)">${label}</span>
-      ${sectors?`<div class="rome-sector-tags" style="margin:0">${sectors}</div>`:''}
-      <button class="rome-preview-del" onclick="removeRomeCode('${escH(code)}')" title="Retirer ce code">×</button>
-    </div>`;
-  }).join('');
+  box.innerHTML=codes.map(code=>`<div class="rome-preview-item">
+    <span style="font-size:.72rem;font-weight:800;color:var(--primary);font-family:var(--ff-h)">${escH(code)}</span>
+    <button class="rome-preview-del" onclick="removeRomeCode('${escH(code)}')" title="Retirer ce code">×</button>
+  </div>`).join('');
 }
 
 function removeRomeCode(code){
@@ -2894,28 +2718,36 @@ function rebuildTypeFilter(){
   if(prev&&types.includes(prev))sel.value=prev;
 }
 
-// Maps a Google Place type to our CATS id
 async function aiValidateAndComplete(results,lat,lng,rKm){
-  const _fc=FORMATION_CONFIG[S.formation]||{};
-  const formationLabel=_fc.label||S.formation||'stage';
+  const metierLabel=S.metierPrincipal||S.formationLabel||(FORMATION_CONFIG[S.formation]?.label)||S.formation||'non précisé';
+  const romeCtx=(S.extraRomeCodes||'').split(',').map(c=>c.trim()).filter(Boolean).slice(0,6).join(', ');
+  const sectorsCtx=(S.profileSectors||[]).join(', ');
   const city=S.addr?S.addr.split(',').slice(-2).join(',').trim():'zone '+lat.toFixed(3)+','+lng.toFixed(3);
   const sample=results.slice(0,60);
   const list=sample.map((c,i)=>i+'|'+c.n+'|'+(c.t||'PME')).join('\n');
-  const validSectors='ESN|Public|Education|Lycees|Sante|Banque|Industrie|Garage|BTP|Restauration|Asso|Logistique|Coworking|PME|Medias';
-  const cvSummary=S.cvProfile?`CV: ${String(S.cvProfile).substring(0,300)}`:'';
-  const prompt=`Tu es expert en recherche de stage en France.
-Formation: "${formationLabel}", mode: ${S.mode||'stage'}, ville: ${city}, rayon: ${rKm}km.${cvSummary?'\n'+cvSummary:''}
-Voici des entreprises trouvees par des APIs officielles:
-${list||'(aucune entreprise trouvee par les APIs)'}
+  const validSectors=CATS.map(c=>c.id).join('|');
+  const prompt=`Tu es un expert en recrutement et en prospection commerciale en France. Tu connais parfaitement le tissu économique local et les pratiques de recrutement françaises.
 
-Taches:
-1. Liste les indices des entreprises PERTINENTES (garde tout si tout l'est)
-2. Suggere 5 a 10 entreprises REELLES supplementaires non listees, adaptees a la formation et la zone
-3. Propose 3 a 6 codes ROME pertinents pour cette formation (format lettre+4chiffres ex: M1802)
-4. Propose 2 a 5 secteurs parmi: ${validSectors}
+Profil candidat :
+- Métier/formation : "${metierLabel}"
+- Type de recherche : ${S.mode||'stage'}
+- Zone géographique : ${city}, rayon ${rKm} km${romeCtx?'\n- Codes ROME : '+romeCtx:''}${sectorsCtx?'\n- Secteurs cibles : '+sectorsCtx:''}${S.cvProfile?'\n- Profil CV (extrait) : '+String(S.cvProfile).substring(0,350):''}
 
-Reponds UNIQUEMENT en JSON valide (sans markdown):
-{"pertinents":[0,1,2...],"suggestions":[{"n":"Nom","t":"${validSectors}","d":"Adresse","v":"Ville"}],"profil":{"rome":[{"code":"M1802","label":"Intitule du metier"}],"secteurs":["ESN","Public"]}}`;
+Entreprises trouvées par APIs officielles (index|nom|type) :
+${list||'(aucune trouvée par les APIs)'}
+
+Tes 4 missions :
+
+1. PERTINENCE — indices [0,1,2…] des entreprises vraiment susceptibles de recruter ce profil. Si tout est pertinent, retourne tous les indices.
+
+2. SUGGESTIONS — 6 à 10 entreprises réelles et connues NON listées ci-dessus, adaptées à ce profil et à la zone géographique "${city}". Favorise les employeurs qui recrutent régulièrement ce type de profil. Pour chaque : nom exact, type (parmi ${validSectors}), adresse approximative, ville.
+
+3. ROME — si les codes ROME ci-dessus sont absents ou incomplets, propose 3 à 6 codes ROME pertinents (format lettre+4chiffres). Sinon, retourne tableau vide.
+
+4. SECTEURS — 2 à 5 secteurs d'employeurs prioritaires pour ce profil (parmi ${validSectors}).
+
+Réponds UNIQUEMENT en JSON valide strict (sans markdown, sans commentaire) :
+{"pertinents":[0,1,2],"suggestions":[{"n":"Nom entreprise","t":"TypeSecteur","d":"Adresse approximative","v":"Ville"}],"profil":{"rome":[{"code":"X0000","label":"Libellé"}],"secteurs":["ID1","ID2"]}}`;
 
   let text;
   if((S.aiProvider||'gemini')==='gemini'){
@@ -3662,7 +3494,7 @@ function generateEmail(s,c,ct,v){
   var mode=s.mode||getMode();
   var diploma=fc.diploma||s.formationLabel||s.formation||'formation professionnelle';
   var label=fc.label||s.formationLabel||'ma formation';
-  var skills=s.comp||fc.skills||'compétences acquises en formation';
+  var skills=s.comp||'compétences acquises en formation';
   var prenom=s.prenom||'';var nom=s.nom||'';
   var prenomNom=(prenom+' '+nom).trim()||'Étudiant(e)';
   var etab=s.etab||'mon organisme de formation';
