@@ -569,62 +569,10 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   <!-- Subtitle (mis à jour par JS selon la formation) -->
   <div id="profil-cs" class="profil-sub"></div>
 
-  <!-- ── 1. Import CV ── -->
-  <div class="card cv-import-card">
-    <div class="pcard-hdr">
-      <div>
-        <div class="ct" style="margin-bottom:0">📄 Import CV</div>
-        <div class="cs" style="margin:2px 0 0">Pré-remplissage automatique de ton profil</div>
-      </div>
-      <label class="btn btn-primary btn-sm" style="cursor:pointer;flex-shrink:0">
-        📎 Choisir (PDF / TXT)
-        <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
-      </label>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span id="cv_status" style="font-size:.76rem;color:var(--blue)">Aucun CV chargé</span>
-    </div>
-    <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--bg2);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6;margin-top:8px"></div>
-    <div id="cv_profile_box" style="display:none;margin-top:10px;border:1px solid rgba(139,92,246,.25);border-radius:10px;overflow:hidden">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(139,92,246,.09);font-size:.74rem;font-weight:600;color:var(--primary)">
-        <span>🤖 Profil IA — réutilisé à chaque email</span>
-        <button class="btn btn-ghost btn-sm" style="padding:1px 8px;font-size:.68rem" onclick="S.cvProfile='';persist();renderCvProfile()">✕ Effacer</button>
-      </div>
-      <pre id="cv_profile_text" style="margin:0;padding:10px 12px;font-family:inherit;font-size:.73rem;color:var(--t2);line-height:1.6;white-space:pre-wrap;background:var(--bg2);max-height:160px;overflow-y:auto"></pre>
-    </div>
-  </div>
-
-  <!-- ── 2. Identité ── -->
-  <div class="card">
-    <div class="ct">👤 Identité</div>
-    <div class="fg">
-      <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
-      <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
-      <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
-      <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
-      <div class="fi full"><label>Organisme de formation</label>
-        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR… (optionnel)" /></div>
-    </div>
-  </div>
-
-  <!-- ── 3. Localisation ── -->
-  <div class="card">
-    <div class="ct">📍 Localisation</div>
-    <div class="cs">Adresse utilisée pour le calcul de distance dans le radar</div>
-    <div style="display:flex;gap:8px">
-      <div class="addr-wrap" style="flex:1">
-        <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
-          oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" />
-        <div id="addr_dd" class="addr-dd"></div>
-      </div>
-      <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" style="flex-shrink:0">📡 GPS</button>
-    </div>
-    <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:6px"></div>
-  </div>
-
-  <!-- ── 4. Formation & Objectif ── -->
+  <!-- ── 1. Formation & Objectif ── -->
   <div class="card">
     <div class="ct">🎓 Formation & Objectif</div>
+    <div class="cs" style="margin-bottom:.6rem">Remplis d'abord ton métier — l'IA s'en servira pour analyser ton CV</div>
     <div class="fg">
       <div class="fi full">
         <label>Formation / Métier *</label>
@@ -661,6 +609,59 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <div class="fi"><label>Début</label><input id="p_debut" type="date" /></div>
       <div class="fi"><label>Fin</label><input id="p_fin" type="date" /></div>
     </div>
+  </div>
+
+  <!-- ── 2. Import CV ── -->
+  <div class="card cv-import-card">
+    <div class="pcard-hdr">
+      <div>
+        <div class="ct" style="margin-bottom:0">📄 Import CV</div>
+        <div class="cs" style="margin:2px 0 0">L'IA utilise ta formation ci-dessus pour mieux analyser ton CV</div>
+      </div>
+      <label class="btn btn-primary btn-sm" style="cursor:pointer;flex-shrink:0">
+        📎 Choisir (PDF / TXT)
+        <input type="file" id="cv_input" accept=".pdf,.txt" style="display:none" onchange="handleCvUpload(event)">
+      </label>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span id="cv_status" style="font-size:.76rem;color:var(--blue)">Aucun CV chargé</span>
+    </div>
+    <div id="cv_preview" style="display:none;padding:8px 12px;background:var(--bg2);border:1px solid rgba(29,110,245,.2);border-radius:var(--r);font-size:.74rem;color:var(--t3);max-height:80px;overflow-y:auto;line-height:1.6;margin-top:8px"></div>
+    <div id="cv_profile_box" style="display:none;margin-top:10px;border:1px solid rgba(139,92,246,.25);border-radius:10px;overflow:hidden">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 12px;background:rgba(139,92,246,.09);font-size:.74rem;font-weight:600;color:var(--primary)">
+        <span>🤖 Profil IA — réutilisé à chaque email</span>
+        <button class="btn btn-ghost btn-sm" style="padding:1px 8px;font-size:.68rem" onclick="S.cvProfile='';persist();renderCvProfile()">✕ Effacer</button>
+      </div>
+      <pre id="cv_profile_text" style="margin:0;padding:10px 12px;font-family:inherit;font-size:.73rem;color:var(--t2);line-height:1.6;white-space:pre-wrap;background:var(--bg2);max-height:160px;overflow-y:auto"></pre>
+    </div>
+  </div>
+
+  <!-- ── 3. Identité ── -->
+  <div class="card">
+    <div class="ct">👤 Identité</div>
+    <div class="fg">
+      <div class="fi"><label>Prénom *</label><input id="p_prenom" placeholder="Léa" /></div>
+      <div class="fi"><label>Nom *</label><input id="p_nom" placeholder="Martin" /></div>
+      <div class="fi"><label>Téléphone *</label><input id="p_tel" type="tel" placeholder="06 00 00 00 00" /></div>
+      <div class="fi"><label>Email *</label><input id="p_email" type="email" placeholder="lea.martin@gmail.com" /></div>
+      <div class="fi full"><label>Organisme de formation</label>
+        <input id="p_etab" placeholder="AFPA Montpellier, GRETA LR… (optionnel)" /></div>
+    </div>
+  </div>
+
+  <!-- ── 4. Localisation ── -->
+  <div class="card">
+    <div class="ct">📍 Localisation</div>
+    <div class="cs">Adresse utilisée pour le calcul de distance dans le radar</div>
+    <div style="display:flex;gap:8px">
+      <div class="addr-wrap" style="flex:1">
+        <input id="p_addr" placeholder="Commence à taper ton adresse…" autocomplete="off"
+          oninput="onAddrInput(this.value)" onkeydown="onAddrKey(event)" />
+        <div id="addr_dd" class="addr-dd"></div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="gpsLocate()" style="flex-shrink:0">📡 GPS</button>
+    </div>
+    <div id="geo_st" style="font-size:.76rem;color:var(--t3);margin-top:6px"></div>
   </div>
 
   <!-- hidden state holder for ROME codes — used by applyRomePicker/saveProfile -->
