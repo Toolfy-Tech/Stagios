@@ -1971,7 +1971,7 @@ async function callAI(prompt,opts,_attempt){
         return callAI(prompt,opts,_attempt+1);
       }
       if(status===404&&msg.toLowerCase().includes('not found')){
-        throw new Error('Modèle IA introuvable ("'+model+'"). Vérifie le nom du modèle dans les paramètres — ex: gemini-2.5-flash');
+        throw new Error('Modèle IA introuvable ("'+model+'"). Vérifie le nom exact dans Google AI Studio.');
       }
       throw new Error('Gemini '+status+': '+msg);
     }
@@ -2782,7 +2782,7 @@ Réponds UNIQUEMENT en JSON valide strict (sans markdown, sans commentaire) :
         await new Promise(res=>setTimeout(res,wait));
         continue;
       }
-      if(status===404){throw new Error('Modèle IA introuvable ("'+_activeAiModel()+'"). Ex: gemini-2.5-flash');}
+      if(status===404){throw new Error('Modèle IA introuvable ("'+_activeAiModel()+'"). Vérifie le nom dans Google AI Studio.');}
       throw new Error('IA '+(err.error?.status||status));
     }
     text=radarText;
