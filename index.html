@@ -1312,12 +1312,12 @@ function setField(id,val){
 }
 
 async function geminiParseCv(text){
-  const sectorIds=CATS.map(c=>c.id).join('|');
   const formationCtx=S.formationLabel||S.formation||'';
   const modeCtx=S.mode||'';
   const contextLine=formationCtx
     ?`\nContexte de recherche : formation/métier "${formationCtx}"${modeCtx?' — contrat '+modeCtx:''}.`
     :'';
+  const catDesc=CATS.map(c=>`${c.id}="${c.lbl}"`).join(', ');
   const prompt=`Analyse ce CV et extrais les informations en JSON strict. Réponds UNIQUEMENT avec le JSON, sans markdown ni explication.${contextLine}
 Format attendu (null si absent) :
 {
@@ -1330,10 +1330,10 @@ Format attendu (null si absent) :
   "mode":"stage ou alternance ou emploi selon ce que cherche le candidat",
   "comp":"compétence1, compétence2, compétence3",
   "motiv":"phrase d'accroche ou objectif professionnel si mentionné",
-  "experiences":["Stage technicien chez Entreprise X","Mission développeur web chez Y"],
-  "certifs":["CACES R489","PSC1","TOEIC 850"],
-  "rome_codes":["M1802","M1801"],
-  "secteurs":["ESN","Public"],
+  "experiences":["intitulé poste chez Entreprise","..."],
+  "certifs":["certification1","certification2"],
+  "rome_codes":["X0000","X0000","X0000"],
+  "secteurs":["ID1","ID2","ID3"],
   "profile_md":"Résumé structuré du candidat en 120 mots maximum, rédigé à la 1ère personne, optimisé pour personnaliser des lettres de candidature. Mettre en avant : formation, compétences clés, expériences notables, certifications et motivation. Ce texte sera réutilisé tel quel dans les futurs prompts de génération d'email — il doit être factuel, précis et directement exploitable.",
   "cv_score":7,
   "cv_strengths":["Point positif 1 concret","Point positif 2 concret"],
@@ -1341,8 +1341,17 @@ Format attendu (null si absent) :
   "cv_verdict":"Phrase de synthèse bienveillante et honnête sur la qualité globale du CV (1-2 phrases)."
 }
 
-Pour rome_codes: codes ROME pertinents pour la formation/expérience${formationCtx?' et le contexte "'+formationCtx+'"':''} (format lettre+4chiffres, ex: M1802).
-Pour secteurs: types d'employeurs les plus adaptés au profil${formationCtx?' et à la formation "'+formationCtx+'"':''}. Uniquement parmi ces valeurs exactes: ${sectorIds}
+ROME CODES — règles impératives :
+- Liste 6 à 10 codes ROME vrais (format lettre+4chiffres), classés du plus au moins pertinent${formationCtx?' pour "'+formationCtx+'"':''}.
+- Couvre TOUTES les facettes du profil : maintenance/support/technicien, réseau/infra, helpdesk/assistance, développement, administration systèmes — selon ce que montre vraiment le CV.
+- Ne te limite JAMAIS aux codes développement si le profil est technicien/support/réseau.
+- Exemples pour un technicien IT : I1401 (maintenance électronique), I1402 (maintenance informatique industrielle), I1404 (maintenance informatique bureautique), I1502 (support/télémaintenance), M1802 (développement), M1805 (études/développement SI), H2504 (maintenance industrielle) — adapte selon le CV réel.
+
+SECTEURS — règles impératives :
+- Réfléchis LARGEMENT : toute organisation ayant un service informatique peut recruter ce profil.
+- Sélectionne TOUTES les catégories pertinentes (minimum 5, pas de limite max) parmi ces valeurs exactes uniquement : ${catDesc}
+- Logique à appliquer : un technicien/développeur/réseau peut travailler dans ESN (SSII), Public (mairies/ministères), Education (universités/IUT), Lycées (établissements scolaires), Santé (hôpitaux/cliniques), Banque (banques/assurances), Industrie (usines avec informatique industrielle), Asso (associations avec SI), Logistique (transport/infra), Coworking (startups/conseil), PME (commerces/distribution avec service IT), Médias (télécoms/agences). BTP, Garage, Restauration ont des services IT mais recrutent moins — ne les inclure que si le CV montre une expérience spécifique.
+- Renvoie les IDs exacts : ${CATS.map(c=>c.id).join('|')}
 
 CV :
 ${text.substring(0,8000)}`;
@@ -2246,7 +2255,10 @@ const NAF2T={
 async function fetchAlternance(lat,lng,rKm){
   try{
     const _fc=FORMATION_CONFIG[S.formation]||{};
-    const _romes=(_fc.romeCodes&&_fc.romeCodes.length?_fc.romeCodes:['M1801','M1802']).join(',');
+    const _romeRe=/^[A-Z]\d{4}$/;
+    const _aiRomes=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
+    const _allRomes=[...new Set([...(_fc.romeCodes||[]),..._aiRomes])].slice(0,8);
+    const _romes=(_allRomes.length?_allRomes:['M1802']).join(',');
     const r=await fetch(`https://labonnealternance.apprentissage.beta.gouv.fr/api/v1/jobs/matcha?longitude=${lng}&latitude=${lat}&radius=${rKm}&romes=${_romes}`);
     const d=await r.json();
     return((d.results||d.matchas||[]).map(e=>({
@@ -2350,7 +2362,7 @@ async function fetchFranceTravail(lat,lng,rKm){
     const _fcFT=FORMATION_CONFIG[S.formation]||{};
     const _romeRe=/^[A-Z]\d{4}$/;
     const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
-    const _romes=[...new Set([...(_fcFT.romeCodes||[]),..._extra])].slice(0,5).join(',');
+    const _romes=[...new Set([...(_fcFT.romeCodes||[]),..._extra])].slice(0,8).join(',');
     const _dist=Math.min(rKm,35);
     const isAlt=(S.mode==='alternance');
     const isEmploi=(S.mode==='emploi');
@@ -2399,7 +2411,7 @@ async function fetchLaBonneBoite(lat,lng,rKm){
   const _fc=FORMATION_CONFIG[S.formation]||{};
   const _romeRe=/^[A-Z]\d{4}$/;
   const _extra=(S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(c=>_romeRe.test(c));
-  const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,5);
+  const _romes=[...new Set([...(_fc.romeCodes||[]),..._extra])].slice(0,8);
   if(!_romes.length)return[];
   try{
     const _p=new URLSearchParams({latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),page:'1',page_size:'100',rome_codes:_romes.join(',')});
