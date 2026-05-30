@@ -2504,17 +2504,22 @@ async function fetchLaBonneBoite(lat,lng,rKm){
 }
 
 async function fetchAnnuaireEntreprises(lat,lng,rKm,nafCodes,metierLabel){
+  // This API does NOT support lat/lon/radius — use departement filter instead
+  const _dept=(S.communeInsee?.substring(0,2))||
+    ((S.addr||'').match(/\b(\d{5})\b/)?.[1]?.substring(0,2))||'';
+  const _base={per_page:'50',page:'1'};
+  if(_dept)_base.departement=_dept;
+
   const results=[];
   const seen=new Set();
-  const _geo={lat:String(lat),lon:String(lng),radius:String(Math.min(rKm,50)),per_page:'50',page:'1'};
 
   async function _doSearch(extra){
     try{
-      const r=await fetch('https://recherche-entreprises.api.gouv.fr/search?'+new URLSearchParams({..._geo,...extra}),{headers:{'Accept':'application/json'}});
-      if(!r.ok)return[];
+      const r=await fetch('https://recherche-entreprises.api.gouv.fr/search?'+new URLSearchParams({..._base,...extra}),{headers:{'Accept':'application/json'}});
+      if(!r.ok){console.warn('[Annuaire]',r.status,extra);return[];}
       const data=await r.json();
       return data.results||[];
-    }catch(e){console.warn('[Annuaire]',extra,e);return[];}
+    }catch(e){console.warn('[Annuaire]',e);return[];}
   }
 
   function _addResult(e){
@@ -2536,10 +2541,9 @@ async function fetchAnnuaireEntreprises(lat,lng,rKm,nafCodes,metierLabel){
     });
   }
 
-  // Parallel: text search + all NAF searches at once
   const searches=[];
   if(metierLabel){
-    const q=metierLabel.replace(/[^\w\s]/g,' ').split(/\s+/).slice(0,4).join(' ').trim();
+    const q=metierLabel.replace(/[^\w\s]/g,' ').split(/\s+/).slice(0,3).join(' ').trim();
     if(q)searches.push(_doSearch({q}));
   }
   const uniqueNafs=[...new Set(nafCodes||[])].slice(0,12);
@@ -2550,19 +2554,24 @@ async function fetchAnnuaireEntreprises(lat,lng,rKm,nafCodes,metierLabel){
   return results;
 }
 
-async function geocodeAiSuggestions(results,userLat,userLng){
+async function geocodeAiSuggestions(results){
+  // Nominatim is CORS-blocked from github.io — use api-adresse.data.gouv.fr instead
   const toGeo=results.filter(c=>c.aiSuggested&&c.lat===0&&c.lng===0&&(c.v||c.d));
   for(const c of toGeo){
-    const q=[(c.d||'').trim(),(c.v||'').trim(),'France'].filter(Boolean).join(', ');
+    const q=[(c.d||'').trim(),(c.v||'').trim()].filter(Boolean).join(' ');
+    if(!q)continue;
     try{
-      const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(q)+'&countrycodes=fr&limit=1',{headers:{'User-Agent':'Stagios/4.0'}});
-      const data=await r.json();
-      if(data&&data[0]){
-        c.lat=parseFloat(data[0].lat);
-        c.lng=parseFloat(data[0].lon);
+      const r=await fetch('https://api-adresse.data.gouv.fr/search/?q='+encodeURIComponent(q)+'&limit=1');
+      if(r.ok){
+        const data=await r.json();
+        const feat=data?.features?.[0];
+        if(feat?.geometry?.coordinates){
+          c.lng=feat.geometry.coordinates[0];
+          c.lat=feat.geometry.coordinates[1];
+        }
       }
     }catch(e){}
-    await new Promise(res=>setTimeout(res,300));
+    await new Promise(res=>setTimeout(res,150));
   }
   return results;
 }
@@ -2992,7 +3001,7 @@ async function launchRadar(){
       const _toGeo=radarResults.filter(c=>c.aiSuggested&&c.lat===0&&c.lng===0);
       if(_toGeo.length){
         msg('📍 Géolocalisation des suggestions IA…');
-        radarResults=await geocodeAiSuggestions(radarResults,coords.lat,coords.lng);
+        radarResults=await geocodeAiSuggestions(radarResults);
       }
     }catch(e){
       console.warn('[Radar] AI validation failed:',e);
