@@ -930,6 +930,15 @@ const CATS=[
   {id:'Médias',     ico:'📡', lbl:'Médias & Télécoms',  sec:['J'],      naf:['6020Z','6010Z','7311Z','6110Z','6120Z','6130Z']},
 ];
 
+const SECTION_LABELS={
+  A:'Agriculture',B:'Industrie',C:'Industrie',D:'Énergie',E:'Eau/Déchets',
+  F:'BTP',G:'Commerce',H:'Transport/Logistique',I:'Hôtellerie/Restauration',
+  J:'IT/Médias/Télécom',K:'Banque/Assurance',L:'Immobilier',
+  M:'Conseil/Ingénierie',N:'Services aux entreprises',O:'Public/Admin',
+  P:'Éducation',Q:'Santé/Social',R:'Arts/Loisirs',S:'Associatif',
+  T:'Particulier employeur',U:'International',
+};
+
 const CRM_COLS=[
   {id:'todo',   cls:'col-todo', lbl:'À contacter',  ico:'📭'},
   {id:'sent',   cls:'col-sent', lbl:'Envoyé',        ico:'📤'},
@@ -2509,14 +2518,25 @@ async function fetchAnnuaireEntreprises(lat,lng,rKm,sections,extraNaf,metierLabe
 
   function addEtab(ul){
     if(!ul.nom_complet)return;
+    // ── FILTRES ANTI-BRUIT ──
+    if(ul.etat_administratif&&ul.etat_administratif!=='A')return;   // cessée
+    if(ul.caractere_employeur==='N')return;                         // n'emploie personne
+    if(ul.tranche_effectif_salarie==='00')return;                   // 0 salarié déclaré
+    // coquilles juridiques sans effectif
+    if(/\b(HOLDING|HOLDCO|\bSCI\b|INVEST|ASSETS?|FONCIERE|PV PROD|SOLAR|PHOTOVOLT|SAS PROD|PROD \d)\b/i.test(ul.nom_complet)
+       &&(!ul.tranche_effectif_salarie||['00','01'].includes(ul.tranche_effectif_salarie)))return;
+
     const me=(ul.matching_etablissements&&ul.matching_etablissements[0])||ul.siege||{};
     const k=ul.nom_complet.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,10);
     if(seen.has(k))return;seen.add(k);
     const lt=parseFloat(me.latitude),ln=parseFloat(me.longitude);
+    const secLetter=(ul.section_activite_principale||'').toUpperCase();
     results.push({
       id:'ann_'+(ul.siren||Math.random().toString(36).slice(2)),
-      n:ul.nom_complet,t:'PME',
-      sec:ul.section_activite_principale||'',naf:ul.activite_principale||'',
+      n:ul.nom_complet,
+      t:SECTION_LABELS[secLetter]||'Autre',
+      sec:secLetter,naf:ul.activite_principale||'',
+      eff:ul.tranche_effectif_salarie||'',
       v:me.libelle_commune||'',
       d:[me.numero_voie,me.type_voie,me.libelle_voie,me.code_postal,me.libelle_commune].filter(Boolean).join(' '),
       e:'',web:'',
