@@ -2035,7 +2035,7 @@ async function fetchEntreprises(lat,lng,rKm,naf){
     const batch=naf.slice(i,i+batchSize);
     await Promise.all(batch.map(async code=>{
       try{
-        const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&long=${lng}&radius=${rKm}&activite_principale=${code}&per_page=20&etat_administratif=A`);
+        const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&lon=${lng}&radius=${rKm}&activite_principale=${code}&per_page=20&etat_administratif=A`);
         if(!r.ok)return;
         const d=await r.json();
         (d.results||[]).forEach(e=>{
