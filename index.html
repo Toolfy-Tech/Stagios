@@ -1312,7 +1312,12 @@ function setField(id,val){
 
 async function geminiParseCv(text){
   const sectorIds=CATS.map(c=>c.id).join('|');
-  const prompt=`Analyse ce CV et extrais les informations en JSON strict. Réponds UNIQUEMENT avec le JSON, sans markdown ni explication.
+  const formationCtx=S.formationLabel||S.formation||'';
+  const modeCtx=S.mode||'';
+  const contextLine=formationCtx
+    ?`\nContexte de recherche : formation/métier "${formationCtx}"${modeCtx?' — contrat '+modeCtx:''}.`
+    :'';
+  const prompt=`Analyse ce CV et extrais les informations en JSON strict. Réponds UNIQUEMENT avec le JSON, sans markdown ni explication.${contextLine}
 Format attendu (null si absent) :
 {
   "prenom":"prénom",
@@ -1335,8 +1340,8 @@ Format attendu (null si absent) :
   "cv_verdict":"Phrase de synthèse bienveillante et honnête sur la qualité globale du CV (1-2 phrases)."
 }
 
-Pour rome_codes: codes ROME pertinents pour la formation/expérience (format lettre+4chiffres, ex: M1802).
-Pour secteurs: uniquement parmi ces valeurs exactes: ${sectorIds}
+Pour rome_codes: codes ROME pertinents pour la formation/expérience${formationCtx?' et le contexte "'+formationCtx+'"':''} (format lettre+4chiffres, ex: M1802).
+Pour secteurs: types d'employeurs les plus adaptés au profil${formationCtx?' et à la formation "'+formationCtx+'"':''}. Uniquement parmi ces valeurs exactes: ${sectorIds}
 
 CV :
 ${text.substring(0,8000)}`;
