@@ -77,7 +77,8 @@ html[data-theme=light] .tab.on{background:var(--primary);border-color:var(--prim
 
 /* ── LAYOUT ─────────────────────────────────────────── */
 .main{max-width:1100px;margin:0 auto;padding:1.5rem 1rem 7rem}
-.page{display:none}.page.on{display:block}
+.page{display:none}.page.on{display:block;animation:pgIn .18s ease}
+@keyframes pgIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── CARDS ──────────────────────────────────────────── */
 .card{background:var(--card);border:1px solid var(--brd);border-radius:var(--rl);box-shadow:var(--shadow);padding:1.25rem}
@@ -104,6 +105,7 @@ html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
 .btn-ghost{background:transparent;color:var(--t2);border-color:var(--brd2)}.btn-ghost:hover{background:var(--bg3);border-color:rgba(108,99,255,.35)}
 .btn-green{background:var(--green);color:#0F0F1A}
 .btn-red{background:var(--red);color:#fff}
+.btn-ai{background:linear-gradient(135deg,#8b5cf6,#6366f1);border-color:#8b5cf6;color:#fff}
 .btn-sm{padding:5px 11px;font-size:.75rem}
 .btn-lg{padding:12px 24px;font-size:.9rem}
 .btn:disabled{opacity:.35;cursor:not-allowed}
@@ -285,7 +287,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .gemini-privacy{font-size:.67rem;color:var(--t4);text-align:center;margin-top:.45rem;line-height:1.4}
 /* ── DÉMARRER PAGE ─────────────────────────────────── */
 .dm-state{display:none}
-.dm-state.on{display:block}
+.dm-state.on{display:block;animation:pgIn .18s ease}
 .dm-upload-zone{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.55rem;padding:2.5rem 1rem;background:linear-gradient(135deg,rgba(139,92,246,.06),rgba(99,102,241,.04));border:2px dashed rgba(139,92,246,.35);border-radius:16px;cursor:pointer;text-align:center;transition:border-color .2s,background .2s;margin-bottom:.6rem;width:100%;box-sizing:border-box}
 .dm-upload-zone:hover,.dm-upload-zone.dm-dz-over{border-color:rgba(139,92,246,.75);background:rgba(139,92,246,.13);transform:scale(1.01)}
 .dm-upload-icon{font-size:2.8rem;line-height:1}
@@ -332,10 +334,6 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 @media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(2,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}.btn{min-height:44px}.btn-sm{min-height:40px;padding:8px 12px}.step-lbl{display:none}}
 @media(max-width:480px){.kanban{grid-template-columns:1fr}.tab{padding:7px 10px;font-size:.68rem;gap:4px}.step-lbl{display:none}}
 
-/* ── MODAL ─────────────────────────────────────────── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1rem}
-.modal-box{background:var(--card);border:1.5px solid var(--brd2);border-radius:var(--rl);padding:1.5rem;max-width:420px;width:100%;box-shadow:var(--shadow2)}
-.modal-title{font-size:.95rem;font-weight:700;color:var(--t1);font-family:var(--ff-h);margin-bottom:.6rem}
 /* ── ROME PICKER ──────────────────────────────────────── */
 .rome-modal{max-width:680px;width:100%;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;background:var(--card);border:1.5px solid var(--brd2);border-radius:var(--rl);box-shadow:0 30px 60px rgba(0,0,0,.55)}
 .rome-modal-hdr{padding:1.2rem 1.5rem 1rem;background:linear-gradient(135deg,rgba(108,99,255,.22),rgba(108,99,255,.05));border-bottom:1px solid var(--brd2);flex-shrink:0}
@@ -846,7 +844,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   <div class="ep" id="ep" style="min-height:200px"></div>
   <div style="display:flex;gap:8px;margin-top:.875rem;flex-wrap:wrap;align-items:center">
     <button class="btn btn-teal" onclick="copyEmail()" id="copy-btn">📋 Copier</button>
-    <button class="btn btn-primary btn-sm" id="btn-ai-email" onclick="geminiGenerateEmail()" style="background:linear-gradient(135deg,#8b5cf6,#6366f1);border-color:#8b5cf6" title="Générer un email personnalisé avec l'IA">🤖 Générer avec l'IA</button>
+    <button class="btn btn-ai btn-sm" id="btn-ai-email" onclick="geminiGenerateEmail()" title="Générer un email personnalisé avec l'IA">🤖 Générer avec l'IA</button>
     <button class="btn btn-ghost btn-sm" id="btn-tpl-email" style="display:none" onclick="exitAiEmailMode()">← Template</button>
     <button class="btn btn-ghost btn-sm" id="e_li_btn" style="display:none" onclick="openLinkedIn()" aria-label="Chercher le contact sur LinkedIn">🔍 Contact LinkedIn</button>
     <button class="btn btn-green btn-sm" onclick="markEmailSent()" id="mark-sent-btn">✅ Marquer envoyé</button>
@@ -1379,8 +1377,8 @@ function renderCvProfile(){
     var bg=sc>=8?'rgba(34,197,94,.1)':sc>=5?'rgba(245,158,11,.1)':'rgba(239,68,68,.1)';
     var brd=sc>=8?'rgba(34,197,94,.3)':sc>=5?'rgba(245,158,11,.3)':'rgba(239,68,68,.3)';
     var label=sc>=8?'CV solide 👍':sc>=5?'CV correct ⚠️':'CV à retravailler ❌';
-    var strHtml=(S.cvStrengths||[]).map(s=>'<li style="color:#16a34a">✓ '+escH(s)+'</li>').join('');
-    var impHtml=(S.cvImprovements||[]).map(s=>'<li style="color:#dc2626">✗ '+escH(s)+'</li>').join('');
+    var strHtml=(S.cvStrengths||[]).map(s=>'<li style="color:var(--green)">✓'+escH(s)+'</li>').join('');
+    var impHtml=(S.cvImprovements||[]).map(s=>'<li style="color:var(--red)">✗'+escH(s)+'</li>').join('');
     scoreHtml=
       '<div style="padding:10px 12px;background:'+bg+';border-bottom:1px solid '+brd+'">'+
         '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">'+
@@ -1614,8 +1612,8 @@ function _populateDmReady(){
       const bg=sc>=8?'rgba(34,197,94,.07)':sc>=5?'rgba(245,158,11,.07)':'rgba(239,68,68,.07)';
       const brd=sc>=8?'rgba(34,197,94,.22)':sc>=5?'rgba(245,158,11,.22)':'rgba(239,68,68,.22)';
       const lbl=sc>=8?'CV solide 👍':sc>=5?'CV correct ⚠️':'CV à retravailler ❌';
-      const sHtml=(S.cvStrengths||[]).map(s=>'<li style="color:#16a34a">✓ '+escH(s)+'</li>').join('');
-      const iHtml=(S.cvImprovements||[]).map(s=>'<li style="color:#dc2626">✗ '+escH(s)+'</li>').join('');
+      const sHtml=(S.cvStrengths||[]).map(s=>'<li style="color:var(--green)">✓'+escH(s)+'</li>').join('');
+      const iHtml=(S.cvImprovements||[]).map(s=>'<li style="color:var(--red)">✗'+escH(s)+'</li>').join('');
       cvBox.innerHTML='<div style="background:'+bg+';border:1px solid '+brd+';border-radius:var(--rl);padding:.9rem 1rem">'+
         '<div style="display:flex;align-items:center;gap:.65rem;margin-bottom:.45rem">'+
           '<span style="font-size:1.5rem;font-weight:800;color:'+col+'">'+sc+'/10</span>'+
