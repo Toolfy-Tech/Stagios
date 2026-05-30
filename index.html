@@ -808,6 +808,9 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <select id="r_type" onchange="renderRadar()" style="width:auto;flex:0">
         <option value="">Tous les types</option>
       </select>
+      <label id="r_hors_sujet_lbl" style="display:none;align-items:center;gap:5px;font-size:.75rem;color:var(--t3);cursor:pointer;white-space:nowrap">
+        <input type="checkbox" id="r_hors_sujet" onchange="renderRadar()"> Masquer hors-sujet
+      </label>
     </div>
     <div class="clist" id="r_list" aria-live="polite" aria-label="Résultats du radar"></div>
   </div>
@@ -2593,6 +2596,46 @@ async function geocodeAiSuggestions(results){
   return results;
 }
 
+async function aiRankByMetier(results){
+  if(!_activeAiKey()||!results.length)return results;
+  const metier=S.metierPrincipal||S.formationLabel||(FORMATION_CONFIG[S.formation]?.label)||S.formation||'non précisé';
+  const cv=S.cvProfile?String(S.cvProfile).substring(0,300):'';
+  const sectors=(S.profileSectors||[]).join(', ');
+  const BATCH=80;
+  for(let start=0;start<results.length;start+=BATCH){
+    const chunk=results.slice(start,start+BATCH);
+    const list=chunk.map((c,i)=>i+'|'+(c.n||'')+'|'+(c.t||'')+'|'+(c.v||'')).join('\n');
+    const prompt=`Tu es un conseiller en recrutement en France. Un candidat cherche ${S.mode||'un stage'} dans le métier : "${metier}".${sectors?'\nSecteurs visés : '+sectors:''}${cv?'\nProfil (extrait CV) : '+cv:''}
+
+Voici des structures locales réelles (format index|nom|secteur|ville).
+Note CHAQUE structure de 0 à 3 selon la probabilité qu'elle emploie/recrute CE métier :
+3 = cœur de cible (recrute typiquement ce profil)
+2 = pertinent (emploie souvent ce profil)
+1 = possible mais secondaire
+0 = hors sujet pour ce métier
+
+${list}
+
+Réponds UNIQUEMENT en JSON strict, sans markdown ni commentaire :
+{"scores":{"0":3,"1":0,"2":2}} avec une note pour chaque index présent.`;
+    try{
+      let text=await callAI(prompt,{maxTokens:2048});
+      text=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+      const m=text.match(/\{[\s\S]*\}/);
+      if(m){
+        const parsed=JSON.parse(m[0]);
+        const scores=parsed.scores||parsed;
+        chunk.forEach((c,i)=>{
+          const s=Number(scores[i]??scores[String(i)]);
+          c._relevance=isNaN(s)?1:Math.max(0,Math.min(3,Math.round(s)));
+        });
+      }
+    }catch(e){console.warn('[Rank]',e);}
+  }
+  results.forEach(c=>{if(typeof c._relevance!=='number')c._relevance=1;});
+  return results;
+}
+
 const ROME_CATALOG={/* supprimé — tout est généré par l'IA */};
 let _romeSelected=new Set();
 
@@ -3026,7 +3069,15 @@ async function launchRadar(){
     }
   }
 
-  radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).filter(c=>c._dist===null||c._dist<=rKm).sort((a,b)=>(a._dist??999)-(b._dist??999));
+  if(_activeAiKey()){
+    msg('🤖 Classement des résultats par pertinence métier…');
+    try{radarResults=await aiRankByMetier(radarResults);}catch(e){console.warn('[Rank]',e);}
+  }
+
+  radarResults=radarResults
+    .map(c=>({...c,_dist:dist(c)}))
+    .filter(c=>c._dist===null||c._dist<=rKm)
+    .sort((a,b)=>(b._relevance??1)-(a._relevance??1)||(a._dist??999)-(b._dist??999));
 
   updateBadges();
   rebuildTypeFilter();
@@ -3062,9 +3113,15 @@ async function launchRadar(){
 function renderRadar(){
   const q=(document.getElementById('r_srch')?.value||'').toLowerCase();
   const tf=document.getElementById('r_type')?.value||'';
+  const hideHS=document.getElementById('r_hors_sujet')?.checked||false;
+  // Show the hors-sujet toggle only once ranking has run (any result has _relevance set)
+  const hasRanking=radarResults.some(c=>typeof c._relevance==='number');
+  const hsLbl=document.getElementById('r_hors_sujet_lbl');
+  if(hsLbl)hsLbl.style.display=hasRanking?'flex':'none';
   const all=radarResults.filter(c=>!_blacklist.has(c.id));
   let fl=all.filter(c=>
     (!tf||c.t===tf)&&
+    (!hideHS||(c._relevance??1)>0)&&
     (!q||(c.n||'').toLowerCase().includes(q)||(c.t||'').toLowerCase().includes(q)||(c.v||'').toLowerCase().includes(q))
   );
   const blCount=radarResults.filter(c=>_blacklist.has(c.id)).length;
@@ -3086,7 +3143,7 @@ function renderRadar(){
         +'<div style="font-size:1.5rem;margin-bottom:.5rem">🔎</div>'
         +'<div style="font-weight:700;margin-bottom:.35rem">Aucun résultat pour ces filtres</div>'
         +'<div style="font-size:.8rem;color:var(--t4);margin-bottom:1rem">'+(tf?'Type : <strong>'+tf+'</strong>  ':'')+( q?'Recherche : <strong>'+q+'</strong>':'')+'</div>'
-        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'r_srch\').value=\'\';document.getElementById(\'r_type\').value=\'\';renderRadar()">Effacer les filtres</button>'
+        +'<button class="btn btn-ghost btn-sm" onclick="document.getElementById(\'r_srch\').value=\'\';document.getElementById(\'r_type\').value=\'\';document.getElementById(\'r_hors_sujet\').checked=false;renderRadar()">Effacer les filtres</button>'
         +'</div>'
       :'<div class="empty" style="padding:2rem 1rem;text-align:center">'
         +'<div style="font-size:1.5rem;margin-bottom:.5rem">📫</div>'
