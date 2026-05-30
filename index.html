@@ -2023,12 +2023,11 @@ const NAF2T={
   '5813Z':'Médias','6020Z':'Médias','6010Z':'Médias','7311Z':'Médias',
 };
 
-async function fetchEntreprises(lat,lng,rKm,nafCodes){
+async function fetchEntreprises(lat,lng,rKm){
   const res=[];
   const seen=new Set();
-  const nafSet=new Set(nafCodes.map(n=>n.toUpperCase()));
-  // Recherche géo paginée sans filtre NAF (l'API refuse activite_principale sans q)
-  // Filtrage NAF côté client sur le champ activite_principale de la réponse
+  // Recherche géo paginée — toutes les entreprises actives dans le rayon
+  // La pertinence métier est déléguée à l'étape IA (aiValidateAndComplete)
   for(let page=1;page<=5;page++){
     try{
       const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&lon=${lng}&radius=${rKm}&per_page=25&page=${page}&etat_administratif=A`);
@@ -2039,9 +2038,8 @@ async function fetchEntreprises(lat,lng,rKm,nafCodes){
       results.forEach(e=>{
         if(!e.nom_complet&&!e.nom_raison_sociale)return;
         if(seen.has(e.siren))return;
-        const naf=(e.activite_principale||'').toUpperCase();
-        if(nafSet.size>0&&!nafSet.has(naf))return;
         seen.add(e.siren);
+        const naf=(e.activite_principale||'').toUpperCase();
         const sie=e.siege||{};
         const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
         res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,
@@ -2768,7 +2766,7 @@ async function launchRadar(){
   const tasks=[];
   if(useSIRENE&&allNaf.length){
     msg('🔍 Annuaire Entreprises…');
-    tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
+    tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm));
   }
   if(useAlt&&S.mode==='alternance'){
     msg('🔍 La Bonne Alternance…');
