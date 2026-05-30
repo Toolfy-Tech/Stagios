@@ -1672,7 +1672,7 @@ function detectAiProvider(key){
   return'gemini';
 }
 function _activeAiKey(){const p=S.aiProvider||'gemini';if(p==='gemini')return S.geminiKey||'';return(S.aiKeys||{})[p]||'';}
-function _activeAiModel(){const p=S.aiProvider||'gemini';if(p==='gemini'){const m=S.geminiModel||'gemini-2.5-flash';return AI_PROVIDERS.gemini.models.includes(m)?m:'gemini-2.5-flash';}return(S.aiModels||{})[p]||AI_PROVIDERS[p]?.models[0]||'';}
+function _activeAiModel(){const p=S.aiProvider||'gemini';if(p==='gemini')return S.geminiModel||'gemini-2.5-flash';return(S.aiModels||{})[p]||AI_PROVIDERS[p]?.models[0]||'';}
 function _saveAiKey(key,provider){provider=provider||S.aiProvider||'gemini';if(!S.aiKeys)S.aiKeys={};S.aiKeys[provider]=key;if(provider==='gemini')S.geminiKey=key;}
 function _saveAiModel(model,provider){provider=provider||S.aiProvider||'gemini';if(!S.aiModels)S.aiModels={};S.aiModels[provider]=model;if(provider==='gemini')S.geminiModel=model;}
 function populateModelSelect(selId,provider){
