@@ -2181,10 +2181,11 @@ async function fetchLaBonneBoite(lat,lng,rKm){
   if(!_romes.length)return[];
   try{
     const _p=new URLSearchParams({latitude:String(lat),longitude:String(lng),distance:String(Math.min(rKm,100)),page:'1',page_size:'100'});
-    _romes.forEach(r=>_p.append('rome',r));
-    const data=await ftProxy('/partenaire/labonneboite/v2/recherche?'+_p);
-    if(!data||!data.items)return[];
-    return data.items.map(c=>({
+    _romes.forEach(r=>_p.append('rome_codes',r));
+    const data=await ftProxy('/partenaire/labonneboite/v2/entreprises/recherche?'+_p);
+    const companies=data?.companies||data?.items||[];
+    if(!companies.length)return[];
+    return companies.map(c=>({
       id:'lbb_'+(c.siret||c.company_name||Math.random()),
       n:c.company_name||'',
       t:(_fc.sectors&&_fc.sectors[0])||'PME',
