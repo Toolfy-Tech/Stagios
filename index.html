@@ -551,14 +551,23 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
           <div id="cv-review-rome" style="display:flex;flex-direction:column;gap:3px"></div>
         </div>
         <div>
-          <div style="font-weight:700;color:var(--t3);margin-bottom:5px">Secteurs (cochés = actifs dans le radar)</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+            <span style="font-weight:700;color:var(--t3)">Secteurs actifs dans le radar</span>
+            <button type="button" onclick="openSectorSearch()" class="btn btn-ghost btn-sm" style="font-size:.7rem;padding:2px 8px">🤖 Suggérer</button>
+          </div>
+          <div id="sector-search-panel" style="display:none;margin-bottom:8px;background:rgba(99,102,241,.07);border-radius:8px;padding:8px 10px">
+            <div style="display:flex;gap:6px;margin-bottom:6px">
+              <input id="sector-search-input" placeholder="Ex: technicien informatique, aide-soignant…" style="flex:1;font-size:.77rem;padding:5px 8px" />
+              <button type="button" onclick="runSectorAiSearch()" class="btn btn-primary btn-sm" style="font-size:.75rem;padding:4px 10px;flex-shrink:0">🔍</button>
+            </div>
+            <div id="sector-search-status" style="font-size:.73rem;color:var(--t4)"></div>
+          </div>
           <div id="cv-review-sectors" style="display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto"></div>
         </div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="btn btn-primary" onclick="saveAndGoRadar()" style="flex:1">🎯 Profil vérifié — Lancer le Radar →</button>
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cv-review-banner').style.display='none'">Masquer</button>
+    <div style="text-align:right">
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cv-review-banner').style.display='none'">✕ Masquer l'analyse</button>
     </div>
   </div>
 
@@ -752,11 +761,11 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     </div>
   </details>
 
-  <!-- ── Sauvegarder ── -->
-  <div style="display:flex;gap:8px">
+  <!-- ── Actions fin de profil ── -->
+  <div style="display:flex;gap:8px;margin-bottom:.5rem">
     <button class="btn btn-ghost btn-lg" style="flex:1" onclick="saveProfile()" id="btn-save-profile">💾 Sauvegarder</button>
-    <button class="btn btn-primary btn-lg" style="flex:1" onclick="saveAndGoRadar()">🎯 Lancer le Radar →</button>
   </div>
+  <button class="btn btn-primary btn-lg" style="width:100%;font-size:1rem;padding:14px" onclick="saveAndGoRadar()">🎯 Profil vérifié — Lancer le Radar →</button>
 
 </div>
 
@@ -1477,6 +1486,60 @@ function toggleReviewSector(id, checked){
     if(!checked)S._aiDetectedSectors=S._aiDetectedSectors.filter(s=>s!==id);
   }
   persist();
+}
+
+function openSectorSearch(){
+  const panel=document.getElementById('sector-search-panel');
+  if(!panel)return;
+  const visible=panel.style.display!=='none';
+  panel.style.display=visible?'none':'block';
+  if(!visible){
+    const inp=document.getElementById('sector-search-input');
+    const hint=S.formationLabel||S.formation||'';
+    if(inp&&!inp.value&&hint)inp.value=hint;
+    if(inp)inp.focus();
+  }
+}
+
+async function runSectorAiSearch(){
+  if(!_activeAiKey()){toast('Configure ta clé IA dans les paramètres','warn');return;}
+  const inp=document.getElementById('sector-search-input');
+  const st=document.getElementById('sector-search-status');
+  const q=(inp?.value||'').trim()||(S.formationLabel||S.formation||'');
+  if(!q){if(st)st.textContent='Décris ton métier ou secteur recherché.';return;}
+  if(st)st.innerHTML='<span style="color:var(--t3)">⏳ L\'IA analyse les secteurs les plus pertinents…</span>';
+  const catList=CATS.map(c=>c.id+'|'+c.lbl).join('\n');
+  const romes=S.extraRomeCodes?`, codes ROME: ${S.extraRomeCodes}`:'';
+  const prompt=`Tu es un expert RH français. Métier/profil : "${q}"${romes}.
+Parmi ces 15 types d'employeurs, sélectionne les PLUS PERTINENTS pour ce profil.
+${catList}
+Réponds UNIQUEMENT en JSON valide : {"recommandes":[{"id":"ESN","raison":"courte raison"},{"id":"Public","raison":"..."}]}
+Liste 4 à 8 secteurs maximum, du plus au moins pertinent. Sois précis et concis.`;
+  try{
+    const raw=await callAI(prompt,{maxTokens:400});
+    const m=raw.match(/\{[\s\S]*\}/);
+    if(!m)throw new Error('Réponse IA invalide');
+    const json=JSON.parse(m[0]);
+    const recs=json.recommandes||[];
+    if(!recs.length)throw new Error('Aucun secteur retourné');
+    // Uncheck all, then check recommended
+    CATS.forEach(c=>{
+      const cb=document.querySelector('#cv-review-sectors input[data-sector="'+c.id+'"]');
+      if(cb){cb.checked=false;activeCats.delete(c.id);}
+    });
+    recs.forEach(r=>{
+      const cb=document.querySelector('#cv-review-sectors input[data-sector="'+r.id+'"]');
+      if(cb){cb.checked=true;activeCats.add(r.id);}
+    });
+    S._aiDetectedSectors=recs.map(r=>r.id);
+    persist();
+    if(st)st.innerHTML='<span style="color:var(--green)">✓ '+recs.length+' secteurs sélectionnés</span>'
+      +'<div style="margin-top:4px;display:flex;flex-direction:column;gap:2px">'
+      +recs.map(r=>'<span style="font-size:.71rem;color:var(--t3)"><b>'+escH(r.id)+'</b> — '+escH(r.raison)+'</span>').join('')
+      +'</div>';
+  }catch(e){
+    if(st)st.innerHTML='<span style="color:var(--red)">⚠️ '+escH(e.message)+'</span>';
+  }
 }
 
 function renderCvProfile(){
