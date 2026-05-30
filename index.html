@@ -532,6 +532,19 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 <!-- ══ PROFIL ══════════════════════════════════════════ -->
 <div class="page" id="page-profil">
   <button class="btn btn-ghost btn-sm" onclick="goTab('demarrer')" style="margin-bottom:.75rem;font-size:.76rem">← Retour à Démarrer</button>
+
+  <!-- Bannière revue CV — visible uniquement après scan IA -->
+  <div id="cv-review-banner" style="display:none;margin-bottom:1rem;border-radius:var(--r);border:1px solid rgba(139,92,246,.4);background:rgba(139,92,246,.08);padding:16px 18px">
+    <div style="font-size:.95rem;font-weight:700;color:#a78bfa;margin-bottom:10px">🤖 L'IA a analysé ton CV — vérifie chaque champ ci-dessous</div>
+    <div id="cv-review-score" style="margin-bottom:10px"></div>
+    <div id="cv-review-lists" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;font-size:.78rem"></div>
+    <div id="cv-review-verdict" style="font-size:.8rem;color:var(--t2);font-style:italic;margin-bottom:14px"></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary" onclick="saveAndGoRadar()" style="flex:1">🎯 Tout est bon — Lancer le Radar →</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cv-review-banner').style.display='none'">Masquer</button>
+    </div>
+  </div>
+
   <div id="first-banner" class="first-banner" style="display:none">
     <span>💡 <strong>Tes données restent dans ce navigateur.</strong> Exporte-les régulièrement via le bouton "Exporter" en haut pour ne rien perdre si tu changes d'appareil.</span>
     <button class="first-banner-close" onclick="dismissFirstBanner()" aria-label="Fermer ce message">OK</button>
@@ -1181,7 +1194,11 @@ async function handleCvUpload(event, fromDemarrer){
       try{
         const aiData=await geminiParseCv(text);
         filled=applyAiCvData(aiData);
-        if(!fromDemarrer&&status)status.textContent='✅ '+file.name+' — 🤖 IA : '+filled+' champ'+(filled>1?'s':'')+' rempli'+(filled>1?'s':'');
+        persist();
+        // Après scan IA réussi → aller au profil pour revue
+        goTab('profil');
+        setTimeout(()=>{fillProfileForm();showCvReviewBanner();},80);
+        return;
       }catch(e){
         console.warn('Gemini CV parse failed:',e);
         filled=autofillFromCv(text);
@@ -1309,6 +1326,7 @@ function setField(id,val){
 }
 
 async function geminiParseCv(text){
+  const sectorIds=CATS.map(c=>c.id).join('|');
   const prompt=`Analyse ce CV et extrais les informations en JSON strict. Réponds UNIQUEMENT avec le JSON, sans markdown ni explication.
 Format attendu (null si absent) :
 {
@@ -1318,16 +1336,22 @@ Format attendu (null si absent) :
   "tel":"0612345678",
   "etab":"Nom de l'école ou centre de formation",
   "formation":"Intitulé exact du diplôme ou titre professionnel le plus récent",
+  "mode":"stage ou alternance ou emploi selon ce que cherche le candidat",
   "comp":"compétence1, compétence2, compétence3",
   "motiv":"phrase d'accroche ou objectif professionnel si mentionné",
   "experiences":["Stage technicien chez Entreprise X","Mission développeur web chez Y"],
   "certifs":["CACES R489","PSC1","TOEIC 850"],
+  "rome_codes":["M1802","M1801"],
+  "secteurs":["ESN","Public"],
   "profile_md":"Résumé structuré du candidat en 120 mots maximum, rédigé à la 1ère personne, optimisé pour personnaliser des lettres de candidature. Mettre en avant : formation, compétences clés, expériences notables, certifications et motivation. Ce texte sera réutilisé tel quel dans les futurs prompts de génération d'email — il doit être factuel, précis et directement exploitable.",
   "cv_score":7,
   "cv_strengths":["Point positif 1 concret","Point positif 2 concret"],
   "cv_improvements":["Amélioration prioritaire 1","Amélioration prioritaire 2","Amélioration prioritaire 3"],
   "cv_verdict":"Phrase de synthèse bienveillante et honnête sur la qualité globale du CV (1-2 phrases)."
 }
+
+Pour rome_codes: codes ROME pertinents pour la formation/expérience (format lettre+4chiffres, ex: M1802).
+Pour secteurs: uniquement parmi ces valeurs exactes: ${sectorIds}
 
 CV :
 ${text.substring(0,8000)}`;
@@ -1377,8 +1401,54 @@ function applyAiCvData(d){
     S.cvImprovements=d.cv_improvements||[];
     S.cvVerdict=d.cv_verdict||'';
   }
+  // Mode (stage/alternance/emploi)
+  if(d.mode){
+    const modeMap={'stage':'stage','alternance':'alternance','emploi':'emploi'};
+    const m=modeMap[(d.mode||'').toLowerCase()];
+    if(m){S.mode=m;const mEl=document.getElementById('p_mode');if(mEl)mEl.value=m;filled++;}
+  }
+  // ROME codes
+  if(Array.isArray(d.rome_codes)&&d.rome_codes.length){
+    const validRe=/^[A-Z]\d{4}$/;
+    const codes=d.rome_codes.map(c=>c.trim().toUpperCase()).filter(c=>validRe.test(c));
+    if(codes.length){
+      S.extraRomeCodes=codes.join(', ');
+      const rEl=document.getElementById('p_rome_codes');if(rEl)rEl.value=S.extraRomeCodes;
+      filled++;
+    }
+  }
+  // Secteurs
+  if(Array.isArray(d.secteurs)&&d.secteurs.length){
+    const validIds=new Set(CATS.map(c=>c.id));
+    d.secteurs.forEach(s=>{if(validIds.has(s))activeCats.add(s);});
+    filled++;
+  }
   renderCvProfile();
   return filled;
+}
+
+function showCvReviewBanner(){
+  const banner=document.getElementById('cv-review-banner');
+  if(!banner||S.cvScore==null)return;
+  // Score
+  const sc=S.cvScore;
+  const col=sc>=7?'var(--green)':sc>=5?'var(--amber)':'var(--red)';
+  const pct=Math.round(sc*10);
+  document.getElementById('cv-review-score').innerHTML=
+    '<div style="display:flex;align-items:center;gap:10px">'
+    +'<span style="font-size:1.6rem;font-weight:900;color:'+col+'">'+sc+'<span style="font-size:.85rem;color:var(--t3)">/10</span></span>'
+    +'<div style="flex:1;height:8px;background:var(--bg3);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+col+';border-radius:4px;transition:width .4s"></div></div>'
+    +'</div>';
+  // Strengths & improvements
+  const str=(S.cvStrengths||[]).map(s=>'<li style="color:var(--green);margin-bottom:3px">✓ '+escH(s)+'</li>').join('');
+  const imp=(S.cvImprovements||[]).map(s=>'<li style="color:var(--amber);margin-bottom:3px">→ '+escH(s)+'</li>').join('');
+  document.getElementById('cv-review-lists').innerHTML=
+    (str?'<div><div style="font-weight:700;color:var(--t2);margin-bottom:5px">Points forts</div><ul style="margin:0;padding-left:1rem">'+str+'</ul></div>':'')
+    +(imp?'<div><div style="font-weight:700;color:var(--t2);margin-bottom:5px">À améliorer</div><ul style="margin:0;padding-left:1rem">'+imp+'</ul></div>':'');
+  // Verdict
+  if(S.cvVerdict)document.getElementById('cv-review-verdict').textContent='" '+S.cvVerdict+' "';
+  banner.style.display='block';
+  banner.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 function renderCvProfile(){
