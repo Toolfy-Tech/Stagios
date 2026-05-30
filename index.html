@@ -987,6 +987,7 @@ function onModeChange(){
   var hint=document.getElementById('mode_hint');
   if(hint)hint.textContent=MODE_HINTS[m]||'';
   if(S&&S.prenom){S.mode=m;persist();}
+  initRadarSourceToggles();
 }
 function getModeLabel(){
   var labels={stage_nr:'stage non rémunéré',stage_r:'stage rémunéré',alternance:'alternance',emploi:'emploi CDI/CDD'};
@@ -2396,6 +2397,19 @@ function initRadarSourceToggles(){
     altLbl.classList.add('src-disabled');
     altLbl.title='Disponible uniquement en mode alternance';
   }
+  // FT job offers not relevant for stage modes — disable and explain
+  const ftLbl=document.getElementById('src-ft-lbl');
+  const ftInp=document.getElementById('src-ft');
+  const isStageMode=(S.mode==='stage_nr'||S.mode==='stage_r'||S.mode==='stage');
+  if(ftLbl&&ftInp&&isStageMode){
+    ftInp.checked=false;
+    ftInp.disabled=true;
+    ftLbl.classList.add('src-disabled');
+    ftLbl.title='Les offres FT sont pour CDI/CDD/Alternance — non pertinent pour un stage';
+  } else if(ftLbl&&ftInp){
+    ftInp.disabled=false;
+    ftLbl.classList.remove('src-disabled');
+  }
 }
 
 async function ftProxy(endpoint,method,body){
@@ -2884,7 +2898,8 @@ async function launchRadar(){
     tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
   }
   // fetchImmersion désactivé — API CORS-bloquée depuis le navigateur
-  if(useFT&&hasProxy){
+  const isStageMode=(S.mode==='stage_nr'||S.mode==='stage_r'||S.mode==='stage');
+  if(useFT&&hasProxy&&!isStageMode){
     msg('🔍 France Travail — offres réelles…');
     tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
   }
