@@ -3305,6 +3305,7 @@ function dismissFirstBanner(){
 function showWelcomePage(){
   document.querySelector('header.hdr')?.style.setProperty('display','none');
   document.getElementById('tabnav')?.style.setProperty('display','none');
+  document.querySelector('div.main')?.style.setProperty('display','none');
   const ov=document.createElement('div');
   ov.id='welcome-overlay';
   ov.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg1);overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem';
@@ -3382,6 +3383,7 @@ function dismissWelcomePage(){
   localStorage.setItem('stagios_welcomed','1');
   document.querySelector('header.hdr')?.style.removeProperty('display');
   document.getElementById('tabnav')?.style.removeProperty('display');
+  document.querySelector('div.main')?.style.removeProperty('display');
   const ov=document.getElementById('welcome-overlay');
   if(ov){
     ov.style.transition='opacity .35s';
