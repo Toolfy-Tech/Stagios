@@ -980,15 +980,12 @@ function searchUrl(query){
 // Hash déterministe pour IDs stables (blacklist persistante entre scans)
 function _hid(s){var h=0;for(var i=0;i<s.length;i++){h=(Math.imul(31,h)+s.charCodeAt(i))|0;}return(h>>>0).toString(36);}
 
-const PRELOADED=[];
-
-
 // ════════════════════════════════════════════════════════════
 // SECTION 2 — ÉTAT APPLICATION
 // ════════════════════════════════════════════════════════════
 let S={};              // profil étudiant
 let coords=null;       // {lat,lng} position
-let radarResults=[];   // résultats radar (PRELOADED + découverts)
+let radarResults=[];   // résultats radar
 let routeSelection=new Set(); // IDs des entreprises dans le parcours
 let crmData={};        // {id: {status, sentDate, notes, contact}}
 let activeCats=new Set(CATS.map(c=>c.id));
@@ -2752,13 +2749,7 @@ async function launchRadar(){
   msg('📍 Position : '+coords.lat.toFixed(4)+', '+coords.lng.toFixed(4)+' — rayon '+rKm+' km');
 
   var _fc=S.formation?FORMATION_CONFIG[S.formation]:null;
-  var _relevantSectors=_fc&&_fc.sectors&&_fc.sectors.length?new Set(_fc.sectors):null;
-  radarResults=PRELOADED.filter(function(c){return !_relevantSectors||_relevantSectors.has(c.t);});
-  if(S.customSectors&&S.customSectors.length){
-    var _customSet=new Set(S.customSectors.map(function(s){return s.toLowerCase();}));
-    var _extraPre=PRELOADED.filter(function(c){return!radarResults.includes(c)&&_customSet.has((c.t||'').toLowerCase());});
-    radarResults=radarResults.concat(_extraPre);
-  }
+  radarResults=[];
 
   const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
   const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
@@ -2816,26 +2807,26 @@ async function launchRadar(){
 
   updateBadges();
   rebuildTypeFilter();
-  const _preCount=PRELOADED.filter(c=>{const d=dist(c);return d===null||d<=rKm;}).length;
+  const _apiCount=radarResults.filter(c=>!c.aiSuggested).length;
   const _aiCount=radarResults.filter(c=>c.aiSuggested).length;
-  const _newCount=radarResults.length-_preCount-_aiCount;
   let _msgFinal='✅ '+radarResults.length+' structures dans '+rKm+' km';
-  _msgFinal+=' ('+_preCount+' pré-chargées';
-  if(_newCount>0)_msgFinal+=', +'+_newCount+' APIs';
-  if(_aiCount>0)_msgFinal+=', +'+_aiCount+' IA';
-  _msgFinal+=')';
-  if(_preCount===radarResults.length&&radarResults.length>0)_msgFinal+=' — APIs sans résultats supplémentaires';
+  if(_apiCount>0||_aiCount>0){
+    _msgFinal+=' (';
+    if(_apiCount>0)_msgFinal+=_apiCount+' via APIs';
+    if(_apiCount>0&&_aiCount>0)_msgFinal+=', ';
+    if(_aiCount>0)_msgFinal+='+'+_aiCount+' IA';
+    _msgFinal+=')';
+  }
+  if(radarResults.length===0)_msgFinal='⚠️ Aucun résultat — vérifie ta connexion ou élargis le rayon';
   msg(_msgFinal);
   const _diagEl=document.getElementById('api-diag');
   if(_diagEl){
     let _diag='<strong>Position scannée :</strong> '+coords.lat.toFixed(5)+', '+coords.lng.toFixed(5)+'<br>';
-    _diag+='<strong>Pré-chargées dans le rayon :</strong> '+_preCount+'<br>';
-    _diag+='<strong>Découvertes via APIs :</strong> '+_newCount+'<br>';
-    if(_newCount===0){
-      _diag+='<br>💡 <strong>Pourquoi la liste semble identique ?</strong><br>';
-      _diag+='Seules les entreprises pré-chargées pour ta zone s\'affichent — les APIs externes n\'ont pas renvoyé de résultats.<br>';
-      _diag+='💡 Essaie d\'augmenter le rayon de recherche ou vérifie ta connexion internet.<br>';
-      _diag+="Les APIs externes cherchent autour de ta position GPS — si elles échouent, seules les entreprises pré-chargées s'affichent.";
+    _diag+='<strong>Trouvées via APIs :</strong> '+_apiCount+'<br>';
+    if(_aiCount>0)_diag+='<strong>Suggérées par l\'IA :</strong> '+_aiCount+'<br>';
+    if(radarResults.length===0){
+      _diag+='<br>💡 <strong>Aucun résultat ?</strong><br>';
+      _diag+='Essaie d\'augmenter le rayon de recherche ou vérifie ta connexion internet.';
     }
     _diagEl.innerHTML=_diag;_diagEl.style.display='block';
   }
