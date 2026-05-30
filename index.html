@@ -535,9 +535,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 
   <!-- ── Bannière revue CV — visible uniquement après scan IA ── -->
   <div id="cv-review-banner" style="display:none;margin-bottom:1rem;border-radius:var(--r);border:1px solid rgba(139,92,246,.4);background:rgba(139,92,246,.08);padding:16px 18px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div style="margin-bottom:10px">
       <div style="font-size:.95rem;font-weight:700;color:#a78bfa">🤖 L'IA a analysé ton CV — vérifie chaque point avant de lancer</div>
-      <button onclick="document.getElementById('cv-review-banner').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:1rem;padding:0 4px">✕</button>
     </div>
     <div id="cv-review-score" style="margin-bottom:10px"></div>
     <div id="cv-review-lists" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;font-size:.78rem"></div>
@@ -565,9 +564,6 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
           <div id="cv-review-sectors" style="display:flex;flex-direction:column;gap:2px;max-height:260px;overflow-y:auto"></div>
         </div>
       </div>
-    </div>
-    <div style="text-align:right">
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('cv-review-banner').style.display='none'">✕ Masquer l'analyse</button>
     </div>
   </div>
 
