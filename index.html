@@ -754,8 +754,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     </div>
     <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:.5rem">
       <span style="font-size:.72rem;color:var(--t4);white-space:nowrap;font-weight:600">Sources :</span>
-      <label class="src-toggle" id="src-gemini-lbl" title="IA — recherche intelligente d'entreprises adaptées à ta formation (clé API requise)">
-        <input type="checkbox" id="src-gemini"> 🤖 IA
+      <label class="src-toggle" id="src-gemini-lbl" title="IA — valide les résultats des APIs et suggère des entreprises supplémentaires via recherche internet (clé API requise)">
+        <input type="checkbox" id="src-gemini"> 🤖 IA (valider + enrichir)
       </label>
       <label class="src-toggle" title="Annuaire officiel SIRENE / recherche-entreprises.api.gouv.fr">
         <input type="checkbox" id="src-sirene" checked> 🏢 Annuaire SIRENE
@@ -2680,42 +2680,61 @@ function rebuildTypeFilter(){
 }
 
 // Maps a Google Place type to our CATS id
-async function fetchGemini(lat,lng,rKm,geminiKey){
+async function aiValidateAndComplete(results,lat,lng,rKm){
   const _fc=FORMATION_CONFIG[S.formation]||{};
   const formationLabel=_fc.label||S.formation||'stage';
-  const city=S.addr?S.addr.split(',').slice(-2).join(',').trim():'la zone autour de '+lat.toFixed(3)+','+lng.toFixed(3);
-  const activeCatLabels=CATS.filter(c=>activeCats.has(c.id)).map(c=>c.lbl).join(', ');
+  const city=S.addr?S.addr.split(',').slice(-2).join(',').trim():'zone '+lat.toFixed(3)+','+lng.toFixed(3);
+  const sample=results.slice(0,60);
+  const list=sample.map((c,i)=>i+'|'+c.n+'|'+(c.t||'PME')).join('\n');
+  const prompt=`Tu es expert en recherche de stage en France.
+Formation: "${formationLabel}", ville: ${city}, rayon: ${rKm}km.
+Voici des entreprises trouvées par des APIs officielles:
+${list}
 
-  const prompt=`Tu es un assistant spécialisé dans la recherche de stages en France.
-Recherche 20 entreprises ou établissements réels et actuellement actifs pour un stage de "${formationLabel}" dans un rayon de ${rKm} km autour de ${city}.
-Catégories souhaitées : ${activeCatLabels}.
-Pour chaque structure, retourne un objet JSON. Réponds UNIQUEMENT avec un tableau JSON valide (sans markdown, sans texte avant/après) :
-[{"n":"Nom exact","t":"ESN|Public|Education|Lycées|Santé|Banque|Industrie|Garage|BTP|Restauration|Asso|Logistique|Coworking|PME|Médias","d":"Adresse complète","web":"https://site.com ou vide","v":"Ville"}]`;
+Tache:
+1. Liste les indices des entreprises PERTINENTES pour cette formation (garde tout si tout est pertinent)
+2. Suggere 5 a 10 entreprises REELLES et ACTIVES supplementaires non listees ci-dessus, adaptees a la formation et a la zone
+
+Reponds UNIQUEMENT en JSON valide (sans markdown):
+{"pertinents":[0,1,2...],"suggestions":[{"n":"Nom","t":"ESN|Public|Education|Lycees|Sante|Banque|Industrie|Garage|BTP|Restauration|Asso|Logistique|Coworking|PME|Medias","d":"Adresse","v":"Ville"}]}`;
 
   let text;
   if((S.aiProvider||'gemini')==='gemini'){
-    // Gemini with search grounding for better local results
-    const key=geminiKey||_activeAiKey();
+    const key=_activeAiKey();
     const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/'+_activeAiModel()+':generateContent?key='+key,{
       method:'POST',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({tools:[{google_search:{}}],contents:[{parts:[{text:prompt}]}]})
     });
-    if(!r.ok){const err=await r.json().catch(()=>({}));throw new Error('Gemini '+(err.error?.status||r.status)+': '+(err.error?.message||'Erreur inconnue'));}
+    if(!r.ok){const err=await r.json().catch(()=>({}));throw new Error('IA '+(err.error?.status||r.status));}
     const data=await r.json();
     text=data.candidates?.[0]?.content?.parts?.map(p=>p.text||'').join('')||'';
   } else {
-    text=await callAI(prompt);
+    text=await callAI(prompt,{maxTokens:2048});
   }
-  const m=text.match(/\[[\s\S]*?\]/);
-  if(!m)throw new Error('Gemini: réponse non parseable');
-  const items=JSON.parse(m[0]);
-  return items.filter(e=>e&&e.n).map((e,i)=>({
-    id:'gem_'+i+'_'+Date.now(),
-    n:e.n,t:e.t||'PME',
-    d:e.d||'',web:e.web||'',v:e.v||'',
-    lat,lng,
-    src:(AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA')
-  }));
+  text=text.replace(/```json\n?/g,'').replace(/```\n?/g,'').trim();
+  const m=text.match(/\{[\s\S]*\}/);
+  if(!m)return results;
+  let parsed;
+  try{parsed=JSON.parse(m[0]);}catch(e){return results;}
+  let filtered=results;
+  const pertinents=parsed.pertinents;
+  if(Array.isArray(pertinents)&&pertinents.length>0&&pertinents.length<sample.length){
+    const keep=new Set(pertinents);
+    filtered=[...sample.filter((_,i)=>keep.has(i)),...results.slice(60)];
+  }
+  const seen=new Set(filtered.map(c=>c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8)));
+  const aiLabel=AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA';
+  if(Array.isArray(parsed.suggestions)){
+    parsed.suggestions.forEach((e,i)=>{
+      if(!e||!e.n)return;
+      const k=e.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
+      if(!seen.has(k)){
+        seen.add(k);
+        filtered.push({id:'ai_'+i+'_'+Date.now(),n:e.n,t:e.t||'PME',d:e.d||'',v:e.v||'',lat,lng,src:aiLabel,aiSuggested:true,disc:true});
+      }
+    });
+  }
+  return filtered;
 }
 
 async function launchRadar(){
@@ -2754,10 +2773,6 @@ async function launchRadar(){
   const hasProxy=FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__');
 
   const tasks=[];
-  if(useGemini){
-    msg('🤖 '+(AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA')+' — recherche intelligente…');
-    tasks.push(fetchGemini(coords.lat,coords.lng,rKm,_activeAiKey()));
-  }
   if(useSIRENE&&allNaf.length){
     msg('🔍 Annuaire Entreprises…');
     tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm,allNaf));
@@ -2786,15 +2801,28 @@ async function launchRadar(){
     });
   });
 
+  if(useGemini){
+    msg('🤖 '+(AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA')+' — validation et enrichissement des résultats…');
+    try{
+      radarResults=await aiValidateAndComplete(radarResults,coords.lat,coords.lng,rKm);
+    }catch(e){
+      console.warn('[Radar] AI validation failed:',e);
+      msg('⚠️ IA indisponible — résultats API seuls affichés');
+      await new Promise(r=>setTimeout(r,2000));
+    }
+  }
+
   radarResults=radarResults.map(c=>({...c,_dist:dist(c)})).filter(c=>c._dist===null||c._dist<=rKm).sort((a,b)=>(a._dist??999)-(b._dist??999));
 
   updateBadges();
   rebuildTypeFilter();
   const _preCount=PRELOADED.filter(c=>{const d=dist(c);return d===null||d<=rKm;}).length;
-  const _newCount=radarResults.length-_preCount;
+  const _aiCount=radarResults.filter(c=>c.aiSuggested).length;
+  const _newCount=radarResults.length-_preCount-_aiCount;
   let _msgFinal='✅ '+radarResults.length+' structures dans '+rKm+' km';
   _msgFinal+=' ('+_preCount+' pré-chargées';
-  if(_newCount>0)_msgFinal+=', +'+_newCount+' trouvées via APIs';
+  if(_newCount>0)_msgFinal+=', +'+_newCount+' APIs';
+  if(_aiCount>0)_msgFinal+=', +'+_aiCount+' IA';
   _msgFinal+=')';
   if(_preCount===radarResults.length&&radarResults.length>0)_msgFinal+=' — APIs sans résultats supplémentaires';
   msg(_msgFinal);
@@ -2890,13 +2918,14 @@ function radarCard(c){
   var badges='';
   // Badge source — couleur par origine des données
   var _srcStyles={
-    'Gemini AI':           ['🤖','#8b5cf6',  'rgba(139,92,246,.15)', 'rgba(139,92,246,.3)'],
     'Annuaire Entreprises':['📋','var(--t3)','var(--bg2)',           'var(--brd)'],
     'France Travail':      ['🎯','var(--blue)','rgba(59,130,246,.12)','rgba(59,130,246,.3)'],
     'La Bonne Boite':      ['⭐','#16a34a',  'rgba(34,197,94,.12)',  'rgba(34,197,94,.3)'],
     'La Bonne Alternance': ['🔄','#9333ea',  'rgba(147,51,234,.12)','rgba(147,51,234,.3)'],
   };
-  if(c.src&&_srcStyles[c.src]){
+  if(c.aiSuggested){
+    badges+='<span style="background:rgba(139,92,246,.15);color:#8b5cf6;border:1px solid rgba(139,92,246,.3);padding:1px 7px;border-radius:20px;font-size:.68rem;white-space:nowrap">🤖 '+escH(c.src||'IA')+' ✨</span> ';
+  } else if(c.src&&_srcStyles[c.src]){
     var _ss=_srcStyles[c.src];
     var _extra='';
     if(c.lbb){var _st=c.lbbStars||0;_extra=' '+(_st>=2.5?'⭐⭐⭐':_st>=1.5?'⭐⭐':_st>=0.5?'⭐':'');}
