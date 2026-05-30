@@ -663,18 +663,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
     </div>
   </div>
 
-  <!-- ── 5. Codes ROME ── -->
-  <div class="card rome-profile-card">
-    <div class="pcard-hdr">
-      <div>
-        <div class="ct" style="margin-bottom:2px">🎯 Codes ROME</div>
-        <div class="cs" style="margin:0">Métiers ciblés pour personnaliser ton radar</div>
-      </div>
-      <button type="button" onclick="lookupRomeo()" class="btn btn-primary btn-sm" style="flex-shrink:0">🎯 Sélectionner</button>
-    </div>
-    <div id="rome-preview"></div>
-    <input id="p_rome_codes" placeholder="Sélectionne via 🎯 ou saisis les codes manuellement (ex : M1802, M1801)" style="width:100%;margin-top:6px;font-size:.82rem" oninput="updateRomePreview()" title="Codes ROME">
-  </div>
+  <!-- hidden state holder for ROME codes — used by applyRomePicker/saveProfile -->
+  <div style="display:none"><div id="rome-preview"></div><input id="p_rome_codes" oninput="updateRomePreview()"></div>
 
   <!-- ── 6. Candidature ── -->
   <div class="card">
@@ -2794,9 +2784,21 @@ function applyRomePicker(){
   const merged=[...new Set([...existing,..._romeSelected])];
   document.querySelectorAll('[id="p_rome_codes"]').forEach(el=>{el.value=merged.join(', ');});
   S.extraRomeCodes=merged.join(', ');
+  persist();
   toast('✅ Codes ROME : '+[..._romeSelected].join(', '),'ok');
   updateRomePreview();
+  _renderBannerRome();
   document.getElementById('rome-picker-overlay')?.remove();
+}
+
+function _renderBannerRome(){
+  const el=document.getElementById('cv-review-rome');
+  if(!el)return;
+  const romes=(S.extraRomeCodes||'').split(',').map(c=>c.trim()).filter(Boolean);
+  el.innerHTML=romes.map(r=>'<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;background:rgba(99,102,241,.15);color:var(--primary);font-size:.74rem;font-weight:600">🎯 '+escH(r)+'</span>').join('')
+    +'<button type="button" onclick="lookupRomeo()" class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:.72rem;padding:3px 10px;display:block">+ Métiers proches</button>';
+  const profileSection=document.getElementById('cv-review-profile');
+  if(profileSection&&(romes.length||(S.profileSectors||[]).length))profileSection.style.display='block';
 }
 
 function updateRomePreview(){
@@ -2826,7 +2828,9 @@ function removeRomeCode(code){
   const codes=inp.value.split(',').map(c=>c.trim()).filter(c=>c&&c.toUpperCase()!==code.toUpperCase());
   inp.value=codes.join(', ');
   S.extraRomeCodes=inp.value;
+  persist();
   updateRomePreview();
+  _renderBannerRome();
 }
 
 // ════════════════════════════════════════════════════════════
@@ -3817,6 +3821,7 @@ function fillProfileForm(){
     const romeEl=document.getElementById('p_rome_codes');
     if(romeEl)romeEl.value=S.extraRomeCodes;
     updateRomePreview();
+    _renderBannerRome();
   }
   if(S.cvFileName){
     const st=document.getElementById('cv_status');
