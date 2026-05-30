@@ -2892,6 +2892,26 @@ function rebuildTypeFilter(){
 }
 
 
+async function ensureRomeCodes(){
+  const has=(S.extraRomeCodes||'').split(',').map(c=>c.trim()).filter(Boolean);
+  if(has.length)return;
+  if(!FT_PROXY_URL||FT_PROXY_URL.startsWith('__'))return;
+  const metier=S.metierPrincipal||S.formationLabel||(FORMATION_CONFIG[S.formation]?.label)||S.formation||'';
+  if(!metier)return;
+  try{
+    const data=await ftProxy('/partenaire/romeo/v2/predictionMetiers','POST',
+      {appellations:[{intitule:metier,identifiant:'1'}],options:{nomAppelant:'stagios',nbResultats:5}});
+    const arr=Array.isArray(data)?data:[data];
+    const metiers=arr[0]?.metiersRome||[];
+    const codes=metiers.map(m=>m.codeRome||m.code||'').filter(c=>/^[A-Z]\d{4}$/.test(c)).slice(0,3);
+    if(codes.length){
+      S.extraRomeCodes=codes.join(', ');
+      const rEl=document.getElementById('p_rome_codes');if(rEl)rEl.value=S.extraRomeCodes;
+      persist();
+    }
+  }catch(e){console.warn('[ROME]',e);}
+}
+
 async function launchRadar(){
   if(!coords){toast("Définis d'abord ton adresse dans l'onglet Profil et sélectionne une suggestion.",'warn');return;}
   if(radarRunning)return;
@@ -2909,44 +2929,43 @@ async function launchRadar(){
   var _fc=S.formation?FORMATION_CONFIG[S.formation]:null;
   radarResults=[];
 
-  const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
-  const allSections=[...new Set(activeCatDefs.flatMap(c=>c.sec||[]))];
-  const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+  await ensureRomeCodes();
 
   const useAiRank=document.getElementById('src-gemini')?.checked&&!!_activeAiKey();
   const useLBB=document.getElementById('src-lbb')?.checked!==false;
   const useFT=document.getElementById('src-ft')?.checked!==false;
   const useAlt=document.getElementById('src-alt')?.checked!==false;
   const hasProxy=FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__');
-
-  const tasks=[];
-  if(useAlt&&S.mode==='alternance'){
-    msg('🔍 La Bonne Alternance…');
-    tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
-  }
-  // fetchImmersion désactivé — API CORS-bloquée depuis le navigateur
   const isStageMode=(S.mode==='stage_nr'||S.mode==='stage_r'||S.mode==='stage');
-  if(useFT&&hasProxy&&!isStageMode){
-    msg('🔍 France Travail — offres réelles…');
-    tasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
-  }
-  if(useLBB&&hasProxy){
-    msg('🔍 La Bonne Boite — entreprises à fort potentiel…');
-    tasks.push(fetchLaBonneBoite(coords.lat,coords.lng,rKm));
-  }
-  const _metierQuery=S.metierPrincipal||S.formationLabel||(FORMATION_CONFIG[S.formation]?.label)||'';
-  msg('🔍 Annuaire entreprises (employeurs proches)…');
-  tasks.push(fetchAnnuaireEntreprises(coords.lat,coords.lng,rKm,allSections,extraNaf,_metierQuery));
 
-  const all=await Promise.allSettled(tasks);
-  const seen=new Set(radarResults.map(c=>c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8)));
-  all.forEach(r=>{
-    if(r.status!=='fulfilled')return;
-    (r.value||[]).forEach(c=>{
-      const k=c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
-      if(!seen.has(k)&&c.n.length>1){seen.add(k);radarResults.push({...c,disc:true});}
-    });
+  // 1) Sources hiring-first (PRIMAIRES)
+  const primaryTasks=[];
+  if(useLBB&&hasProxy)primaryTasks.push(fetchLaBonneBoite(coords.lat,coords.lng,rKm));
+  if(useFT&&hasProxy&&!isStageMode)primaryTasks.push(fetchFranceTravail(coords.lat,coords.lng,rKm));
+  if(useAlt&&S.mode==='alternance')primaryTasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
+  msg('🔍 Entreprises qui recrutent (La Bonne Boîte / France Travail)…');
+  const primary=(await Promise.allSettled(primaryTasks))
+    .filter(r=>r.status==='fulfilled').flatMap(r=>r.value||[]);
+
+  const seen=new Set();
+  primary.forEach(c=>{
+    const k=(c.n||'').toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,10);
+    if(c.n&&!seen.has(k)){seen.add(k);radarResults.push({...c,disc:true});}
   });
+
+  // 2) SIRENE en complément si résultats ciblés insuffisants
+  const SEUIL=25;
+  if(radarResults.length<SEUIL){
+    msg('🔍 Peu de résultats ciblés — élargissement via l\'annuaire…');
+    const activeCatDefs=CATS.filter(c=>activeCats.has(c.id));
+    const allSections=[...new Set(activeCatDefs.flatMap(c=>c.sec||[]))];
+    const extraNaf=(S.extraNafCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean);
+    const comp=await fetchAnnuaireEntreprises(coords.lat,coords.lng,rKm,allSections,extraNaf,'');
+    comp.forEach(c=>{
+      const k=(c.n||'').toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,10);
+      if(c.n&&!seen.has(k)){seen.add(k);radarResults.push({...c,disc:true});}
+    });
+  }
 
   radarResults=radarResults.filter(c=>!c.aiSuggested);
 
@@ -2958,7 +2977,10 @@ async function launchRadar(){
   radarResults=radarResults
     .map(c=>({...c,_dist:dist(c)}))
     .filter(c=>c._dist===null||c._dist<=rKm)
-    .sort((a,b)=>(b._relevance??1)-(a._relevance??1)||(a._dist??999)-(b._dist??999));
+    .sort((a,b)=>
+      (b.lbbStars??0)-(a.lbbStars??0)||
+      (b._relevance??1)-(a._relevance??1)||
+      (a._dist??999)-(b._dist??999));
 
   updateBadges();
   rebuildTypeFilter();
@@ -3073,6 +3095,7 @@ function radarCard(c){
     if(c.lbb){var _st=c.lbbStars||0;_extra=' '+(_st>=2.5?'⭐⭐⭐':_st>=1.5?'⭐⭐':_st>=0.5?'⭐':'');}
     if(c.ft){_extra+=(c.contractType?' · '+escH(c.contractType):'')+(c.altOffer?' · Alt':'');}
     badges+='<span style="background:'+_ss[2]+';color:'+_ss[1]+';border:1px solid '+_ss[3]+';padding:1px 7px;border-radius:20px;font-size:.68rem;white-space:nowrap">'+_ss[0]+' '+escH(c.src)+_extra+'</span> ';
+    if(c.lbb)badges+='<span style="background:rgba(22,163,74,.12);color:#16a34a;border:1px solid rgba(22,163,74,.3);padding:1px 7px;border-radius:20px;font-size:.68rem;white-space:nowrap">🟢 recrute</span> ';
   }
   if(c.pmsmp)badges+='<span class="pmsmp-badge">PMSMP</span> ';
   if(c.alt&&!c.src)badges+='<span class="alt-badge">alternance</span> ';
