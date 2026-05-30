@@ -775,6 +775,27 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
   </div>
   <div id="api-diag" style="display:none;padding:9px 14px;border-radius:var(--r);background:var(--bg2);border:1px solid var(--brd);font-size:.75rem;color:var(--t3);line-height:1.7;margin-bottom:.75rem"></div>
 
+  <div id="ai-profile-suggest" style="display:none;margin-bottom:.75rem;border-radius:var(--r);border:1px solid rgba(139,92,246,.35);background:rgba(139,92,246,.07);padding:14px 16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="font-weight:700;font-size:.85rem;color:#a78bfa">🤖 L'IA a analysé ton profil — ajoute ces infos pour améliorer les résultats</div>
+      <button onclick="document.getElementById('ai-profile-suggest').style.display='none'" style="background:none;border:none;cursor:pointer;color:var(--t4);font-size:1rem;padding:0 4px">✕</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div>
+        <div style="font-size:.75rem;font-weight:700;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">🎯 Codes ROME</div>
+        <div id="ai-suggest-rome" style="display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+      <div>
+        <div style="font-size:.75rem;font-weight:700;color:var(--t2);margin-bottom:8px;text-transform:uppercase;letter-spacing:.04em">🏢 Secteurs</div>
+        <div id="ai-suggest-sectors" style="display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:8px">
+      <button class="btn btn-primary btn-sm" onclick="applyAiProfileSuggestions()">✅ Appliquer au profil</button>
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('ai-profile-suggest').style.display='none'">Ignorer</button>
+    </div>
+  </div>
+
   <!-- Barre parcours flottante -->
   <div class="route-bar" id="route-bar">
     <span style="font-size:.85rem;font-weight:700;color:var(--primary)">🗺 <span id="route-count">0</span> étape(s)</span>
@@ -2623,17 +2644,21 @@ async function aiValidateAndComplete(results,lat,lng,rKm){
   const city=S.addr?S.addr.split(',').slice(-2).join(',').trim():'zone '+lat.toFixed(3)+','+lng.toFixed(3);
   const sample=results.slice(0,60);
   const list=sample.map((c,i)=>i+'|'+c.n+'|'+(c.t||'PME')).join('\n');
+  const validSectors='ESN|Public|Education|Lycees|Sante|Banque|Industrie|Garage|BTP|Restauration|Asso|Logistique|Coworking|PME|Medias';
+  const cvSummary=S.cvProfile?`CV: ${String(S.cvProfile).substring(0,300)}`:'';
   const prompt=`Tu es expert en recherche de stage en France.
-Formation: "${formationLabel}", ville: ${city}, rayon: ${rKm}km.
-Voici des entreprises trouvées par des APIs officielles:
-${list}
+Formation: "${formationLabel}", mode: ${S.mode||'stage'}, ville: ${city}, rayon: ${rKm}km.${cvSummary?'\n'+cvSummary:''}
+Voici des entreprises trouvees par des APIs officielles:
+${list||'(aucune entreprise trouvee par les APIs)'}
 
-Tache:
-1. Liste les indices des entreprises PERTINENTES pour cette formation (garde tout si tout est pertinent)
-2. Suggere 5 a 10 entreprises REELLES et ACTIVES supplementaires non listees ci-dessus, adaptees a la formation et a la zone
+Taches:
+1. Liste les indices des entreprises PERTINENTES (garde tout si tout l'est)
+2. Suggere 5 a 10 entreprises REELLES supplementaires non listees, adaptees a la formation et la zone
+3. Propose 3 a 6 codes ROME pertinents pour cette formation (format lettre+4chiffres ex: M1802)
+4. Propose 2 a 5 secteurs parmi: ${validSectors}
 
 Reponds UNIQUEMENT en JSON valide (sans markdown):
-{"pertinents":[0,1,2...],"suggestions":[{"n":"Nom","t":"ESN|Public|Education|Lycees|Sante|Banque|Industrie|Garage|BTP|Restauration|Asso|Logistique|Coworking|PME|Medias","d":"Adresse","v":"Ville"}]}`;
+{"pertinents":[0,1,2...],"suggestions":[{"n":"Nom","t":"${validSectors}","d":"Adresse","v":"Ville"}],"profil":{"rome":[{"code":"M1802","label":"Intitule du metier"}],"secteurs":["ESN","Public"]}}`;
 
   let text;
   if((S.aiProvider||'gemini')==='gemini'){
@@ -2671,7 +2696,59 @@ Reponds UNIQUEMENT en JSON valide (sans markdown):
       }
     });
   }
+  // Expose profil suggestions for the UI card
+  if(parsed.profil)filtered._aiProfil=parsed.profil;
   return filtered;
+}
+
+function showAiProfileSuggest(profil){
+  const card=document.getElementById('ai-profile-suggest');
+  const romeEl=document.getElementById('ai-suggest-rome');
+  const secEl=document.getElementById('ai-suggest-sectors');
+  if(!card||!profil)return;
+  // ROME codes
+  const existingRome=new Set((S.extraRomeCodes||'').split(',').map(c=>c.trim().toUpperCase()).filter(Boolean));
+  const romes=(profil.rome||[]).filter(r=>r.code&&!existingRome.has(r.code.toUpperCase()));
+  if(romeEl){
+    romeEl.innerHTML=romes.length?romes.map(r=>`
+      <label style="display:flex;align-items:flex-start;gap:7px;cursor:pointer;font-size:.78rem">
+        <input type="checkbox" checked data-rome="${escH(r.code)}" style="margin-top:2px;accent-color:var(--primary)">
+        <span><strong>${escH(r.code)}</strong> <span style="color:var(--t3)">${escH(r.label||'')}</span></span>
+      </label>`).join('')
+    :'<span style="font-size:.75rem;color:var(--t4)">Déjà à jour</span>';
+  }
+  // Secteurs
+  const validIds=new Set(CATS.map(c=>c.id));
+  const sectors=(profil.secteurs||[]).filter(s=>validIds.has(s));
+  if(secEl){
+    secEl.innerHTML=sectors.length?sectors.map(s=>{
+      const cat=CATS.find(c=>c.id===s);
+      return`<label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.78rem">
+        <input type="checkbox" checked data-sector="${escH(s)}" style="accent-color:var(--primary)">
+        <span>${cat?.ico||''} ${escH(cat?.lbl||s)}</span>
+      </label>`;
+    }).join('')
+    :'<span style="font-size:.75rem;color:var(--t4)">Déjà à jour</span>';
+  }
+  if(romes.length||sectors.length)card.style.display='block';
+}
+
+function applyAiProfileSuggestions(){
+  // ROME codes
+  const checked=[...document.querySelectorAll('#ai-suggest-rome input[data-rome]:checked')].map(i=>i.dataset.rome);
+  if(checked.length){
+    const existing=(S.extraRomeCodes||'').split(',').map(c=>c.trim()).filter(Boolean);
+    const merged=[...new Set([...existing,...checked])];
+    S.extraRomeCodes=merged.join(', ');
+    const el=document.getElementById('p_rome_codes');
+    if(el)el.value=S.extraRomeCodes;
+  }
+  // Secteurs → activeCats
+  const sectors=[...document.querySelectorAll('#ai-suggest-sectors input[data-sector]:checked')].map(i=>i.dataset.sector);
+  sectors.forEach(s=>activeCats.add(s));
+  persist();
+  document.getElementById('ai-profile-suggest').style.display='none';
+  toast('✅ Profil enrichi — relance le radar pour de meilleurs résultats','ok');
 }
 
 async function launchRadar(){
@@ -2730,7 +2807,11 @@ async function launchRadar(){
   if(useGemini){
     msg('🤖 '+(AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA')+' — validation et enrichissement des résultats…');
     try{
-      radarResults=await aiValidateAndComplete(radarResults,coords.lat,coords.lng,rKm);
+      const _aiResult=await aiValidateAndComplete(radarResults,coords.lat,coords.lng,rKm);
+      const _aiProfil=_aiResult._aiProfil;
+      delete _aiResult._aiProfil;
+      radarResults=_aiResult;
+      if(_aiProfil)showAiProfileSuggest(_aiProfil);
     }catch(e){
       console.warn('[Radar] AI validation failed:',e);
       msg('⚠️ IA indisponible — résultats API seuls affichés');
