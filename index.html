@@ -1314,44 +1314,60 @@ function setField(id,val){
 async function geminiParseCv(text){
   const formationCtx=S.formationLabel||S.formation||'';
   const modeCtx=S.mode||'';
-  const contextLine=formationCtx
-    ?`\nContexte de recherche : formation/métier "${formationCtx}"${modeCtx?' — contrat '+modeCtx:''}.`
+  const contextHint=formationCtx
+    ?`\nContexte utilisateur : formation/métier visé = "${formationCtx}"${modeCtx?' — type de contrat recherché : '+modeCtx:''}.`
     :'';
-  const catDesc=CATS.map(c=>`${c.id}="${c.lbl}"`).join(', ');
-  const prompt=`Analyse ce CV et extrais les informations en JSON strict. Réponds UNIQUEMENT avec le JSON, sans markdown ni explication.${contextLine}
-Format attendu (null si absent) :
+  const catLines=CATS.map(c=>`  ${c.id} = "${c.lbl}"`).join('\n');
+  const catIds=CATS.map(c=>c.id).join('|');
+  const prompt=`Tu es un expert certifié en ressources humaines et en nomenclature des métiers français (ROME 4, NAF/APE INSEE). Analyse ce CV et réponds UNIQUEMENT en JSON strict, sans markdown ni explication.${contextHint}
+
+FORMAT JSON (null si absent) :
 {
   "prenom":"prénom",
   "nom":"NOM",
   "email":"email@exemple.com",
   "tel":"0612345678",
-  "etab":"Nom de l'école ou centre de formation",
-  "formation":"Intitulé exact du diplôme ou titre professionnel le plus récent",
-  "mode":"stage ou alternance ou emploi selon ce que cherche le candidat",
+  "etab":"établissement de formation principal",
+  "formation":"Intitulé exact du diplôme ou titre le plus récent",
+  "mode":"stage|alternance|emploi",
   "comp":"compétence1, compétence2, compétence3",
-  "motiv":"phrase d'accroche ou objectif professionnel si mentionné",
-  "experiences":["intitulé poste chez Entreprise","..."],
+  "motiv":"objectif professionnel ou phrase d'accroche si mentionné",
+  "experiences":["Intitulé poste chez Entreprise (année)"],
   "certifs":["certification1","certification2"],
-  "rome_codes":["X0000","X0000","X0000"],
-  "secteurs":["ID1","ID2","ID3"],
-  "profile_md":"Résumé structuré du candidat en 120 mots maximum, rédigé à la 1ère personne, optimisé pour personnaliser des lettres de candidature. Mettre en avant : formation, compétences clés, expériences notables, certifications et motivation. Ce texte sera réutilisé tel quel dans les futurs prompts de génération d'email — il doit être factuel, précis et directement exploitable.",
+  "metier_principal":"Intitulé précis du métier cible déduit du CV${formationCtx?' et de la formation "'+formationCtx+'"':''}",
+  "rome_codes":["X0000","X0000","X0000","X0000","X0000","X0000"],
+  "naf_suggestions":["0000A","0000B","0000C","0000D"],
+  "secteurs":["ID1","ID2","ID3","ID4","ID5"],
+  "profile_md":"Résumé du candidat en 120 mots max, 1ère personne, factuel et exploitable pour personnaliser des emails de candidature : formation, compétences clés, expériences, certifications, motivation.",
   "cv_score":7,
-  "cv_strengths":["Point positif 1 concret","Point positif 2 concret"],
-  "cv_improvements":["Amélioration prioritaire 1","Amélioration prioritaire 2","Amélioration prioritaire 3"],
-  "cv_verdict":"Phrase de synthèse bienveillante et honnête sur la qualité globale du CV (1-2 phrases)."
+  "cv_strengths":["point fort concret 1","point fort concret 2"],
+  "cv_improvements":["amélioration prioritaire 1","amélioration 2","amélioration 3"],
+  "cv_verdict":"Synthèse bienveillante et honnête sur la qualité globale du CV (1-2 phrases)."
 }
 
-ROME CODES — règles impératives :
-- Liste 6 à 10 codes ROME vrais (format lettre+4chiffres), classés du plus au moins pertinent${formationCtx?' pour "'+formationCtx+'"':''}.
-- Couvre TOUTES les facettes du profil : maintenance/support/technicien, réseau/infra, helpdesk/assistance, développement, administration systèmes — selon ce que montre vraiment le CV.
-- Ne te limite JAMAIS aux codes développement si le profil est technicien/support/réseau.
-- Exemples pour un technicien IT : I1401 (maintenance électronique), I1402 (maintenance informatique industrielle), I1404 (maintenance informatique bureautique), I1502 (support/télémaintenance), M1802 (développement), M1805 (études/développement SI), H2504 (maintenance industrielle) — adapte selon le CV réel.
+━━━ CODES ROME — MÉTHODE 3 CERCLES ━━━
+Applique cette méthode rigoureuse${formationCtx?' pour le métier "'+formationCtx+'"':' selon le CV'} :
 
-SECTEURS — règles impératives :
-- Réfléchis LARGEMENT : toute organisation ayant un service informatique peut recruter ce profil.
-- Sélectionne TOUTES les catégories pertinentes (minimum 5, pas de limite max) parmi ces valeurs exactes uniquement : ${catDesc}
-- Logique à appliquer : un technicien/développeur/réseau peut travailler dans ESN (SSII), Public (mairies/ministères), Education (universités/IUT), Lycées (établissements scolaires), Santé (hôpitaux/cliniques), Banque (banques/assurances), Industrie (usines avec informatique industrielle), Asso (associations avec SI), Logistique (transport/infra), Coworking (startups/conseil), PME (commerces/distribution avec service IT), Médias (télécoms/agences). BTP, Garage, Restauration ont des services IT mais recrutent moins — ne les inclure que si le CV montre une expérience spécifique.
-- Renvoie les IDs exacts : ${CATS.map(c=>c.id).join('|')}
+• CERCLE 1 — Code exact (1 code) : le code ROME le plus précis correspondant au métier principal. C'est ton point de départ.
+• CERCLE 2 — Codes proches (2 à 4 codes) : même domaine professionnel, variantes du même rôle. Ex : si cercle 1 = installateur réseau, cercle 2 = maintenance réseau, administration systèmes, support technique.
+• CERCLE 3 — Codes transverses (2 à 4 codes) : autres familles ROME où ce profil est régulièrement recruté grâce à ses compétences transférables. Ex : gestion de projet SI, assistance AMOA, technicien de proximité, formateur technique…
+
+Résultat : 6 à 10 codes ROME vrais de la nomenclature française, classés du plus au moins pertinent. Format : 1 lettre + 4 chiffres. N'invente jamais un code.
+
+━━━ SECTEURS — ANALYSE PAR BESOIN ━━━
+Question directrice : "Quels types d'organisations ont un besoin réel et régulier de recruter ${formationCtx?'"'+formationCtx+'"':'ce profil'} ?"
+
+Analyse chaque catégorie ci-dessous par la demande, pas par l'évidence :
+${catLines}
+
+Règles :
+- Inclus TOUTES les catégories où la réponse est "oui, régulièrement" OU "oui, ponctuellement mais réellement"
+- Pense aux besoins transversaux : une école, un hôpital, une mairie, une PME, une asso ont souvent les mêmes besoins en support IT, comptabilité, RH, logistique, communication…
+- Ne te limite pas aux secteurs "évidents" — un commercial peut travailler en industrie, santé, logistique, banque ; un infirmier peut être en association, collectivité, entreprise de téléassistance
+- Minimum 5 secteurs. Valeurs exactes uniquement : ${catIds}
+
+━━━ CODES NAF (naf_suggestions) ━━━
+Liste 4 à 8 codes NAF/APE français (format 4 chiffres + lettre majuscule, ex: 6202A, 8610Z, 4741Z) des secteurs d'activité économique qui emploient le plus ce profil en France. Ces codes serviront à identifier les entreprises cibles dans le radar géolocalisé.
 
 CV :
 ${text.substring(0,8000)}`;
@@ -1407,6 +1423,8 @@ function applyAiCvData(d){
     const m=modeMap[(d.mode||'').toLowerCase()];
     if(m){S.mode=m;const mEl=document.getElementById('p_mode');if(mEl)mEl.value=m;filled++;}
   }
+  // Métier principal détecté
+  if(d.metier_principal){S.metierPrincipal=d.metier_principal;}
   // ROME codes
   if(Array.isArray(d.rome_codes)&&d.rome_codes.length){
     const validRe=/^[A-Z]\d{4}$/;
@@ -1414,6 +1432,18 @@ function applyAiCvData(d){
     if(codes.length){
       S.extraRomeCodes=codes.join(', ');
       const rEl=document.getElementById('p_rome_codes');if(rEl)rEl.value=S.extraRomeCodes;
+      filled++;
+    }
+  }
+  // NAF suggestions → merge into extraNafCodes (used by radar)
+  if(Array.isArray(d.naf_suggestions)&&d.naf_suggestions.length){
+    const nafRe=/^\d{4}[A-Z]$/;
+    const aiNaf=d.naf_suggestions.map(n=>n.trim().toUpperCase()).filter(n=>nafRe.test(n));
+    if(aiNaf.length){
+      const existing=(S.extraNafCodes||'').split(',').map(n=>n.trim()).filter(Boolean);
+      S.extraNafCodes=[...new Set([...existing,...aiNaf])].join(', ');
+      const nafEl=document.getElementById('p_naf_codes');
+      if(nafEl)nafEl.value=S.extraNafCodes;
       filled++;
     }
   }
