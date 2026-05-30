@@ -1672,7 +1672,7 @@ function detectAiProvider(key){
   return'gemini';
 }
 function _activeAiKey(){const p=S.aiProvider||'gemini';if(p==='gemini')return S.geminiKey||'';return(S.aiKeys||{})[p]||'';}
-function _activeAiModel(){const p=S.aiProvider||'gemini';if(p==='gemini')return S.geminiModel||'gemini-2.5-flash';return(S.aiModels||{})[p]||AI_PROVIDERS[p]?.models[0]||'';}
+function _activeAiModel(){const p=S.aiProvider||'gemini';if(p==='gemini'){const m=S.geminiModel||'gemini-2.5-flash';return AI_PROVIDERS.gemini.models.includes(m)?m:'gemini-2.5-flash';}return(S.aiModels||{})[p]||AI_PROVIDERS[p]?.models[0]||'';}
 function _saveAiKey(key,provider){provider=provider||S.aiProvider||'gemini';if(!S.aiKeys)S.aiKeys={};S.aiKeys[provider]=key;if(provider==='gemini')S.geminiKey=key;}
 function _saveAiModel(model,provider){provider=provider||S.aiProvider||'gemini';if(!S.aiModels)S.aiModels={};S.aiModels[provider]=model;if(provider==='gemini')S.geminiModel=model;}
 function populateModelSelect(selId,provider){
@@ -2023,32 +2023,34 @@ const NAF2T={
   '5813Z':'Médias','6020Z':'Médias','6010Z':'Médias','7311Z':'Médias',
 };
 
-async function fetchEntreprises(lat,lng,rKm,naf){
+async function fetchEntreprises(lat,lng,rKm,nafCodes){
   const res=[];
   const seen=new Set();
-  // 2 requêtes/batch, 400ms entre chaque pour respecter le rate limit
-  const batchSize=2;
-  for(let i=0;i<naf.length;i+=batchSize){
-    const batch=naf.slice(i,i+batchSize);
-    await Promise.all(batch.map(async code=>{
-      try{
-        const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&lon=${lng}&radius=${rKm}&activite_principale=${code}&per_page=20&etat_administratif=A`);
-        if(!r.ok)return;
-        const d=await r.json();
-        (d.results||[]).forEach(e=>{
-          if(!e.nom_complet&&!e.nom_raison_sociale)return;
-          if(seen.has(e.siren))return;
-          seen.add(e.siren);
-          const sie=e.siege||{};
-          const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
-          res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,
-            t:NAF2T[code]||'PME',v:sie.libelle_commune||'',d:'NAF '+code,
-            e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,
-            siren:e.siren,src:'Annuaire Entreprises'});
-        });
-      }catch(ex){}
-    }));
-    if(i+batchSize<naf.length)await new Promise(r=>setTimeout(r,400));
+  const nafSet=new Set(nafCodes.map(n=>n.toUpperCase()));
+  // Recherche géo paginée sans filtre NAF (l'API refuse activite_principale sans q)
+  // Filtrage NAF côté client sur le champ activite_principale de la réponse
+  for(let page=1;page<=5;page++){
+    try{
+      const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&lon=${lng}&radius=${rKm}&per_page=25&page=${page}&etat_administratif=A`);
+      if(!r.ok)break;
+      const d=await r.json();
+      const results=d.results||[];
+      if(!results.length)break;
+      results.forEach(e=>{
+        if(!e.nom_complet&&!e.nom_raison_sociale)return;
+        if(seen.has(e.siren))return;
+        const naf=(e.activite_principale||'').toUpperCase();
+        if(nafSet.size>0&&!nafSet.has(naf))return;
+        seen.add(e.siren);
+        const sie=e.siege||{};
+        const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
+        res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,
+          t:NAF2T[naf]||'PME',v:sie.libelle_commune||'',d:'NAF '+naf,
+          e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,
+          siren:e.siren,src:'Annuaire Entreprises'});
+      });
+    }catch(ex){break;}
+    if(page<5)await new Promise(r=>setTimeout(r,200));
   }
   return res;
 }
