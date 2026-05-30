@@ -757,9 +757,6 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
       <label class="src-toggle" id="src-gemini-lbl" title="IA — valide les résultats des APIs et suggère des entreprises supplémentaires via recherche internet (clé API requise)">
         <input type="checkbox" id="src-gemini"> 🤖 IA (valider + enrichir)
       </label>
-      <label class="src-toggle" title="Annuaire officiel SIRENE / recherche-entreprises.api.gouv.fr">
-        <input type="checkbox" id="src-sirene" checked> 🏢 Annuaire SIRENE
-      </label>
       <label class="src-toggle" id="src-lbb-lbl" title="La Bonne Boite — entreprises à fort potentiel d'embauche (nécessite proxy FT)">
         <input type="checkbox" id="src-lbb" checked> ⭐ La Bonne Boite
       </label>
@@ -2023,35 +2020,6 @@ const NAF2T={
   '5813Z':'Médias','6020Z':'Médias','6010Z':'Médias','7311Z':'Médias',
 };
 
-async function fetchEntreprises(lat,lng,rKm){
-  const res=[];
-  const seen=new Set();
-  // Recherche géo paginée — toutes les entreprises actives dans le rayon
-  // La pertinence métier est déléguée à l'étape IA (aiValidateAndComplete)
-  for(let page=1;page<=5;page++){
-    try{
-      const r=await fetch(`https://recherche-entreprises.api.gouv.fr/search?lat=${lat}&lon=${lng}&radius=${rKm}&per_page=25&page=${page}&etat_administratif=A`);
-      if(!r.ok)break;
-      const d=await r.json();
-      const results=d.results||[];
-      if(!results.length)break;
-      results.forEach(e=>{
-        if(!e.nom_complet&&!e.nom_raison_sociale)return;
-        if(seen.has(e.siren))return;
-        seen.add(e.siren);
-        const naf=(e.activite_principale||'').toUpperCase();
-        const sie=e.siege||{};
-        const lt=parseFloat(sie.latitude),ln=parseFloat(sie.longitude);
-        res.push({id:'ent_'+e.siren,n:e.nom_complet||e.nom_raison_sociale,
-          t:NAF2T[naf]||'PME',v:sie.libelle_commune||'',d:'NAF '+naf,
-          e:'',web:e.site_internet||'',lat:isNaN(lt)?lat:lt,lng:isNaN(ln)?lng:ln,
-          siren:e.siren,src:'Annuaire Entreprises'});
-      });
-    }catch(ex){break;}
-    if(page<5)await new Promise(r=>setTimeout(r,200));
-  }
-  return res;
-}
 
 async function fetchAlternance(lat,lng,rKm){
   try{
@@ -2757,17 +2725,12 @@ async function launchRadar(){
   const allNaf=[...new Set([...activeCatDefs.flatMap(c=>c.naf||[]),..._formationNaf,...extraNaf])];
 
   const useGemini=document.getElementById('src-gemini')?.checked&&!!_activeAiKey();
-  const useSIRENE=document.getElementById('src-sirene')?.checked!==false;
   const useLBB=document.getElementById('src-lbb')?.checked!==false;
   const useFT=document.getElementById('src-ft')?.checked!==false;
   const useAlt=document.getElementById('src-alt')?.checked!==false;
   const hasProxy=FT_PROXY_URL&&!FT_PROXY_URL.startsWith('__');
 
   const tasks=[];
-  if(useSIRENE&&allNaf.length){
-    msg('🔍 Annuaire Entreprises…');
-    tasks.push(fetchEntreprises(coords.lat,coords.lng,rKm));
-  }
   if(useAlt&&S.mode==='alternance'){
     msg('🔍 La Bonne Alternance…');
     tasks.push(fetchAlternance(coords.lat,coords.lng,rKm));
@@ -2909,7 +2872,6 @@ function radarCard(c){
   var badges='';
   // Badge source — couleur par origine des données
   var _srcStyles={
-    'Annuaire Entreprises':['📋','var(--t3)','var(--bg2)',           'var(--brd)'],
     'France Travail':      ['🎯','var(--blue)','rgba(59,130,246,.12)','rgba(59,130,246,.3)'],
     'La Bonne Boite':      ['⭐','#16a34a',  'rgba(34,197,94,.12)',  'rgba(34,197,94,.3)'],
     'La Bonne Alternance': ['🔄','#9333ea',  'rgba(147,51,234,.12)','rgba(147,51,234,.3)'],
