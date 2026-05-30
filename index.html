@@ -3293,14 +3293,99 @@ function validateStep(n){
 // First-time banner
 function initFirstBanner(){
   if(!localStorage.getItem('stagios_welcomed')){
-    var b=document.getElementById('first-banner');
-    if(b)b.style.display='flex';
+    showWelcomePage();
   }
 }
 function dismissFirstBanner(){
   localStorage.setItem('stagios_welcomed','1');
   var b=document.getElementById('first-banner');
   if(b){b.style.opacity='0';b.style.transition='opacity .3s';setTimeout(function(){b.style.display='none';},300);}
+}
+
+function showWelcomePage(){
+  const ov=document.createElement('div');
+  ov.id='welcome-overlay';
+  ov.style.cssText='position:fixed;inset:0;z-index:9999;background:var(--bg1);overflow-y:auto;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem';
+  ov.innerHTML=`
+  <div style="max-width:560px;width:100%;padding:1rem 0 3rem">
+
+    <!-- Header -->
+    <div style="text-align:center;margin-bottom:2rem">
+      <div style="font-size:3rem;margin-bottom:.5rem">🚀</div>
+      <h1 style="font-family:var(--ff-h);font-size:1.9rem;font-weight:900;color:var(--t1);margin:0 0 .4rem">Bienvenue sur Stagios</h1>
+      <p style="font-size:1rem;color:var(--t3);margin:0">Ton assistant IA pour trouver ton stage, alternance ou emploi</p>
+    </div>
+
+    <!-- Mission -->
+    <div style="background:var(--bg2);border:1px solid var(--brd1);border-radius:var(--rl);padding:1.25rem 1.4rem;margin-bottom:1rem">
+      <div style="font-size:.7rem;font-weight:800;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.6rem">La mission</div>
+      <p style="margin:0;font-size:.9rem;color:var(--t2);line-height:1.65">
+        Stagios est un outil <strong style="color:var(--t1)">100% gratuit</strong> qui utilise l'Intelligence Artificielle pour t'aider à <strong style="color:var(--t1)">trouver des entreprises près de chez toi</strong>, analyser ton CV, identifier les secteurs qui te correspondent et rédiger des emails de candidature personnalisés — le tout en quelques minutes.
+      </p>
+    </div>
+
+    <!-- Pourquoi l'IA -->
+    <div style="background:var(--bg2);border:1px solid var(--brd1);border-radius:var(--rl);padding:1.25rem 1.4rem;margin-bottom:1rem">
+      <div style="font-size:.7rem;font-weight:800;color:var(--t4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.8rem">🤖 Pourquoi l'IA ?</div>
+      <div style="display:flex;flex-direction:column;gap:.7rem">
+        <div style="display:flex;gap:.75rem;align-items:flex-start">
+          <span style="font-size:1.2rem;flex-shrink:0">📄</span>
+          <div><strong style="color:var(--t1);font-size:.85rem">Analyse ton CV en quelques secondes</strong><br><span style="font-size:.78rem;color:var(--t3)">Remplit automatiquement ton profil : formation, compétences, codes ROME, secteurs cibles.</span></div>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:flex-start">
+          <span style="font-size:1.2rem;flex-shrink:0">🏢</span>
+          <div><strong style="color:var(--t1);font-size:.85rem">Trouve les entreprises qui recrutent</strong><br><span style="font-size:.78rem;color:var(--t3)">Radar géolocalisé : les entreprises les plus susceptibles de t'accueillir, dans ton rayon.</span></div>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:flex-start">
+          <span style="font-size:1.2rem;flex-shrink:0">✉️</span>
+          <div><strong style="color:var(--t1);font-size:.85rem">Rédige des emails sur mesure</strong><br><span style="font-size:.78rem;color:var(--t3)">Chaque email de candidature est personnalisé selon l'entreprise et ton profil.</span></div>
+        </div>
+        <div style="display:flex;gap:.75rem;align-items:flex-start">
+          <span style="font-size:1.2rem;flex-shrink:0">📊</span>
+          <div><strong style="color:var(--t1);font-size:.85rem">Suit tes candidatures</strong><br><span style="font-size:.78rem;color:var(--t3)">Kanban intégré pour suivre chaque démarche : à contacter, relancé, répondu…</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gemini gratuit -->
+    <div style="background:rgba(34,197,94,.07);border:1px solid rgba(34,197,94,.25);border-radius:var(--rl);padding:1.25rem 1.4rem;margin-bottom:1rem">
+      <div style="display:flex;gap:.75rem;align-items:flex-start">
+        <span style="font-size:1.4rem;flex-shrink:0">💚</span>
+        <div>
+          <div style="font-weight:800;color:var(--green);font-size:.9rem;margin-bottom:.3rem">Gratuit avec Google Gemini</div>
+          <p style="margin:0;font-size:.8rem;color:var(--t2);line-height:1.6">L'IA fonctionne avec <strong>Google Gemini</strong> — gratuit, sans carte bancaire, juste un compte Google. Tu obtiens une clé API en 2 minutes sur <strong>Google AI Studio</strong>. D'autres fournisseurs sont aussi supportés : ChatGPT, Claude, Mistral, Groq.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Avertissement sans IA -->
+    <div style="background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.3);border-radius:var(--rl);padding:1rem 1.4rem;margin-bottom:1.75rem">
+      <div style="display:flex;gap:.6rem;align-items:flex-start">
+        <span style="font-size:1.1rem;flex-shrink:0">⚠️</span>
+        <p style="margin:0;font-size:.78rem;color:var(--t2);line-height:1.6"><strong style="color:var(--amber)">Sans configuration IA</strong>, le site ne peut pas analyser ton CV, suggérer des entreprises ni rédiger tes emails. La clé IA est <strong>indispensable</strong> — et ça prend 2 minutes à configurer.</p>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <button onclick="dismissWelcomePage()" class="btn btn-primary btn-lg" style="width:100%;font-size:1rem;padding:15px;border-radius:var(--rl)">
+      🔑 Configurer mon IA gratuitement →
+    </button>
+    <p style="text-align:center;margin:.75rem 0 0;font-size:.72rem;color:var(--t4)">Tu pourras toujours modifier ta configuration plus tard dans les Paramètres</p>
+
+  </div>`;
+  document.body.appendChild(ov);
+}
+
+function dismissWelcomePage(){
+  localStorage.setItem('stagios_welcomed','1');
+  const ov=document.getElementById('welcome-overlay');
+  if(ov){
+    ov.style.transition='opacity .35s';
+    ov.style.opacity='0';
+    setTimeout(()=>ov.remove(),360);
+  }
+  // Go directly to AI settings
+  goToIASettings();
 }
 
 // Confirmation modal
