@@ -495,13 +495,15 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
           <div class="dm-pc-name" id="dm-pc-name">Profil incomplet</div>
           <div class="dm-pc-formation" id="dm-pc-formation"></div>
           <div class="dm-pc-school" id="dm-pc-school"></div>
+          <div id="dm-pc-contact" style="font-size:.74rem;color:var(--t3);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap"></div>
         </div>
       </div>
+      <div id="dm-pc-motiv" style="font-size:.78rem;color:var(--t3);font-style:italic;margin-top:.5rem;line-height:1.45;display:none"></div>
       <div class="dm-chips" id="dm-chips"></div>
       <div class="dm-period" id="dm-period"></div>
       <div style="display:flex;gap:8px;margin-top:.6rem">
-        <button class="btn btn-ghost" style="flex:1" onclick="goTab('email')">✉️ Écrire des emails</button>
         <button class="btn btn-ghost" style="flex:1" onclick="goTab('profil')">✏️ Modifier le profil</button>
+        <button class="btn btn-ghost" style="flex:1" onclick="goTab('suivi')">📋 Voir le suivi</button>
       </div>
       <div style="text-align:center;margin-top:.6rem">
         <span style="font-size:.73rem;color:var(--t4);cursor:pointer;text-decoration:underline" onclick="goToIASettings()">⚙️ Modifier la clé / modèle IA</span>
@@ -1591,6 +1593,16 @@ function _populateDmReady(){
   set('dm-pc-name',((S.prenom||'')+' '+(S.nom||'')).trim()||'Profil incomplet');
   set('dm-pc-formation',S.formationLabel||S.formation||'Formation non précisée');
   set('dm-pc-school',S.etab||'');
+  const contactEl=document.getElementById('dm-pc-contact');
+  if(contactEl){
+    const parts=[];
+    if(S.email)parts.push('📧 '+S.email);
+    if(S.tel)parts.push('📞 '+S.tel);
+    contactEl.innerHTML=parts.map(p=>'<span>'+escH(p)+'</span>').join('');
+  }
+  const motivEl=document.getElementById('dm-pc-motiv');
+  if(motivEl&&S.motiv){motivEl.textContent='" '+S.motiv+' "';motivEl.style.display='block';}
+  else if(motivEl)motivEl.style.display='none';
   const chips=document.getElementById('dm-chips');
   if(chips){
     const skills=(S.comp||'').split(',').map(s=>s.trim()).filter(Boolean).slice(0,6);
@@ -1608,9 +1620,9 @@ function _populateDmReady(){
   if(cvBox){
     if(S.cvScore!=null){
       const sc=S.cvScore;
-      const col=sc>=8?'#16a34a':sc>=5?'#d97706':'#dc2626';
-      const bg=sc>=8?'rgba(34,197,94,.07)':sc>=5?'rgba(245,158,11,.07)':'rgba(239,68,68,.07)';
-      const brd=sc>=8?'rgba(34,197,94,.22)':sc>=5?'rgba(245,158,11,.22)':'rgba(239,68,68,.22)';
+      const col=sc>=8?'var(--green)':sc>=5?'var(--amber)':'var(--red)';
+      const bg=sc>=8?'var(--green-l)':sc>=5?'var(--amber-l)':'var(--red-l)';
+      const brd=sc>=8?'rgba(67,233,123,.22)':sc>=5?'rgba(255,159,10,.22)':'rgba(255,82,82,.22)';
       const lbl=sc>=8?'CV solide 👍':sc>=5?'CV correct ⚠️':'CV à retravailler ❌';
       const sHtml=(S.cvStrengths||[]).map(s=>'<li style="color:var(--green)">✓'+escH(s)+'</li>').join('');
       const iHtml=(S.cvImprovements||[]).map(s=>'<li style="color:var(--red)">✗'+escH(s)+'</li>').join('');
