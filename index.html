@@ -2453,7 +2453,7 @@ async function fetchFranceTravail(lat,lng,rKm){
         d:o.intitule+(o.salaire?.libelle?' — '+o.salaire.libelle:''),
         e:'',
         web:'https://candidat.francetravail.fr/offres/recherche/detail/'+o.id,
-        lat:isNaN(_lt)?lat:_lt,lng:isNaN(_ln)?lng:_ln,
+        lat:isNaN(_lt)||_lt===0?0:_lt,lng:isNaN(_ln)||_ln===0?0:_ln,
         src:'France Travail',hasOffer:true,ft:true,
         contractType:o.typeContrat?.libelle||'',
         altOffer:!!(o.alternance)
@@ -2786,7 +2786,7 @@ Tes 4 missions :
 
 1. PERTINENCE — indices [0,1,2…] des entreprises vraiment susceptibles de recruter ce profil. Si tout est pertinent, retourne tous les indices.
 
-2. SUGGESTIONS — 6 à 10 entreprises réelles et connues NON listées ci-dessus, adaptées à ce profil et à la zone géographique "${city}". Favorise les employeurs qui recrutent régulièrement ce type de profil. Pour chaque : nom exact, type (parmi ${validSectors}), adresse approximative, ville.
+2. SUGGESTIONS — 6 à 10 structures réelles et connues NON listées ci-dessus. CONTRAINTE ABSOLUE : uniquement des établissements ayant une ADRESSE PHYSIQUE EN FRANCE, dans le département ou les départements limitrophes de "${city}". Interdit de suggérer des sièges étrangers, des multinationales sans présence locale, ou toute structure hors de France métropolitaine. Pour chaque : nom exact, type (parmi ${validSectors}), adresse approximative en France, ville française.
 
 3. ROME — si les codes ROME ci-dessus sont absents ou incomplets, propose 3 à 6 codes ROME pertinents (format lettre+4chiffres). Sinon, retourne tableau vide.
 
@@ -2833,9 +2833,13 @@ Réponds UNIQUEMENT en JSON valide strict (sans markdown, sans commentaire) :
   }
   const seen=new Set(filtered.map(c=>c.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8)));
   const aiLabel=AI_PROVIDERS[S.aiProvider||'gemini']?.label||'IA';
+  const _foreignPattern=/\b(portugal|espagne|spain|belgique|belgium|luxembourg|suisse|switzerland|italie|italy|allemagne|germany|maroc|morocco|royaume[- ]uni|london|amsterdam|madrid|barcelone|barcelona|lisbonne|lisbon|bruxelles|brussels|genève|zurich|berlin|münchen|munich)\b/i;
   if(Array.isArray(parsed.suggestions)){
     parsed.suggestions.forEach((e,i)=>{
       if(!e||!e.n)return;
+      // Skip suggestions that appear to be outside France
+      const vCity=(e.v||'').toLowerCase()+(e.d||'').toLowerCase();
+      if(_foreignPattern.test(vCity))return;
       const k=e.n.toLowerCase().replace(/[^a-z0-9]/g,'').substring(0,8);
       if(!seen.has(k)){
         seen.add(k);
