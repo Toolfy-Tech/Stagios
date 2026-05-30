@@ -90,7 +90,7 @@ html[data-theme=light] .tab.on{background:var(--primary);border-color:var(--prim
 /* ── FORM ───────────────────────────────────────────── */
 .fg{display:grid;grid-template-columns:1fr 1fr;gap:.875rem}
 .fi{display:flex;flex-direction:column;gap:4px}.fi.full{grid-column:1/-1}
-.fi label{font-size:.71rem;font-weight:600;color:var(--t4);letter-spacing:.05em;text-transform:uppercase;font-family:var(--ff-h)}
+.fi label{font-size:.75rem;font-weight:600;color:var(--t4);letter-spacing:.05em;text-transform:uppercase;font-family:var(--ff-h)}
 input,select,textarea{width:100%;padding:10px 14px;border:1px solid var(--brd2);border-radius:var(--r);font-size:.875rem;color:var(--t1);background:var(--inp);font-family:var(--ff-b);transition:border-color .15s,box-shadow .15s}
 input:focus,select:focus,textarea:focus{outline:none;border-color:rgba(108,99,255,.80);border-width:1.5px;box-shadow:0 0 0 3px rgba(108,99,255,.12)}
 textarea{resize:vertical;min-height:68px;line-height:1.5}
@@ -109,7 +109,7 @@ html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
 .btn:disabled{opacity:.35;cursor:not-allowed}
 
 /* ── BADGES ─────────────────────────────────────────── */
-.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:.66rem;font-weight:700;font-family:var(--ff-h);border:1px solid transparent}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:3px 9px;border-radius:20px;font-size:.69rem;font-weight:700;font-family:var(--ff-h);border:1px solid transparent}
 .b-ESN{background:var(--primary-l);color:var(--purple);border-color:rgba(108,99,255,.30)}
 .b-Public{background:var(--green-l);color:var(--green);border-color:rgba(67,233,123,.30)}
 .b-Santé{background:rgba(255,101,132,.10);color:#FF6584;border-color:rgba(255,101,132,.25)}
@@ -123,10 +123,10 @@ html[data-theme=dark] select option{background:#1A1A2E;color:#fff}
 .b-Télécom,.b-Médias{background:var(--cyan-l);color:var(--cyan);border-color:rgba(94,234,212,.28)}
 .b-Asso{background:rgba(255,215,0,.10);color:#FFD700;border-color:rgba(255,215,0,.25)}
 .b-Coworking{background:var(--primary-l);color:var(--purple);border-color:rgba(108,99,255,.25)}
-.disc-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--purple-l);color:var(--purple);font-weight:700;border:1px solid rgba(167,139,250,.30)}
-.pmsmp-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--cyan-l);color:var(--cyan);font-weight:700;border:1px solid rgba(94,234,212,.30)}
-.alt-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--amber-l);color:var(--amber);font-weight:700;border:1px solid rgba(255,159,10,.28)}
-.ft-badge{font-size:.63rem;padding:2px 7px;border-radius:20px;background:var(--primary-l);color:var(--purple);font-weight:700;border:1px solid rgba(108,99,255,.35)}
+.disc-badge{font-size:.67rem;padding:2px 7px;border-radius:20px;background:var(--purple-l);color:var(--purple);font-weight:700;border:1px solid rgba(167,139,250,.30)}
+.pmsmp-badge{font-size:.67rem;padding:2px 7px;border-radius:20px;background:var(--cyan-l);color:var(--cyan);font-weight:700;border:1px solid rgba(94,234,212,.30)}
+.alt-badge{font-size:.67rem;padding:2px 7px;border-radius:20px;background:var(--amber-l);color:var(--amber);font-weight:700;border:1px solid rgba(255,159,10,.28)}
+.ft-badge{font-size:.67rem;padding:2px 7px;border-radius:20px;background:var(--primary-l);color:var(--purple);font-weight:700;border:1px solid rgba(108,99,255,.35)}
 
 /* ── TIER DISTANCE ──────────────────────────────────── */
 .tier{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:700;border:1px solid transparent}
@@ -329,8 +329,8 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
 .ia-change-link:hover{opacity:1;text-decoration:underline}
 @media(max-width:520px){.ia-cmp{grid-template-columns:1fr}.ia-key-row{flex-direction:column}}
 @media print{.hdr,.tabnav,.btn,.toolbar,.cat-grid,.radar-controls,.search-banner,.pbar,.sg,.tipsbox,.notice,.ca,.kb-actions{display:none!important}body{background:#fff;color:#000}.page{display:block!important}.kanban{overflow:visible}}
-@media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(3,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}.btn{min-height:44px}.btn-sm{min-height:40px;padding:8px 12px}.step-lbl{display:none}}
-@media(max-width:480px){.kanban{grid-template-columns:repeat(2,minmax(130px,1fr))}.tab{padding:7px 10px;font-size:.68rem;gap:4px}.step-lbl{display:none}}
+@media(max-width:640px){.fg{grid-template-columns:1fr}.sg{grid-template-columns:repeat(2,1fr)}.kanban{grid-template-columns:repeat(2,minmax(150px,1fr))}.cc{flex-wrap:wrap}.ca{width:100%}.logo span{display:none}.tab{padding:8px 13px;font-size:.72rem}.btn{min-height:44px}.btn-sm{min-height:40px;padding:8px 12px}.step-lbl{display:none}}
+@media(max-width:480px){.kanban{grid-template-columns:1fr}.tab{padding:7px 10px;font-size:.68rem;gap:4px}.step-lbl{display:none}}
 
 /* ── MODAL ─────────────────────────────────────────── */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:9998;display:flex;align-items:center;justify-content:center;padding:1rem}
@@ -770,6 +770,7 @@ select.status-sel{width:auto;font-size:.75rem;padding:3px 8px}
         <input type="checkbox" id="src-alt" checked> 🔄 Alternance
       </label>
     </div>
+    <div id="proxy-notice" style="display:none;font-size:.74rem;color:var(--t4);margin-top:6px;line-height:1.4">⚠️ <strong>La Bonne Boite</strong> et <strong>Offres FT</strong> nécessitent le proxy France Travail — non disponible dans cette configuration.</div>
   </div>
 
   <div id="radar-banner" class="search-banner" style="display:none">
@@ -2098,9 +2099,11 @@ function initRadarSourceToggles(){
     if(!hasProxy){
       inp.checked=false;
       inp.disabled=true;
-      if(lbl){lbl.classList.add('src-disabled');lbl.title='Proxy France Travail non configuré — non disponible';}
+      if(lbl)lbl.classList.add('src-disabled');
     }
   });
+  const notice=document.getElementById('proxy-notice');
+  if(notice)notice.style.display=hasProxy?'none':'block';
   // Gemini toggle — actif seulement si clé configurée
   const gemInp=document.getElementById('src-gemini');
   const gemLbl=document.getElementById('src-gemini-lbl');
